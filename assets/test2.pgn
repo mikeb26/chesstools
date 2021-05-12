@@ -1,0 +1,10 @@
+[Event "test: Scandinavian"]
+[Site "xyz098"]
+[Result "*"]
+[UTCDate "2021.05.13"]
+[UTCTime "05:34:53"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Mismatched Parens"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 (3... Qd6 4. d4 Nf6 5. Nf3 a6 6. g3)  (3... Qd8 4. d4 Nf6 5. Nf3 ( Bg4) 4. d4 Nf6 5. Nf3 c6 6. Bc4 *
