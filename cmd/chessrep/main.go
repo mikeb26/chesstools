@@ -7,31 +7,39 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
+	"github.com/mikeb26/chesstools"
 	"github.com/notnil/chess"
 )
 
 type RepValidator struct {
-	color             chess.Color
-	pgnFileList       []string
-	moveMap           map[string]MoveMapValue
-	uniquePosCount    uint
-	dupPosCount       uint
-	conflictPosCount  uint
-	gameList          []*chess.Game
-	whiteConflictList []Conflict
-	blackConflictList []Conflict
+	color               chess.Color
+	scoreDepth          int
+	scoreExceptions     map[string]string
+	scoreExceptionsFile string
+	pgnFileList         []string
+	moveMap             map[string]MoveMapValue
+	uniquePosCount      uint
+	dupPosCount         uint
+	conflictPosCount    uint
+	gameList            []*chess.Game
+	whiteConflictList   []Conflict
+	blackConflictList   []Conflict
+	evalCtx             *chesstools.EvalCtx
 }
 
 type MoveMapValue struct {
-	move    string
-	game    *chess.Game
-	gameNum int
+	move        string
+	game        *chess.Game
+	gameNum     int
+	pgnFilename string
 }
 
 type Conflict struct {
@@ -39,17 +47,22 @@ type Conflict struct {
 	conflictMove MoveMapValue
 }
 
-func NewRepValidator(c chess.Color, pgns []string) *RepValidator {
+func NewRepValidator(c chess.Color, sd int, pgns []string,
+	scoreExceptionsFileIn string) *RepValidator {
+
 	rv := &RepValidator{
-		color:             c,
-		pgnFileList:       make([]string, len(pgns)),
-		moveMap:           make(map[string]MoveMapValue),
-		uniquePosCount:    0,
-		dupPosCount:       0,
-		conflictPosCount:  0,
-		gameList:          make([]*chess.Game, 0),
-		whiteConflictList: make([]Conflict, 0),
-		blackConflictList: make([]Conflict, 0),
+		color:               c,
+		scoreDepth:          sd,
+		scoreExceptions:     make(map[string]string, 0),
+		scoreExceptionsFile: scoreExceptionsFileIn,
+		pgnFileList:         make([]string, len(pgns)),
+		moveMap:             make(map[string]MoveMapValue),
+		uniquePosCount:      0,
+		dupPosCount:         0,
+		conflictPosCount:    0,
+		gameList:            make([]*chess.Game, 0),
+		whiteConflictList:   make([]Conflict, 0),
+		blackConflictList:   make([]Conflict, 0),
 	}
 	for ii, p := range pgns {
 		rv.pgnFileList[ii] = p
@@ -69,27 +82,35 @@ func NewRepValidator(c chess.Color, pgns []string) *RepValidator {
 
 func main() {
 	var color chess.Color
-	pgnList, err := parseArgs(&color)
+	var scoreDepth int
+	var scoreExceptionsFile string
+	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	rv := NewRepValidator(color, pgnList)
+	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile)
 	err = rv.Load()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load PGN files: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to initialize validator: %v\n", err)
 		return
 	}
 
 	rv.printStatsAndConflicts()
+	if rv.evalCtx != nil {
+		rv.evalCtx.Close()
+		rv.evalCtx = nil
+	}
 }
 
-func parseArgs(c *chess.Color) ([]string, error) {
+func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string) ([]string, error) {
 	f := flag.NewFlagSet("fenvalidate", flag.ExitOnError)
 	var colorFlag string
 
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
+	f.StringVar(scoreExceptionsFile, "exceptions", "", "file with score exceptions")
+	f.IntVar(scoreDepth, "depth", 0, "<evalDepthInPlies>")
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
@@ -128,19 +149,61 @@ func (rv *RepValidator) printStatsAndConflicts() {
 	fmt.Printf("\tConflicts:\n")
 
 	for _, c := range *conflictList {
-		fmt.Printf("\t\tMove %v from game %v(#%v) conflicts with move %v from game %v(#%v)\n", c.conflictMove.move, getGameName(c.conflictMove.game), c.conflictMove.gameNum, c.existingMove.move, getGameName(c.existingMove.game), c.existingMove.gameNum)
+		fmt.Printf("\t\tMove %v from game %v(%v#%v) conflicts with move %v from	game %v(%v#%v)\n",
+			c.conflictMove.move, getGameName(c.conflictMove.game),
+			c.conflictMove.pgnFilename, c.conflictMove.gameNum, c.existingMove.move,
+			getGameName(c.existingMove.game), c.existingMove.pgnFilename,
+			c.existingMove.gameNum)
 	}
 }
 
+func (rv *RepValidator) loadExceptions() error {
+	encodedExceptions, err := ioutil.ReadFile(rv.scoreExceptionsFile)
+	if err != nil {
+		return fmt.Errorf("Failed to open exceptions file %v: %w",
+			rv.scoreExceptionsFile, err)
+	}
+
+	type ScoreException struct {
+		FEN  string
+		Move string
+	}
+
+	var exceptions []ScoreException
+	err = json.Unmarshal(encodedExceptions, &exceptions)
+	if err != nil {
+		return fmt.Errorf("Failed to parse exceptions file %v: %w",
+			rv.scoreExceptionsFile, err)
+	}
+	for _, e := range exceptions {
+		normalizedFen, err := normalizeFEN(e.FEN)
+		if err != nil {
+			return fmt.Errorf("Failed to parse FEN %v in exceptions file %v: %w",
+				e.FEN, rv.scoreExceptionsFile, err)
+		}
+		rv.scoreExceptions[normalizedFen] = e.Move
+	}
+
+	return nil
+}
+
 func (rv *RepValidator) Load() error {
+	var err error
+
+	if rv.scoreDepth > 0 && rv.scoreExceptionsFile != "" {
+		err = rv.loadExceptions()
+		if err != nil {
+			return err
+		}
+	}
 	for _, pgnFilename := range rv.pgnFileList {
-		f, err := os.OpenFile(pgnFilename, os.O_RDONLY, 0600)
+		f, err := chesstools.OpenPgn(pgnFilename)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
 
-		err = rv.processOnePGN(f)
+		err = rv.processOnePGN(f, pgnFilename)
 		if err != nil {
 			return err
 		}
@@ -159,7 +222,7 @@ func getGameName(g *chess.Game) string {
 	return gn
 }
 
-func (rv *RepValidator) processOnePGN(f io.Reader) error {
+func (rv *RepValidator) processOnePGN(f io.Reader, pgnFilename string) error {
 	var opts chess.ScannerOpts
 	opts.ExpandVariations = true
 
@@ -169,7 +232,7 @@ func (rv *RepValidator) processOnePGN(f io.Reader) error {
 	ii := 1
 	for scanner.Scan() {
 		g := scanner.Next()
-		err = rv.processOneGame(g, ii)
+		err = rv.processOneGame(g, pgnFilename, ii)
 		if err != nil {
 			return err
 		}
@@ -179,29 +242,39 @@ func (rv *RepValidator) processOnePGN(f io.Reader) error {
 	return scanner.Err()
 }
 
-func (rv *RepValidator) processOneGame(g *chess.Game, gameNumLocal int) error {
+func (rv *RepValidator) processOneGame(g *chess.Game, pgnFilename string,
+	gameNumLocal int) error {
 	rv.gameList = append(rv.gameList, g)
 	moves := g.Moves()
 	var m string
+
+	moveCount := 1
+	scoreFutureMovesThisGame := true
 	for ii, p := range g.Positions() {
 		if ii >= len(moves) {
 			continue
 		}
 
-		var notation chess.AlgebraicNotation
-		m = notation.Encode(p, moves[ii])
-		err := rv.processOneMove(g, gameNumLocal, p, m)
+		//var notation chess.AlgebraicNotation
+		//m = notation.Encode(p, moves[ii])
+		m = moves[ii].String()
+		err := rv.processOneMove(g, pgnFilename, gameNumLocal, p, moveCount, m,
+			&scoreFutureMovesThisGame)
 		if err != nil {
 			return err
+		}
+
+		if ii%2 == 1 {
+			moveCount++
 		}
 	}
 
 	return nil
 }
 
-func getPositionKey(fen string) (string, error) {
-	// for opening repertoire purposes strip off the halfmove clock and
-	// full move number fields from the FEN as these may differ across
+func normalizeFEN(fen string) (string, error) {
+	// for opening repertoire purposes zero the halfmove clock field and reset
+	// the full move number field from the FEN as these may differ across
 	// variations/transpositions. keep castling rights, active color, and
 	// en-passant square as all of these are material. for a future release
 	// consider situations where the chosen move in a position with castling
@@ -222,34 +295,102 @@ func getPositionKey(fen string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if ii >= 3 {
-			continue
-		}
 
 		_, err = sb.WriteRune(' ')
 		if err != nil {
 			return "", err
 		}
 	}
+	_, err = sb.WriteString("0 1")
+	if err != nil {
+		return "", err
+	}
 
 	return sb.String(), nil
 }
 
-func (rv *RepValidator) processOneMove(g *chess.Game, gameNumLocal int, p *chess.Position, m string) error {
-	k, err := getPositionKey(p.String())
+func sprintMove(moveCount int, m string, c chess.Color) string {
+	ret := fmt.Sprintf("%v. ", moveCount)
+
+	if c == chess.Black {
+		ret += "... "
+	}
+
+	ret += m
+
+	return ret
+}
+
+func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
+	gameNumLocal int, fen string, moveCount int, m string) bool {
+
+	if rv.evalCtx == nil {
+		rv.evalCtx = chesstools.NewEvalCtx().WithFEN(fen).WithEvalDepth(rv.scoreDepth)
+		rv.evalCtx.InitEngine()
+	} else {
+		rv.evalCtx.SetFEN(fen)
+	}
+
+	er := rv.evalCtx.Eval()
+	if er.BestMove != m {
+		exceptionsMove, ok := rv.scoreExceptions[fen]
+		if !ok {
+			fmt.Printf("Engine recommends %v instead of %v in game %v(%v#%v) FEN:%v\n",
+				sprintMove(moveCount, er.BestMove, rv.color),
+				sprintMove(moveCount, m, rv.color), getGameName(g), pgnFilename,
+				gameNumLocal, fen)
+
+			return false
+		} // else
+		if exceptionsMove == m {
+			fmt.Printf("Ignoring engine recommended %v instead of %v in game %v(%v#%v) FEN:%v\n",
+				sprintMove(moveCount, er.BestMove, rv.color),
+				sprintMove(moveCount, m, rv.color), getGameName(g), pgnFilename,
+				gameNumLocal, fen)
+
+			return true
+		} // else
+
+		fmt.Printf("Exceptions move %v does not match repertoire move %v in game %v(%v#%v) FEN:%v\n",
+			sprintMove(moveCount, exceptionsMove, rv.color),
+			sprintMove(moveCount, m, rv.color), getGameName(g), pgnFilename,
+			gameNumLocal, fen)
+
+		return false
+	}
+
+	return true
+}
+
+func (rv *RepValidator) processOneMove(g *chess.Game, pgnFilenameLocal string,
+	gameNumLocal int, p *chess.Position, moveCount int, m string,
+	scoreFutureMovesThisGame *bool) error {
+	fen, err := normalizeFEN(p.String())
 	if err != nil {
 		return err
 	}
 
-	val, present := rv.moveMap[k]
+	val, present := rv.moveMap[fen]
 	if !present {
-		rv.moveMap[k] = MoveMapValue{move: m, game: g, gameNum: gameNumLocal}
+		rv.moveMap[fen] = MoveMapValue{move: m, game: g, gameNum: gameNumLocal,
+			pgnFilename: pgnFilenameLocal}
 		rv.uniquePosCount++
+
+		if p.Turn() == rv.color && rv.scoreDepth != 0 && moveCount > 3 {
+			if *scoreFutureMovesThisGame {
+				*scoreFutureMovesThisGame = rv.scoreMove(g, pgnFilenameLocal,
+					gameNumLocal, fen, moveCount, m)
+			} else {
+				fmt.Printf("Skipping scoring move %v in game %v(%v#%v) FEN:%v due to earlier move engine recommendation\n",
+					moveCount, getGameName(g), pgnFilenameLocal, gameNumLocal, fen)
+			}
+		}
 		return nil
 	} // else
 
 	if val.move != m {
-		conflictVal := MoveMapValue{move: m, game: g, gameNum: gameNumLocal}
+		conflictVal := MoveMapValue{move: m, game: g, gameNum: gameNumLocal,
+			pgnFilename: pgnFilenameLocal}
 		c := Conflict{existingMove: val, conflictMove: conflictVal}
 		if p.Turn() == chess.Black {
 			rv.blackConflictList = append(rv.blackConflictList, c)

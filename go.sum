@@ -1,3 +1,4 @@
 github.com/ajstarks/svgo v0.0.0-20200320125537-f189e35d30ca/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=
-github.com/mikeb26/chess v1.6.0 h1:kmVxaOu//In9pDpWCm6zRki21BQb3YKQ3NcurFfmHpk=
-github.com/mikeb26/chess v1.6.0/go.mod h1:cRuJUIBFq9Xki05TWHJxHYkC+fFpq45IWwk94DdlCrA=
+github.com/mikeb26/chess v1.6.2 h1:TofeTbTKdY/mbNrIQ3ZgEVcTmtsil9ORS72a3OTaUy8=
+github.com/mikeb26/chess v1.6.2/go.mod h1:cRuJUIBFq9Xki05TWHJxHYkC+fFpq45IWwk94DdlCrA=
+golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
