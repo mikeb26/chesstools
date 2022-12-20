@@ -44,6 +44,7 @@ type EvalCtx struct {
 	evalTimeInSec uint   // default == 5 minutes
 	evalDepth     int    // default == infinite
 	g             *chess.Game
+	cacheOnly     bool
 
 	engine     *uci.Engine
 	engVersion float64
@@ -67,6 +68,7 @@ func NewEvalCtx() *EvalCtx {
 	rv.evalDepth = DefaultDepth
 	rv.g = nil
 	rv.position = nil
+	rv.cacheOnly = false
 
 	var err error
 	rv.engine, err = uci.New("stockfish")
@@ -114,6 +116,11 @@ func (evalCtx *EvalCtx) WithEvalTime(evalTimeInSec uint) *EvalCtx {
 
 func (evalCtx *EvalCtx) WithEvalDepth(evalDepth int) *EvalCtx {
 	evalCtx.evalDepth = evalDepth
+	return evalCtx
+}
+
+func (evalCtx *EvalCtx) WithCacheOnly(cacheOnly bool) *EvalCtx {
+	evalCtx.cacheOnly = cacheOnly
 	return evalCtx
 }
 
@@ -247,7 +254,7 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	return ret
 }
 
-func (evalCtx *EvalCtx) loadResultFromCache() (*EvalResult, error) {
+func (evalCtx *EvalCtx) loadResultFromCache(staleOk bool) (*EvalResult, error) {
 	cacheFileName := fen2CacheFileName(evalCtx.position.String())
 	cacheFilePath := fen2CacheFilePath(evalCtx.position.String())
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
@@ -266,7 +273,7 @@ func (evalCtx *EvalCtx) loadResultFromCache() (*EvalResult, error) {
 		panic(err)
 	}
 
-	if evalCtx.engVersion > er.EngVersion {
+	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, fmt.Errorf("cache stale")
 	}
 
@@ -321,16 +328,18 @@ func fen2CacheFilePath(cacheFileName string) string {
 
 func (evalCtx *EvalCtx) Eval() *EvalResult {
 	fromCache := false
-	er, err := evalCtx.loadResultFromCache()
+	er, err := evalCtx.loadResultFromCache(evalCtx.cacheOnly)
 	if err == nil {
 		fromCache = true
-	}
 
-	if err == nil && evalCtx.evalDepth != DefaultDepth &&
-		er.Depth >= evalCtx.evalDepth {
-		// we were asked to search by depth, have a cache hit, and the cached
-		// entry has a greater depth than was requested so we can use it
-		return er
+		if evalCtx.cacheOnly || (evalCtx.evalDepth != DefaultDepth &&
+			er.Depth >= evalCtx.evalDepth) {
+			// we were asked to search by depth, have a cache hit, and the cached
+			// entry has a greater depth than was requested so we can use it
+			return er
+		}
+	} else if evalCtx.cacheOnly {
+		return nil
 	}
 
 	if evalCtx.evalDepth != DefaultDepth {

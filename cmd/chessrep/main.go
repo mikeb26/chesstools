@@ -33,6 +33,7 @@ type RepValidator struct {
 	whiteConflictList   []Conflict
 	blackConflictList   []Conflict
 	evalCtx             *chesstools.EvalCtx
+	cacheOnly           bool
 }
 
 type MoveMapValue struct {
@@ -48,7 +49,7 @@ type Conflict struct {
 }
 
 func NewRepValidator(c chess.Color, sd int, pgns []string,
-	scoreExceptionsFileIn string) *RepValidator {
+	scoreExceptionsFileIn string, cacheOnly bool) *RepValidator {
 
 	rv := &RepValidator{
 		color:               c,
@@ -63,6 +64,7 @@ func NewRepValidator(c chess.Color, sd int, pgns []string,
 		gameList:            make([]*chess.Game, 0),
 		whiteConflictList:   make([]Conflict, 0),
 		blackConflictList:   make([]Conflict, 0),
+		cacheOnly:           cacheOnly,
 	}
 	for ii, p := range pgns {
 		rv.pgnFileList[ii] = p
@@ -84,13 +86,14 @@ func main() {
 	var color chess.Color
 	var scoreDepth int
 	var scoreExceptionsFile string
-	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile)
+	var cacheOnly bool
+	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile, &cacheOnly)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile)
+	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile, cacheOnly)
 	err = rv.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize validator: %v\n", err)
@@ -104,13 +107,16 @@ func main() {
 	}
 }
 
-func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string) ([]string, error) {
-	f := flag.NewFlagSet("fenvalidate", flag.ExitOnError)
+func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
+	cacheOnly *bool) ([]string, error) {
+
+	f := flag.NewFlagSet("chessrep", flag.ExitOnError)
 	var colorFlag string
 
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
 	f.StringVar(scoreExceptionsFile, "exceptions", "", "file with score exceptions")
 	f.IntVar(scoreDepth, "depth", 0, "<evalDepthInPlies>")
+	f.BoolVar(cacheOnly, "cacheonly", false, "only return cached evaluations")
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
@@ -325,13 +331,18 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	gameNumLocal int, fen string, moveCount int, m string) bool {
 
 	if rv.evalCtx == nil {
-		rv.evalCtx = chesstools.NewEvalCtx().WithFEN(fen).WithEvalDepth(rv.scoreDepth)
+		rv.evalCtx = chesstools.NewEvalCtx().WithFEN(fen).WithEvalDepth(rv.scoreDepth).WithCacheOnly(rv.cacheOnly)
 		rv.evalCtx.InitEngine()
 	} else {
 		rv.evalCtx.SetFEN(fen)
 	}
 
 	er := rv.evalCtx.Eval()
+	if er == nil {
+		fmt.Printf("Skipping scoring move %v in game %v(%v#%v) FEN:%v without engine eval\n",
+			moveCount, getGameName(g), pgnFilename, gameNumLocal, fen)
+		return true
+	}
 	if er.BestMove != m {
 		exceptionsMove, ok := rv.scoreExceptions[fen]
 		if !ok {
