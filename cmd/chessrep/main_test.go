@@ -10,7 +10,7 @@ import (
 
 func TestNewRepValidator(t *testing.T) {
 	rv := NewRepValidator(chess.White, 0, []string{"foo.pgn", "bar.pgn"},
-		"", false)
+		"", false, 0.04, 0)
 	if rv.color != chess.White {
 		t.Fatalf("NewRepValidator failed to initialize color")
 	}
@@ -33,7 +33,7 @@ func TestNewRepValidator(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 	rv := NewRepValidator(chess.White, 0, []string{"../../assets/test1.pgn"},
-		"", false)
+		"", false, 0.04, 0)
 	err := rv.Load()
 	if err != nil {
 		t.Fatalf("rv.Load() failed: %v", err)
@@ -73,7 +73,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestMissingFileLoad(t *testing.T) {
-	rv := NewRepValidator(chess.Black, 0, []string{"bogus.pgn"}, "", false)
+	rv := NewRepValidator(chess.Black, 0, []string{"bogus.pgn"}, "", false, 0.04, 0)
 	err := rv.Load()
 	if err == nil {
 		t.Fatalf("rv.Load() succeeded but should have failed")
@@ -85,7 +85,7 @@ func TestMissingFileLoad(t *testing.T) {
 
 func TestCorruptFileLoad(t *testing.T) {
 	rv := NewRepValidator(chess.Black, 0, []string{"../../assets/test2.pgn"},
-		"", false)
+		"", false, 0.04, 0)
 	err := rv.Load()
 	if err == nil {
 		t.Fatalf("rv.Load() succeeded but should have failed")

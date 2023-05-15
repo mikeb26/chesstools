@@ -22,6 +22,8 @@ import (
 type RepValidator struct {
 	color               chess.Color
 	scoreDepth          int
+	gapThreshold        float64
+	gapSkip             int
 	scoreExceptions     map[string]string
 	scoreExceptionsFile string
 	pgnFileList         []string
@@ -49,11 +51,14 @@ type Conflict struct {
 }
 
 func NewRepValidator(c chess.Color, sd int, pgns []string,
-	scoreExceptionsFileIn string, cacheOnly bool) *RepValidator {
+	scoreExceptionsFileIn string, cacheOnly bool, gapThresholdIn float64,
+	gapSkipIn int) *RepValidator {
 
 	rv := &RepValidator{
 		color:               c,
 		scoreDepth:          sd,
+		gapThreshold:        gapThresholdIn,
+		gapSkip:             gapSkipIn,
 		scoreExceptions:     make(map[string]string, 0),
 		scoreExceptionsFile: scoreExceptionsFileIn,
 		pgnFileList:         make([]string, len(pgns)),
@@ -85,15 +90,19 @@ func NewRepValidator(c chess.Color, sd int, pgns []string,
 func main() {
 	var color chess.Color
 	var scoreDepth int
+	var gapThreshold float64
+	var gapSkip int
 	var scoreExceptionsFile string
 	var cacheOnly bool
-	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile, &cacheOnly)
+	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile,
+		&cacheOnly, &gapThreshold, &gapSkip)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile, cacheOnly)
+	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile,
+		cacheOnly, gapThreshold, gapSkip)
 	err = rv.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize validator: %v\n", err)
@@ -108,7 +117,7 @@ func main() {
 }
 
 func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
-	cacheOnly *bool) ([]string, error) {
+	cacheOnly *bool, gapThreshold *float64, gapSkip *int) ([]string, error) {
 
 	f := flag.NewFlagSet("chessrep", flag.ExitOnError)
 	var colorFlag string
@@ -116,6 +125,8 @@ func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
 	f.StringVar(scoreExceptionsFile, "exceptions", "", "file with score exceptions")
 	f.IntVar(scoreDepth, "depth", 0, "<evalDepthInPlies>")
+	f.Float64Var(gapThreshold, "gapthreshold", 0.04, "<gapThresholdPct>")
+	f.IntVar(gapSkip, "gapskip", 0, "<gapMoveSkipCount>")
 	f.BoolVar(cacheOnly, "cacheonly", false, "only return cached evaluations")
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -213,6 +224,11 @@ func (rv *RepValidator) Load() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	err = rv.checkForGaps()
+	if err != nil {
+		return err
 	}
 
 	return nil
