@@ -2,9 +2,12 @@ package chesstools
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -24,6 +27,9 @@ const (
 	DefaultEvalTimeInSec = 300
 	DefaultDepth         = -1 // infinite
 )
+
+var ErrCacheMiss = errors.New("cache miss")
+var ErrCacheStale = errors.New("cache stale")
 
 type EvalResult struct {
 	CP         int
@@ -254,14 +260,16 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	return ret
 }
 
-func (evalCtx *EvalCtx) loadResultFromCache(staleOk bool) (*EvalResult, error) {
+func (evalCtx *EvalCtx) loadResultFromLocalCache(
+	staleOk bool) (*EvalResult, error) {
+
 	cacheFileName := fen2CacheFileName(evalCtx.position.String())
 	cacheFilePath := fen2CacheFilePath(evalCtx.position.String())
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	encodedResult, err := ioutil.ReadFile(cacheFileFullName)
 	if os.IsNotExist(err) {
-		return nil, fmt.Errorf("cache miss")
+		return nil, ErrCacheMiss
 	}
 	if err != nil {
 		panic(err)
@@ -274,12 +282,143 @@ func (evalCtx *EvalCtx) loadResultFromCache(staleOk bool) (*EvalResult, error) {
 	}
 
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
-		return nil, fmt.Errorf("cache stale")
+		return nil, ErrCacheStale
 	}
 
-	er.KNPS = er.KNPS + " (cached)"
+	er.KNPS = er.KNPS + " (local cache)"
 
 	return &er, nil
+}
+
+type CloudPV struct {
+	CP    int    `json:"cp"`
+	Mate  int    `json:"mate"`
+	Moves string `json:"moves"`
+}
+
+type CloudEvalResp struct {
+	Error  string    `json:"error"`
+	Fen    string    `json:"fen"`
+	KNodes int       `json:"knodes"`
+	Depth  int       `json:"depth"`
+	PVs    []CloudPV `json:"pvs"`
+}
+
+func (evalCtx *EvalCtx) loadResultFromCloudCache(
+	staleOk bool) (*EvalResult, error) {
+
+	const BaseUrl = "https://lichess.org/api/cloud-eval"
+
+	position := url.QueryEscape(evalCtx.position.String())
+	queryParams := fmt.Sprintf("?fen=%v", position)
+	requestURL, err := url.Parse(BaseUrl + queryParams)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", requestURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var cloudResp CloudEvalResp
+	err = json.Unmarshal(body, &cloudResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if cloudResp.Error != "" {
+		if cloudResp.Error == "Not found" {
+			return nil, ErrCacheMiss
+		} // else
+		return nil, fmt.Errorf("cloud fetch error: %v", cloudResp.Error)
+	}
+
+	var evalResult EvalResult
+	evalResult.CP = cloudResp.PVs[0].CP
+	evalResult.Mate = cloudResp.PVs[0].Mate
+	moveList := strings.Split(cloudResp.PVs[0].Moves, " ")
+	evalResult.BestMove = moveList[0]
+	evalResult.Depth = cloudResp.Depth
+	evalResult.EngVersion = 14.1 // not in response; hardcode for now
+	evalResult.KNPS = fmt.Sprintf("%v (cloud cache)", cloudResp.KNodes)
+
+	if !staleOk && evalCtx.engVersion > evalResult.EngVersion {
+		return nil, ErrCacheStale
+	}
+
+	return &evalResult, nil
+}
+
+func selectBest(r1, r2 *EvalResult) *EvalResult {
+	if r1 == nil {
+		return r2
+	} else if r2 == nil {
+		return r1
+	} // else both non-nil
+
+	if r1.Depth > r2.Depth {
+		return r1
+	} else if r2.Depth > r1.Depth {
+		return r2
+	} // else both have equal depths
+
+	if r1.KNPS > r2.KNPS {
+		return r1
+	} else if r2.KNPS > r1.KNPS {
+		return r2
+	} // else both have equal KNPS
+
+	if r1.EngVersion > r2.EngVersion {
+		return r1
+	} // else
+
+	return r2
+}
+
+func selectBestErr(err1, err2 error) error {
+	if err1 == nil {
+		return err2
+	} else if err2 == nil {
+		return err1
+	} // else both non-nil
+
+	if errors.Is(err1, ErrCacheMiss) ||
+		(errors.Is(err1, ErrCacheStale) &&
+			!errors.Is(err2, ErrCacheMiss)) {
+		return err2
+	} // else
+
+	return err1
+}
+
+func atLeastOneSuccess(err1, err2 error) bool {
+	return (err1 == nil || err2 == nil)
+}
+
+func (evalCtx *EvalCtx) loadResultFromCache(
+	staleOk bool) (*EvalResult, error) {
+
+	localResult, err1 := evalCtx.loadResultFromLocalCache(staleOk)
+	cloudResult, err2 := evalCtx.loadResultFromCloudCache(staleOk)
+	if !atLeastOneSuccess(err1, err2) {
+		return nil, selectBestErr(err1, err2)
+	}
+
+	return selectBest(localResult, cloudResult), nil
 }
 
 func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
