@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	evalCtx := chesstools.NewEvalCtx()
+	evalCtx := chesstools.NewEvalCtx(false)
 	defer evalCtx.Close()
 
 	parseArgs(evalCtx)

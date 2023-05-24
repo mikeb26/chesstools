@@ -347,7 +347,7 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	gameNumLocal int, fen string, moveCount int, m string) bool {
 
 	if rv.evalCtx == nil {
-		rv.evalCtx = chesstools.NewEvalCtx().WithFEN(fen).WithEvalDepth(rv.scoreDepth).WithCacheOnly(rv.cacheOnly)
+		rv.evalCtx = chesstools.NewEvalCtx(rv.cacheOnly).WithFEN(fen).WithEvalDepth(rv.scoreDepth)
 		rv.evalCtx.InitEngine()
 	} else {
 		rv.evalCtx.SetFEN(fen)

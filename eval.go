@@ -59,10 +59,13 @@ type EvalCtx struct {
 }
 
 func (evalCtx *EvalCtx) Close() {
-	evalCtx.engine.Close()
-	evalCtx.engine = nil
+	if evalCtx.engine != nil {
+		evalCtx.engine.Close()
+		evalCtx.engine = nil
+	}
 }
-func NewEvalCtx() *EvalCtx {
+
+func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv := &EvalCtx{}
 
 	rv.turn = chess.White
@@ -75,12 +78,14 @@ func NewEvalCtx() *EvalCtx {
 	rv.evalDepth = DefaultDepth
 	rv.g = nil
 	rv.position = nil
-	rv.cacheOnly = false
+	rv.cacheOnly = cacheOnlyIn
 
 	var err error
-	rv.engine, err = uci.New("stockfish")
-	if err != nil {
-		panic("Unable to initialize stockfish")
+	if cacheOnlyIn == false {
+		rv.engine, err = uci.New("stockfish")
+		if err != nil {
+			panic("Unable to initialize stockfish")
+		}
 	}
 
 	return rv
@@ -126,11 +131,6 @@ func (evalCtx *EvalCtx) WithEvalDepth(evalDepth int) *EvalCtx {
 	return evalCtx
 }
 
-func (evalCtx *EvalCtx) WithCacheOnly(cacheOnly bool) *EvalCtx {
-	evalCtx.cacheOnly = cacheOnly
-	return evalCtx
-}
-
 func (evalCtx *EvalCtx) GetPosition() string {
 	return evalCtx.position.String()
 }
@@ -148,45 +148,47 @@ func getSystemMem() uint64 {
 func (evalCtx *EvalCtx) InitEngine() {
 	evalCtx.g = evalCtx.loadPgnOrFEN()
 
-	err := evalCtx.engine.Renice()
-	if err != nil {
-		panic(err)
-	}
+	if evalCtx.engine != nil {
+		err := evalCtx.engine.Renice()
+		if err != nil {
+			panic(err)
+		}
 
-	err = evalCtx.engine.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame)
-	if err != nil {
-		panic(err)
-	}
+		err = evalCtx.engine.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame)
+		if err != nil {
+			panic(err)
+		}
 
-	engineVer := evalCtx.engine.ID()["name"]
-	engineVerParts := strings.Split(engineVer, " ")
-	if len(engineVerParts) < 2 {
-		panic("Cannot find stockfish version number")
-	}
-	evalCtx.engVersion, err = strconv.ParseFloat(engineVerParts[1], 64)
-	if err != nil {
-		panic("Cannot parse stockfish version number")
-	}
+		engineVer := evalCtx.engine.ID()["name"]
+		engineVerParts := strings.Split(engineVer, " ")
+		if len(engineVerParts) < 2 {
+			panic("Cannot find stockfish version number")
+		}
+		evalCtx.engVersion, err = strconv.ParseFloat(engineVerParts[1], 64)
+		if err != nil {
+			panic("Cannot parse stockfish version number")
+		}
 
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
-	if err != nil {
-		panic(err)
-	}
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Hash", Value: strconv.FormatUint(evalCtx.hashSizeInMiB, 10)})
-	if err != nil {
-		panic(err)
-	}
+		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
+		if err != nil {
+			panic(err)
+		}
+		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Hash", Value: strconv.FormatUint(evalCtx.hashSizeInMiB, 10)})
+		if err != nil {
+			panic(err)
+		}
 
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
-	if err != nil {
-		panic(err)
-	}
+		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
+		if err != nil {
+			panic(err)
+		}
 
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
-	if err != nil {
-		panic(err)
+		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
+		if err != nil {
+			panic(err)
+		}
+		//err = evalCtx.engine.Run(uci.CmdSetOption{Name: "MultiPV", Value: "5"})
 	}
-	//err = evalCtx.engine.Run(uci.CmdSetOption{Name: "MultiPV", Value: "5"})
 
 	if evalCtx.fen != "" {
 		evalCtx.position = evalCtx.g.Position()
@@ -203,9 +205,12 @@ func (evalCtx *EvalCtx) InitEngine() {
 		}
 		evalCtx.position = p[halfMoveIndex]
 	}
-	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
-	if err != nil {
-		panic(err)
+
+	if evalCtx.engine != nil {
+		err := evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -217,9 +222,11 @@ func (evalCtx *EvalCtx) SetFEN(fen string) *EvalCtx {
 	}
 	evalCtx.g = chess.NewGame(fenCheck)
 	evalCtx.position = evalCtx.g.Position()
-	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
-	if err != nil {
-		panic(err)
+	if evalCtx.engine != nil {
+		err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return evalCtx
@@ -501,6 +508,9 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		return nil
 	}
 
+	if evalCtx.engine == nil {
+		panic("eval: BUG: engine should be non-nil for uncached eval")
+	}
 	if evalCtx.evalDepth != DefaultDepth {
 		err = evalCtx.engine.Run(uci.CmdGo{Depth: evalCtx.evalDepth})
 	} else {
