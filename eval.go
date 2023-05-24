@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -313,38 +314,57 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	queryParams := fmt.Sprintf("?fen=%v", position)
 	requestURL, err := url.Parse(BaseUrl + queryParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("eval: failed to parse url:%w", err)
 	}
 
-	req, err := http.NewRequest("GET", requestURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/json")
+	var resp *http.Response
+	for {
+		req, err := http.NewRequest("GET", requestURL.String(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("eval: failed to create request:%w", err)
+		}
+		req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+		client := &http.Client{}
+		resp, err = client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("eval: GET %v failed: %w",
+				requestURL.String(), err)
+		}
+		if resp.StatusCode == 429 {
+			// https://lichess.org/page/api-tips says wait a minute
+			fmt.Fprintf(os.Stderr, "429 recv; sleeping 1min...")
+
+			io.Copy(ioutil.Discard, resp.Body)
+			resp.Body.Close()
+			client = nil
+			resp = nil
+			req = nil
+
+			time.Sleep(1 * time.Minute)
+			continue
+		}
+
+		defer resp.Body.Close()
+		break
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("eval: failed to read http response: %w", err)
 	}
 
 	var cloudResp CloudEvalResp
 	err = json.Unmarshal(body, &cloudResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("eval: failed to unmarshel json response.\n\terr:%w\n\tcode:%v\n\tbody:%v", err, resp.StatusCode, string(body))
 	}
 
 	if cloudResp.Error != "" {
 		if cloudResp.Error == "Not found" {
 			return nil, ErrCacheMiss
 		} // else
-		return nil, fmt.Errorf("cloud fetch error: %v", cloudResp.Error)
+		return nil, fmt.Errorf("eval: cloud fetch error: %v", cloudResp.Error)
 	}
 
 	var evalResult EvalResult
