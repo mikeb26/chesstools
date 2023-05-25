@@ -15,5 +15,5 @@ func main() {
 	}
 
 	g := chess.NewGame(pgn)
-	fmt.Printf("%v\n", g.FEN())
+	fmt.Printf("%v\n", g.Position().XFENString())
 }

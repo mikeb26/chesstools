@@ -2,6 +2,7 @@ package chesstools
 
 import (
 	_ "embed"
+	"strconv"
 
 	"encoding/json"
 	"fmt"
@@ -28,6 +29,8 @@ type MoveStats struct {
 	WhiteWins int    `json:"white"`
 	BlackWins int    `json:"black"`
 	Draws     int    `json:"draws"`
+
+	Eval *EvalResult //only valid when getEval==true
 }
 
 type OpeningResp struct {
@@ -43,6 +46,8 @@ type OpeningGame struct {
 	openingName string
 	OpeningResp *OpeningResp
 	Threshold   float64 // percent of games
+
+	eval bool
 }
 
 func (openingGame *OpeningGame) String() string {
@@ -54,12 +59,26 @@ func (openingGame *OpeningGame) Turn() chess.Color {
 }
 
 func NewOpeningGame(parent *OpeningGame, move string, getTop bool,
-	gapThreshold float64) (*OpeningGame, error) {
+	threshold float64, getEval bool) (*OpeningGame, error) {
+	return NewOpeningGameActual(parent, nil, move, getTop, threshold, getEval)
+}
+
+func NewOpeningGame2(game *chess.Game, getTop bool,
+	threshold float64, getEval bool) (*OpeningGame, error) {
+	return NewOpeningGameActual(nil, game, "", getTop, threshold, getEval)
+}
+
+func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
+	getTop bool, threshold float64, getEval bool) (*OpeningGame, error) {
 
 	var openingGame OpeningGame
-	openingGame.Threshold = gapThreshold
+	openingGame.Threshold = threshold
 	if parent == nil {
-		openingGame.G = chess.NewGame()
+		if game == nil {
+			openingGame.G = chess.NewGame()
+		} else {
+			openingGame.G = game
+		}
 	} else {
 		parentMovesStr := parent.G.String()
 		parentMovesReader := strings.NewReader(parentMovesStr)
@@ -91,7 +110,7 @@ func NewOpeningGame(parent *OpeningGame, move string, getTop bool,
 		}
 	}
 	var ok bool
-	openingGame.openingName, ok = openingNames[openingGame.G.FEN()]
+	openingGame.openingName, ok = openingNames[openingGame.G.Position().XFENString()]
 	if !ok {
 		if parent != nil {
 			openingGame.openingName = parent.openingName
@@ -99,22 +118,25 @@ func NewOpeningGame(parent *OpeningGame, move string, getTop bool,
 			openingGame.openingName = ""
 		}
 	}
+	openingGame.eval = getEval
+	if getEval {
+		err = openingGame.getEvalsForResp()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &openingGame, nil
 }
 
-func (openingGame *OpeningGame) ChoicesString() string {
+func (openingGame *OpeningGame) ChoicesString(ignoreThreshold bool) string {
 	var sb strings.Builder
 
 	total := openingGame.OpeningResp.Total()
 
-	sb.WriteString(fmt.Sprintf("white:%v black:%v draws:%v\n",
-		PctS(openingGame.OpeningResp.WhiteWins, total),
-		PctS(openingGame.OpeningResp.BlackWins, total),
-		PctS(openingGame.OpeningResp.Draws, total)))
-	for _, mv := range openingGame.OpeningResp.Moves {
+	for idx, mv := range openingGame.OpeningResp.Moves {
 		tmpGame, err := NewOpeningGame(openingGame, mv.San, false,
-			openingGame.Threshold)
+			openingGame.Threshold, false)
 		var gameName string
 		if err != nil {
 			gameName = fmt.Sprintf("err:%v", err)
@@ -123,12 +145,25 @@ func (openingGame *OpeningGame) ChoicesString() string {
 		}
 
 		mvTotal := mv.Total()
-		if Pct(mvTotal, total) < openingGame.Threshold {
+		if !ignoreThreshold && Pct(mvTotal, total) < openingGame.Threshold {
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("  %v(%v) white:%v black:%v draws:%v (%v)\n",
-			mv.San, PctS(mvTotal, total), PctS(mv.WhiteWins, mvTotal),
-			PctS(mv.BlackWins, mvTotal), PctS(mv.Draws, mvTotal), gameName))
+		sb.WriteString(fmt.Sprintf("  %v. %v (%v) [%v]\n", idx, mv.San,
+			PctS(mvTotal, total), gameName))
+		sb.WriteString(fmt.Sprintf("      Winning Percentages: ["))
+		sb.WriteString(fmt.Sprintf("White:%v ", PctS(mv.WhiteWins, mvTotal)))
+		sb.WriteString(fmt.Sprintf("Black:%v ", PctS(mv.BlackWins, mvTotal)))
+		sb.WriteString(fmt.Sprintf("Draws:%v]\n", PctS(mv.Draws, mvTotal)))
+
+		if openingGame.eval && mv.Eval != nil {
+			sb.WriteString(fmt.Sprintf("      Eval: "))
+			if mv.Eval.Mate != 0 {
+				sb.WriteString(fmt.Sprintf("Mate:%v ", mv.Eval.Mate))
+			} else {
+				sb.WriteString(fmt.Sprintf("%v ", mv.Eval.CP))
+			}
+			sb.WriteString(fmt.Sprintf("(depth:%v)\n", mv.Eval.Depth))
+		}
 	}
 
 	return sb.String()
@@ -172,6 +207,7 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 
 	var openingResp OpeningResp
 	var resp *http.Response
+	retryCount := 0
 
 	for {
 		req, err := http.NewRequest("GET", requestURL.String(), nil)
@@ -189,7 +225,9 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 		}
 		if resp.StatusCode == 429 {
 			// https://lichess.org/page/api-tips says wait a minute
-			fmt.Fprintf(os.Stderr, "429 recv; sleeping 1min...")
+			fmt.Fprintf(os.Stderr, "opening: 429 recv; sleeping 1min retry:%v...",
+				retryCount)
+			retryCount++
 
 			io.Copy(ioutil.Discard, resp.Body)
 			resp.Body.Close()
@@ -230,4 +268,43 @@ func init() {
 		name := openingFields[1]
 		openingNames[fen] = name
 	}
+}
+
+func (openingGame *OpeningGame) getEvalsForResp() error {
+	evalCtx := NewEvalCtx(true)
+	defer evalCtx.Close()
+
+	for idx, mv := range openingGame.OpeningResp.Moves {
+		tmpGame, err := NewOpeningGame(openingGame, mv.San, false,
+			openingGame.Threshold, false)
+		if err != nil {
+			return err
+		}
+		evalCtx.SetFEN(tmpGame.G.FEN())
+		openingGame.OpeningResp.Moves[idx].Eval = evalCtx.Eval()
+	}
+
+	return nil
+}
+
+func getMoveCountFromFEN(fen string) int {
+	// move count is encoded as the last token in the fen
+	fenTokens := strings.Split(fen, " ")
+	lastTokenIdx := len(fenTokens) - 1
+
+	ret, _ := strconv.ParseInt(fenTokens[lastTokenIdx], 10, 32)
+	return int(ret)
+}
+
+func (openingGame *OpeningGame) GetMoveCount() int {
+	return getMoveCountFromFEN(openingGame.G.Position().XFENString())
+}
+
+func GetOpeningName(fen string) string {
+	openingName, ok := openingNames[fen]
+	if !ok {
+		return ""
+	}
+
+	return openingName
 }

@@ -270,6 +270,9 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	}
 
 	err = scanner.Err()
+	if errors.Is(err, io.EOF) {
+		err = nil
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -280,8 +283,14 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	staleOk bool) (*EvalResult, error) {
 
-	cacheFileName := fen2CacheFileName(evalCtx.position.String())
-	cacheFilePath := fen2CacheFilePath(evalCtx.position.String())
+	fen := evalCtx.position.XFENString()
+	var err error
+	fen, err = NormalizeFEN(fen)
+	if err != nil {
+		return nil, err
+	}
+	cacheFileName := fen2CacheFileName(fen)
+	cacheFilePath := fen2CacheFilePath(fen)
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	encodedResult, err := ioutil.ReadFile(cacheFileFullName)
@@ -323,17 +332,24 @@ type CloudEvalResp struct {
 
 func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	staleOk bool) (*EvalResult, error) {
-
 	const BaseUrl = "https://lichess.org/api/cloud-eval"
 
-	position := url.QueryEscape(evalCtx.position.String())
-	queryParams := fmt.Sprintf("?fen=%v", position)
+	fen := evalCtx.position.XFENString()
+	var err error
+	fen, err = NormalizeFEN(fen)
+	if err != nil {
+		return nil, err
+	}
+	position := url.QueryEscape(fen)
+	queryParams := fmt.Sprintf("?fen=%v&multiPv=1&variant=standard", position)
 	requestURL, err := url.Parse(BaseUrl + queryParams)
 	if err != nil {
 		return nil, fmt.Errorf("eval: failed to parse url:%w", err)
 	}
 
 	var resp *http.Response
+	retryCount := 0
+
 	for {
 		req, err := http.NewRequest("GET", requestURL.String(), nil)
 		if err != nil {
@@ -349,7 +365,9 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 		}
 		if resp.StatusCode == 429 {
 			// https://lichess.org/page/api-tips says wait a minute
-			fmt.Fprintf(os.Stderr, "429 recv; sleeping 1min...")
+			fmt.Fprintf(os.Stderr, "eval: 429 recv; sleeping 1min retry:%v...",
+				retryCount)
+			retryCount++
 
 			io.Copy(ioutil.Discard, resp.Body)
 			resp.Body.Close()
@@ -387,7 +405,15 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	evalResult.CP = cloudResp.PVs[0].CP
 	evalResult.Mate = cloudResp.PVs[0].Mate
 	moveList := strings.Split(cloudResp.PVs[0].Moves, " ")
-	evalResult.BestMove = moveList[0]
+	uciNotation := chess.UCINotation{}
+	bestMove, err := uciNotation.Decode(evalCtx.position, moveList[0])
+	if err != nil {
+		panic(fmt.Sprintf("BUG: could not decode uci str %v: %v",
+			moveList[0], err))
+	}
+
+	algNotation := chess.AlgebraicNotation{}
+	evalResult.BestMove = algNotation.Encode(evalCtx.position, bestMove)
 	evalResult.Depth = cloudResp.Depth
 	evalResult.EngVersion = 14.1 // not in response; hardcode for now
 	evalResult.KNPS = fmt.Sprintf("%v (cloud cache)", cloudResp.KNodes)
@@ -399,30 +425,15 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	return &evalResult, nil
 }
 
-func selectBest(r1, r2 *EvalResult) *EvalResult {
-	if r1 == nil {
-		return r2
-	} else if r2 == nil {
-		return r1
+func selectBest(local, cloud *EvalResult) *EvalResult {
+	if local == nil {
+		return cloud
+	} else if cloud == nil {
+		return local
 	} // else both non-nil
 
-	if r1.Depth > r2.Depth {
-		return r1
-	} else if r2.Depth > r1.Depth {
-		return r2
-	} // else both have equal depths
-
-	if r1.KNPS > r2.KNPS {
-		return r1
-	} else if r2.KNPS > r1.KNPS {
-		return r2
-	} // else both have equal KNPS
-
-	if r1.EngVersion > r2.EngVersion {
-		return r1
-	} // else
-
-	return r2
+	// for now just use the local one
+	return local
 }
 
 func selectBestErr(err1, err2 error) error {
@@ -458,8 +469,8 @@ func (evalCtx *EvalCtx) loadResultFromCache(
 }
 
 func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
-	cacheFileName := fen2CacheFileName(evalCtx.position.String())
-	cacheFilePath := fen2CacheFilePath(evalCtx.position.String())
+	cacheFileName := fen2CacheFileName(evalCtx.position.XFENString())
+	cacheFilePath := fen2CacheFilePath(evalCtx.position.XFENString())
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	_ = os.Remove(cacheFileFullName)
@@ -543,12 +554,22 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		return er
 	}
 
-	//var notation chess.AlgebraicNotation
+	// results.BestMove doesn't include correct tags, so do this encode/decode
+	// dance
+	algNotation := chess.AlgebraicNotation{}
+	uciNotation := chess.UCINotation{}
+
+	bestMvUciStr := uciNotation.Encode(evalCtx.position, results.BestMove)
+	bestMoveFixed, err := uciNotation.Decode(evalCtx.position, bestMvUciStr)
+	if err != nil {
+		panic(fmt.Sprintf("BUG: could not re-encode decoded uci str %v: %v",
+			bestMvUciStr, err))
+	}
+
 	er = &EvalResult{
-		CP:   results.Info.Score.CP,
-		Mate: results.Info.Score.Mate,
-		//BestMove: notation.Encode(evalCtx.position, results.BestMove)
-		BestMove:   results.BestMove.String(),
+		CP:         results.Info.Score.CP,
+		Mate:       results.Info.Score.Mate,
+		BestMove:   algNotation.Encode(evalCtx.position, bestMoveFixed),
 		Depth:      results.Info.Depth,
 		KNPS:       fmt.Sprintf("%v", results.Info.NPS/1000),
 		EngVersion: evalCtx.engVersion,

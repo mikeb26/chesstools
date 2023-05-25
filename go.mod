@@ -1,10 +1,7 @@
 module github.com/mikeb26/chesstools
 
-go 1.13
+go 1.20
 
-require (
-	github.com/notnil/chess v1.5.0
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-)
+replace github.com/notnil/chess => github.com/mikeb26/chess v1.5.1-0.20230529170343-56481453ee10
 
-replace github.com/notnil/chess v1.5.0 => github.com/mikeb26/chess v1.6.2
+require github.com/notnil/chess v0.0.0-00010101000000-000000000000

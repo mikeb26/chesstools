@@ -94,3 +94,40 @@ func openPgnLichess(url string) (io.ReadCloser, error) {
 
 	return resp.Body, nil
 }
+
+func NormalizeFEN(fen string) (string, error) {
+	// for opening repertoire purposes zero the halfmove clock field and reset
+	// the full move number field from the FEN as these may differ across
+	// variations/transpositions. keep castling rights, active color, and
+	// en-passant square as all of these are material. for a future release
+	// consider situations where the chosen move in a position with castling
+	// rights is not a castle as potentially equivalent to the same position
+	// without castling rights. similarly for en-passant where the chosen
+	// move is not an en-passant capture. FEN reference:
+	// https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+
+	fenFields := strings.Split(fen, " ")
+	if len(fenFields) != 6 {
+		return "", fmt.Errorf("Invalid FEN:{%v} expecting 6 fields but found %v", fen, len(fenFields))
+	}
+
+	var sb strings.Builder
+	var err error
+	for ii := 0; ii < 4; ii++ {
+		_, err = sb.WriteString(fenFields[ii])
+		if err != nil {
+			return "", err
+		}
+
+		_, err = sb.WriteRune(' ')
+		if err != nil {
+			return "", err
+		}
+	}
+	_, err = sb.WriteString("0 1")
+	if err != nil {
+		return "", err
+	}
+
+	return sb.String(), nil
+}

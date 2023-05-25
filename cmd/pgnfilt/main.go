@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ func NewFiltCtx(pgns []string, optsIn chess.ScannerOpts) *FiltCtx {
 }
 
 func main() {
-	opts := chess.ScannerOptsDefault
+	opts := chess.ScannerOpts{}
 	pgnList, err := parseArgs(&opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
@@ -53,8 +54,8 @@ func main() {
 func parseArgs(opts *chess.ScannerOpts) ([]string, error) {
 	f := flag.NewFlagSet("pgnfilt", flag.ExitOnError)
 
-	f.Uint64Var(&opts.MinELO, "minelo", 0, "minimum ELO of both players")
-	f.Uint64Var(&opts.MinTimeInSecs, "mintime", 0, "minimum clock in seconds")
+	//	f.Uint64Var(&opts.MinELO, "minelo", 0, "minimum ELO of both players")
+	//	f.Uint64Var(&opts.MinTimeInSecs, "mintime", 0, "minimum clock in seconds")
 	f.Parse(os.Args[1:])
 
 	if len(f.Args()) == 0 {
@@ -86,13 +87,22 @@ func (filtCtx *FiltCtx) processOnePGN(f io.Reader) error {
 	var err error
 	for scanner.Scan() {
 		g := scanner.Next()
+		if len(g.Moves()) == 0 {
+			continue
+		}
+
 		err = filtCtx.processOneGame(g)
 		if err != nil {
 			return err
 		}
 	}
 
-	return scanner.Err()
+	err = scanner.Err()
+	if errors.Is(err, io.EOF) {
+		err = nil
+	}
+
+	return err
 }
 
 func (filtCtx *FiltCtx) processOneGame(g *chess.Game) error {

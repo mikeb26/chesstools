@@ -10,7 +10,7 @@ import (
 func (rv *RepValidator) selectMove(openingGame *chesstools.OpeningGame,
 	totalPct float64) (string, error) {
 
-	normalizedFen, err := normalizeFEN(openingGame.G.FEN())
+	normalizedFen, err := chesstools.NormalizeFEN(openingGame.G.FEN())
 	if err != nil {
 		return "", fmt.Errorf("Failed to normalize FEN %v: %w",
 			openingGame.G.FEN(), err)
@@ -41,7 +41,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 			return false, nil
 		}
 		childGame, err := chesstools.NewOpeningGame(openingGame, mv, true,
-			openingGame.Threshold)
+			openingGame.Threshold, false)
 		if err != nil {
 			return false, err
 		}
@@ -58,7 +58,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 		pushedOne = true
 
 		childGame, err := chesstools.NewOpeningGame(openingGame, mv.San, true,
-			openingGame.Threshold)
+			openingGame.Threshold, false)
 		if err != nil {
 			return false, err
 		}
@@ -82,7 +82,8 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 }
 
 func (rv *RepValidator) checkForGaps() error {
-	openingGame, err := chesstools.NewOpeningGame(nil, "", true, rv.gapThreshold)
+	openingGame, err := chesstools.NewOpeningGame(nil, "", true,
+		rv.gapThreshold, false)
 	if err != nil {
 		return err
 	}

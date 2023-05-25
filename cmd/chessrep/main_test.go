@@ -52,20 +52,20 @@ func TestLoad(t *testing.T) {
 		t.Fatalf("Expected 3 whiteConflicts but got %v", len(rv.whiteConflictList))
 	}
 	if len(rv.blackConflictList) != 10 {
-		t.Fatalf("Expected 3 blackConflicts but got %v", len(rv.blackConflictList))
+		t.Fatalf("Expected 10 blackConflicts but got %v", len(rv.blackConflictList))
 	}
-	if rv.whiteConflictList[0].existingMove.move != "d1e2" ||
-		rv.whiteConflictList[0].conflictMove.move != "c1f4" {
+	if rv.whiteConflictList[0].existingMove.move != "Qe2" ||
+		rv.whiteConflictList[0].conflictMove.move != "Bf4" {
 		t.Fatalf("1st conflict does not match")
 	}
-	if rv.whiteConflictList[1].existingMove.move != "f2f4" ||
-		rv.whiteConflictList[1].conflictMove.move != "f1d3" {
+	if rv.whiteConflictList[1].existingMove.move != "f4" ||
+		rv.whiteConflictList[1].conflictMove.move != "Bd3" {
 		t.Fatalf("2nd conflict does not match existing:%v conflict:%v",
 			rv.whiteConflictList[1].existingMove.move,
 			rv.whiteConflictList[1].conflictMove.move)
 	}
-	if rv.whiteConflictList[2].existingMove.move != "e1g1" ||
-		rv.whiteConflictList[2].conflictMove.move != "e4e5" {
+	if rv.whiteConflictList[2].existingMove.move != "O-O" ||
+		rv.whiteConflictList[2].conflictMove.move != "e5" {
 		t.Fatalf("3rd conflict does not match existing:%v conflict:%v",
 			rv.whiteConflictList[2].existingMove.move,
 			rv.whiteConflictList[2].conflictMove.move)

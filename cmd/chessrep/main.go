@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -28,14 +29,22 @@ type RepValidator struct {
 	scoreExceptionsFile string
 	pgnFileList         []string
 	moveMap             map[string]MoveMapValue
-	uniquePosCount      uint
-	dupPosCount         uint
-	conflictPosCount    uint
-	gameList            []*chess.Game
-	whiteConflictList   []Conflict
-	blackConflictList   []Conflict
-	evalCtx             *chesstools.EvalCtx
-	cacheOnly           bool
+	// positions counts do not include the final or "leaf" position in a
+	// repertoire. e.g. a white opening book consisting of just:
+	// 1. e4 d5 2. Nf3 Nc6 3. Bb5
+	// would be counted as having 4 unique positions, which would include
+	// the starting position, the position after d5, the position after Nf3,
+	// and the position after Nc6, but not the final position after Bb5. Also
+	// note that move number and half-move clock are ignored for the purposes
+	// of testing uniqueness
+	uniquePosCount    uint
+	dupPosCount       uint
+	conflictPosCount  uint
+	gameList          []*chess.Game
+	whiteConflictList []Conflict
+	blackConflictList []Conflict
+	evalCtx           *chesstools.EvalCtx
+	cacheOnly         bool
 }
 
 type MoveMapValue struct {
@@ -193,7 +202,7 @@ func (rv *RepValidator) loadExceptions() error {
 			rv.scoreExceptionsFile, err)
 	}
 	for _, e := range exceptions {
-		normalizedFen, err := normalizeFEN(e.FEN)
+		normalizedFen, err := chesstools.NormalizeFEN(e.FEN)
 		if err != nil {
 			return fmt.Errorf("Failed to parse FEN %v in exceptions file %v: %w",
 				e.FEN, rv.scoreExceptionsFile, err)
@@ -254,6 +263,9 @@ func (rv *RepValidator) processOnePGN(f io.Reader, pgnFilename string) error {
 	ii := 1
 	for scanner.Scan() {
 		g := scanner.Next()
+		if len(g.Moves()) == 0 {
+			continue
+		}
 		err = rv.processOneGame(g, pgnFilename, ii)
 		if err != nil {
 			return err
@@ -261,7 +273,12 @@ func (rv *RepValidator) processOnePGN(f io.Reader, pgnFilename string) error {
 		ii++
 	}
 
-	return scanner.Err()
+	err = scanner.Err()
+	if errors.Is(err, io.EOF) {
+		err = nil
+	}
+
+	return err
 }
 
 func (rv *RepValidator) processOneGame(g *chess.Game, pgnFilename string,
@@ -277,9 +294,8 @@ func (rv *RepValidator) processOneGame(g *chess.Game, pgnFilename string,
 			continue
 		}
 
-		//var notation chess.AlgebraicNotation
-		//m = notation.Encode(p, moves[ii])
-		m = moves[ii].String()
+		encoder := chess.AlgebraicNotation{}
+		m = encoder.Encode(p, moves[ii])
 		err := rv.processOneMove(g, pgnFilename, gameNumLocal, p, moveCount, m,
 			&scoreFutureMovesThisGame)
 		if err != nil {
@@ -292,43 +308,6 @@ func (rv *RepValidator) processOneGame(g *chess.Game, pgnFilename string,
 	}
 
 	return nil
-}
-
-func normalizeFEN(fen string) (string, error) {
-	// for opening repertoire purposes zero the halfmove clock field and reset
-	// the full move number field from the FEN as these may differ across
-	// variations/transpositions. keep castling rights, active color, and
-	// en-passant square as all of these are material. for a future release
-	// consider situations where the chosen move in a position with castling
-	// rights is not a castle as potentially equivalent to the same position
-	// without castling rights. similarly for en-passant where the chosen
-	// move is not an en-passant capture. FEN reference:
-	// https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-
-	fenFields := strings.Split(fen, " ")
-	if len(fenFields) != 6 {
-		return "", fmt.Errorf("Invalid FEN:{%v} expecting 6 fields but found %v", fen, len(fenFields))
-	}
-
-	var sb strings.Builder
-	var err error
-	for ii := 0; ii < 4; ii++ {
-		_, err = sb.WriteString(fenFields[ii])
-		if err != nil {
-			return "", err
-		}
-
-		_, err = sb.WriteRune(' ')
-		if err != nil {
-			return "", err
-		}
-	}
-	_, err = sb.WriteString("0 1")
-	if err != nil {
-		return "", err
-	}
-
-	return sb.String(), nil
 }
 
 func sprintMove(moveCount int, m string, c chess.Color) string {
@@ -352,6 +331,7 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	} else {
 		rv.evalCtx.SetFEN(fen)
 	}
+	fmt.Fprintf(os.Stderr, "Scoring mv %v in fen %v\n", m, fen)
 
 	er := rv.evalCtx.Eval()
 	if er == nil {
@@ -359,10 +339,12 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 			moveCount, getGameName(g), pgnFilename, gameNumLocal, fen)
 		return true
 	}
-	if er.BestMove != m {
+	// BestMove is occasionally missing the check+ symbol
+	if er.BestMove != m &&
+		er.BestMove+"+" != m {
 		exceptionsMove, ok := rv.scoreExceptions[fen]
 		if !ok {
-			fmt.Printf("Engine recommends %v instead of %v in game %v(%v#%v) FEN:%v\n",
+			fmt.Printf("** Engine recommends %v instead of %v in game %v(%v#%v) FEN:%v\n",
 				sprintMove(moveCount, er.BestMove, rv.color),
 				sprintMove(moveCount, m, rv.color), getGameName(g), pgnFilename,
 				gameNumLocal, fen)
@@ -392,7 +374,7 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 func (rv *RepValidator) processOneMove(g *chess.Game, pgnFilenameLocal string,
 	gameNumLocal int, p *chess.Position, moveCount int, m string,
 	scoreFutureMovesThisGame *bool) error {
-	fen, err := normalizeFEN(p.String())
+	fen, err := chesstools.NormalizeFEN(p.XFENString())
 	if err != nil {
 		return err
 	}
@@ -402,7 +384,6 @@ func (rv *RepValidator) processOneMove(g *chess.Game, pgnFilenameLocal string,
 		rv.moveMap[fen] = MoveMapValue{move: m, game: g, gameNum: gameNumLocal,
 			pgnFilename: pgnFilenameLocal}
 		rv.uniquePosCount++
-
 		if p.Turn() == rv.color && rv.scoreDepth != 0 && moveCount > 3 {
 			if *scoreFutureMovesThisGame {
 				*scoreFutureMovesThisGame = rv.scoreMove(g, pgnFilenameLocal,
