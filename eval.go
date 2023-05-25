@@ -96,6 +96,15 @@ func (evalCtx *EvalCtx) WithPgnFile(pgnFile string) *EvalCtx {
 	return evalCtx
 }
 
+func (evalCtx *EvalCtx) WithCacheOnly() *EvalCtx {
+	evalCtx.cacheOnly = true
+	if evalCtx.engine != nil {
+		evalCtx.engine.Close()
+		evalCtx.engine = nil
+	}
+	return evalCtx
+}
+
 func (evalCtx *EvalCtx) WithFEN(fen string) *EvalCtx {
 	evalCtx.fen = fen
 	return evalCtx

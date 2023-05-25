@@ -21,6 +21,10 @@ func main() {
 }
 
 func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult) {
+	if er == nil {
+		fmt.Printf("Not found\n")
+		return
+	}
 	fmt.Printf("FEN: %v\n", evalCtx.GetPosition())
 	fmt.Printf("Best Move: %v\n", er.BestMove)
 	fmt.Printf("Score: cp: %v\n", er.CP)
@@ -48,6 +52,8 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	f.Uint64Var(&numThreads, "thread", 0, "<numThreads>")
 	var hashSizeInMiB uint64
 	f.Uint64Var(&hashSizeInMiB, "hash", 0, "<hashSizeInMiB>")
+	var cacheOnly bool
+	f.BoolVar(&cacheOnly, "cacheonly", false, "only return cached evaluations")
 
 	f.Parse(os.Args[1:])
 
@@ -95,5 +101,8 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	}
 	if hashSizeInMiB != 0 {
 		evalCtx = evalCtx.WithHashSize(hashSizeInMiB)
+	}
+	if cacheOnly {
+		evalCtx = evalCtx.WithCacheOnly()
 	}
 }
