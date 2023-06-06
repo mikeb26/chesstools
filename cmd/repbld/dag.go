@@ -25,6 +25,7 @@ type DagNode struct {
 	alreadyEmitted          bool
 	childrenAlreadyComputed bool
 	openingName             string
+	openingEco              string
 	openingNameHasSuffix    bool
 	moveListSet             MoveListAndStartFENSet
 	nodeId                  int
@@ -50,6 +51,7 @@ func NewDag(repColorIn chess.Color, outputModeIn OutputMode) *Dag {
 			alreadyEmitted:          false,
 			childrenAlreadyComputed: false,
 			openingName:             "",
+			openingEco:              "",
 			openingNameHasSuffix:    false,
 			moveListSet:             NewMoveListAndStartFENSet(),
 			nodeId:                  0,
@@ -85,12 +87,14 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 			alreadyEmitted:          false,
 			childrenAlreadyComputed: false,
 			openingName:             "",
+			openingEco:              "",
 			openingNameHasSuffix:    false,
 			moveListSet:             NewMoveListAndStartFENSet(),
 			nodeId:                  dag.numNodes,
 		}
 		dagNode.openingName, dagNode.openingNameHasSuffix =
 			dag.getOpeningName(parent, dagNode, mv)
+		dagNode.openingEco = dag.getOpeningEco(parent, dagNode)
 		if pos.Turn() == chess.White {
 			dagNode.moveNum++
 		}
@@ -230,10 +234,12 @@ func (dag *Dag) emitGameHeadersToOutput(output io.Writer, node *DagNode,
 		currentTime.UTC().Hour(), currentTime.UTC().Minute(),
 		currentTime.UTC().Second()))
 	fmt.Fprintf(output, "[Variant \"%v\"]\n", "Standard")
+	fmt.Fprintf(output, "[ECO \"%v\"]\n", node.openingEco)
 	fmt.Fprintf(output, "[Annotator \"%v\"]\n",
 		"https://github.com/mikeb26/chesstools")
 	if fen != "" {
 		fmt.Fprintf(output, "[FEN \"%v\"]\n", fen)
+		fmt.Fprintf(output, "[SetUp \"%v\"]\n", "1")
 	}
 }
 
@@ -279,4 +285,14 @@ func (dag *Dag) getOpeningName(parent *DagNode, node *DagNode,
 	opening = fmt.Sprintf("%v, %v %v", parent.openingName, mvNumStr, mv)
 
 	return opening, true
+}
+
+func (dag *Dag) getOpeningEco(parent *DagNode, node *DagNode) string {
+
+	openingEco := chesstools.GetOpeningEco(node.position.XFENString())
+	if openingEco != "" {
+		return openingEco
+	}
+
+	return parent.openingEco
 }

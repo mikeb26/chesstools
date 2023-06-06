@@ -1,10 +1,3 @@
 Copied from https://github.com/lichess-org/chess-openings.git
 
-cat a.tsv b.tsv c.tsv d.tsv e.tsv > all.tsv
-cut -f3,2 -d$'\t' --output-delimiter=';' all.tsv | while read line
-do
-    IFS=';' read -ra fields <<< "$line"
-    fen=$(echo "${fields[1]}" | ../pgn2fen)
-    echo "$fen;${fields[0]}"
-done > all_fen.tsv
-cat extra_fen.tsv>>all_fen.tsv
+run ./build.sh to generate

@@ -21,7 +21,13 @@ const BaseUrl = "https://explorer.lichess.ovh/lichess"
 
 //go:embed eco/all_fen.tsv
 var openingNamesTsvText string
-var openingNames map[string]string
+
+type Opening struct {
+	eco  string
+	name string
+}
+
+var openings map[string]*Opening
 
 type MoveStats struct {
 	Uci       string `json:"uci"`
@@ -44,6 +50,7 @@ type OpeningGame struct {
 	G           *chess.Game
 	parent      *OpeningGame
 	openingName string
+	openingEco  string
 	OpeningResp *OpeningResp
 	Threshold   float64 // percent of games
 
@@ -110,13 +117,19 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 		}
 	}
 	var ok bool
-	openingGame.openingName, ok = openingNames[openingGame.G.Position().XFENString()]
+
+	opening, ok := openings[openingGame.G.Position().XFENString()]
 	if !ok {
 		if parent != nil {
 			openingGame.openingName = parent.openingName
+			openingGame.openingEco = parent.openingEco
 		} else {
 			openingGame.openingName = ""
+			openingGame.openingEco = ""
 		}
+	} else {
+		openingGame.openingName = opening.name
+		openingGame.openingEco = opening.eco
 	}
 	openingGame.eval = getEval
 	if getEval {
@@ -257,16 +270,20 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 }
 
 func init() {
-	openingNames = make(map[string]string)
+	openings = make(map[string]*Opening)
 	for _, openingRow := range strings.Split(openingNamesTsvText, "\n") {
 		openingFields := strings.Split(openingRow, ";")
-		if len(openingFields) != 2 {
+		if len(openingFields) != 3 {
 			continue
 		}
 
 		fen := openingFields[0]
-		name := openingFields[1]
-		openingNames[fen] = name
+		ecoIn := openingFields[1]
+		nameIn := openingFields[2]
+		openings[fen] = &Opening{
+			eco:  ecoIn,
+			name: nameIn,
+		}
 	}
 }
 
@@ -301,10 +318,19 @@ func (openingGame *OpeningGame) GetMoveCount() int {
 }
 
 func GetOpeningName(fen string) string {
-	openingName, ok := openingNames[fen]
+	opening, ok := openings[fen]
 	if !ok {
 		return ""
 	}
 
-	return openingName
+	return opening.name
+}
+
+func GetOpeningEco(fen string) string {
+	opening, ok := openings[fen]
+	if !ok {
+		return ""
+	}
+
+	return opening.eco
 }
