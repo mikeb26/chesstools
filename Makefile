@@ -28,6 +28,10 @@ deps:
 	go mod edit -replace=github.com/notnil/chess=github.com/mikeb26/chess@v1.9.0.mb2
 	GOPROXY=direct go mod tidy
 	go mod vendor
+	mkdir /tmp/openings
+	cd /tmp/openings; git clone https://github.com/lichess-org/chess-openings.git
+	cp /tmp/openings/chess-openings/*.tsv eco/
+	rm -rf /tmp/openings
 
 vendor: go.mod
 	go mod download
