@@ -223,10 +223,20 @@ func (dag *Dag) emitNode(output io.Writer, node *DagNode) {
 func (dag *Dag) emitGameHeadersToOutput(output io.Writer, node *DagNode,
 	fen string) {
 
+	currentTime := time.Now()
+
+	// https://en.wikipedia.org/wiki/Portable_Game_Notation
+	// "Seven Tag Roster" should be first
 	fmt.Fprintf(output, "[Event \"%v\"]\n", node.openingName)
+	fmt.Fprintf(output, "[Site \"%v\"]\n", "")
+	fmt.Fprintf(output, "[Date \"%v\"]\n", fmt.Sprintf("%v.%02v.%02v",
+		currentTime.Year(), int(currentTime.Month()),
+		currentTime.Day()))
+	fmt.Fprintf(output, "[Round \"%v\"]\n", "1")
+	fmt.Fprintf(output, "[White \"%v\"]\n", "")
+	fmt.Fprintf(output, "[Black \"%v\"]\n", "")
 	fmt.Fprintf(output, "[Result \"%v\"]\n", "*")
 
-	currentTime := time.Now()
 	fmt.Fprintf(output, "[UTCDate \"%v\"]\n", fmt.Sprintf("%v.%02v.%02v",
 		currentTime.UTC().Year(), int(currentTime.UTC().Month()),
 		currentTime.UTC().Day()))
