@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -177,8 +178,10 @@ func buildRep(color chess.Color,
 			}
 
 			if mv == "quit" {
+				dag.addNodesFromGame(openingGame.Parent.G)
 				return false, fmt.Errorf("told to quit")
 			} else if mv == "endvar" {
+				dag.addNodesFromGame(openingGame.Parent.G)
 				return false, nil
 			}
 			childGame, err = chesstools.NewOpeningGame(openingGame, mv, true,
@@ -253,16 +256,36 @@ func selectMove(openingGame *chesstools.OpeningGame,
 		return val.move, nil
 	}
 
-	fmt.Printf("Opening Name: %v\n", openingGame.String())
-	fmt.Printf("Current Moves: %v\n", openingGame.G.String())
+	numBookMoves := len(openingGame.OpeningResp.Moves)
+
+	fmt.Printf("\nOpening: %v (%v)\n", openingGame.String(), openingGame.Eco)
+	fmt.Printf("PGN:%v\nFEN: \"%v\"\n", openingGame.G.String(),
+		openingGame.G.Position().XFENString())
 	fmt.Printf("Percent of total: %v\n", chesstools.PctS2(totalPct))
-	fmt.Printf("Choices: \n%v\n", openingGame.ChoicesString(true))
+	fmt.Printf("Move Choices: \n%v", openingGame.ChoicesString(true))
+	fmt.Printf("  %v. End this variation\n", numBookMoves+1)
+	fmt.Printf("  %v. Quit\n", numBookMoves+2)
 
 	fmt.Printf("%v", openingGame.G.Position().Board().Draw())
-	fmt.Printf("Enter move: ")
-	mv := ""
-	fmt.Scanf("%s", &mv)
-	mv = strings.TrimSpace(mv)
+	fmt.Printf("\nEnter move: ")
+	selection := ""
+	fmt.Scanf("%s", &selection)
+	selection = strings.TrimSpace(selection)
+
+	// users can either enter the move directly or pick a number on the
+	// presented list
+	mv := selection
+	selectNum, err := strconv.ParseInt(selection, 10, 32)
+	if err == nil {
+		if selectNum >= 1 && selectNum <= int64(numBookMoves) {
+			mv = openingGame.OpeningResp.Moves[selectNum-1].San
+		} else if selectNum == int64(numBookMoves)+1 {
+			mv = "endvar"
+		} else if selectNum == int64(numBookMoves)+2 {
+			mv = "quit"
+		}
+	}
+
 	return mv, nil
 }
 

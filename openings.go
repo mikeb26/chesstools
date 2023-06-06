@@ -48,9 +48,9 @@ type OpeningResp struct {
 
 type OpeningGame struct {
 	G           *chess.Game
-	parent      *OpeningGame
+	Parent      *OpeningGame
 	openingName string
-	openingEco  string
+	Eco         string
 	OpeningResp *OpeningResp
 	Threshold   float64 // percent of games
 
@@ -109,7 +109,7 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 			return nil, err
 		}
 	}
-	openingGame.parent = parent
+	openingGame.Parent = parent
 	if getTop {
 		openingGame.OpeningResp, err = getTopMoves(openingGame.G)
 		if err != nil {
@@ -122,14 +122,14 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 	if !ok {
 		if parent != nil {
 			openingGame.openingName = parent.openingName
-			openingGame.openingEco = parent.openingEco
+			openingGame.Eco = parent.Eco
 		} else {
 			openingGame.openingName = ""
-			openingGame.openingEco = ""
+			openingGame.Eco = ""
 		}
 	} else {
 		openingGame.openingName = opening.name
-		openingGame.openingEco = opening.eco
+		openingGame.Eco = opening.eco
 	}
 	openingGame.eval = getEval
 	if getEval {
@@ -161,7 +161,7 @@ func (openingGame *OpeningGame) ChoicesString(ignoreThreshold bool) string {
 		if !ignoreThreshold && Pct(mvTotal, total) < openingGame.Threshold {
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("  %v. %v (%v) [%v]\n", idx, mv.San,
+		sb.WriteString(fmt.Sprintf("  %v. %v (%v) [%v]\n", idx+1, mv.San,
 			PctS(mvTotal, total), gameName))
 		sb.WriteString(fmt.Sprintf("      Winning Percentages: ["))
 		sb.WriteString(fmt.Sprintf("White:%v ", PctS(mv.WhiteWins, mvTotal)))
