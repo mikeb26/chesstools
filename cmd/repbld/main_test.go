@@ -24,10 +24,19 @@ func TestRepBld(t *testing.T) {
 	tmpFlattenedFile.Close()
 	defer os.Remove(tmpFlattenedFile.Name())
 
-	mainWork(chess.Black, 0.99, 14, "", "tests/test1.input.pgn",
-		tmpConsolidatedFile.Name(), Consolidated, true)
-	mainWork(chess.Black, 0.99, 14, "", "tests/test1.input.pgn",
-		tmpFlattenedFile.Name(), Flattened, true)
+	opts := RepBldOpts{
+		color:        chess.Black,
+		threshold:    0.99,
+		maxDepth:     14,
+		inputFile:    "tests/test1.input.pgn",
+		outputFile:   tmpConsolidatedFile.Name(),
+		outputMode:   Consolidated,
+		keepExisting: true,
+	}
+	mainWork(&opts)
+	opts.outputFile = tmpFlattenedFile.Name()
+	opts.outputMode = Flattened
+	mainWork(&opts)
 
 	tmpConsolidatedFile2, err := os.Open(tmpConsolidatedFile.Name())
 	if err != nil {

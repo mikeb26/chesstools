@@ -17,6 +17,17 @@ import (
 	"github.com/notnil/chess"
 )
 
+type RepBldOpts struct {
+	color        chess.Color
+	threshold    float64
+	maxDepth     int
+	startMoves   string
+	inputFile    string
+	outputFile   string
+	outputMode   OutputMode
+	keepExisting bool
+}
+
 type MoveMapValue struct {
 	move          string
 	game          *chess.Game
@@ -33,40 +44,39 @@ var dag *Dag
 
 const MinGames = 200
 
-func parseArgs(c *chess.Color, threshold *float64, maxDepth *int,
-	startMoves *string, inputFile *string, outputFile *string,
-	outputMode *OutputMode, keepExisting *bool) error {
+func parseArgs(opts *RepBldOpts) error {
 
 	f := flag.NewFlagSet("repbld", flag.ExitOnError)
 	var colorFlag string
 	var format string
 
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
-	f.StringVar(startMoves, "start", "", "<pgnStart> (starting moves)")
-	f.StringVar(inputFile, "input", "", "<existingRep>")
-	f.StringVar(outputFile, "output", "", "<outputFile>")
+	f.StringVar(&opts.startMoves, "start", "", "<pgnStart> (starting moves)")
+	f.StringVar(&opts.inputFile, "input", "", "<existingRep>")
+	f.StringVar(&opts.outputFile, "output", "", "<outputFile>")
 	f.StringVar(&format, "format", "", "<flattened|consolidated>")
-	f.Float64Var(threshold, "threshold", 0.02, "<thresholdPct>")
-	f.IntVar(maxDepth, "maxdepth", 14, "<max depth>")
-	f.BoolVar(keepExisting, "keepexisting", false, "<true|false>")
+	f.Float64Var(&opts.threshold, "threshold", 0.02, "<thresholdPct>")
+	f.IntVar(&opts.maxDepth, "maxdepth", 14, "<max depth>")
+	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
+
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
 		fallthrough
 	case "W":
-		*c = chess.White
+		opts.color = chess.White
 	case "BLACK":
 		fallthrough
 	case "B":
-		*c = chess.Black
+		opts.color = chess.Black
 	default:
 		return fmt.Errorf("please specify --color <white|black>")
 	}
 	switch strings.ToUpper(format) {
 	case "FLATTENED":
-		*outputMode = Flattened
+		opts.outputMode = Flattened
 	case "CONSOLIDATED":
-		*outputMode = Consolidated
+		opts.outputMode = Consolidated
 	default:
 		return fmt.Errorf("please specify --format <flattened|consolidated>")
 	}
@@ -75,78 +85,66 @@ func parseArgs(c *chess.Color, threshold *float64, maxDepth *int,
 }
 
 func main() {
-	var color chess.Color
-	var threshold float64
-	var maxDepth int
-	var startMoves string
-	var inputFile string
-	var outputFile string
-	var outputMode OutputMode
-	var keepExisting bool
-	err := parseArgs(&color, &threshold, &maxDepth, &startMoves, &inputFile,
-		&outputFile, &outputMode, &keepExisting)
+	var opts RepBldOpts
+	err := parseArgs(&opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)
 		return
 	}
 
-	mainWork(color, threshold, maxDepth, startMoves, inputFile, outputFile,
-		outputMode, keepExisting)
+	mainWork(&opts)
 }
 
-func mainWork(color chess.Color, threshold float64, maxDepth int,
-	startMoves string, inputFile string, outputFile string,
-	outputMode OutputMode, keepExisting bool) {
-
+func mainWork(opts *RepBldOpts) {
 	moveMap = make(map[string]*MoveMapValue)
-	dag = NewDag(color, outputMode)
+	dag = NewDag(opts.color, opts.outputMode)
 
-	_ = os.Remove(outputFile)
-	outFile, err := os.OpenFile(outputFile, os.O_CREATE|os.O_RDWR, 0644)
+	_ = os.Remove(opts.outputFile)
+	outFile, err := os.OpenFile(opts.outputFile, os.O_CREATE|os.O_RDWR, 0644)
 	defer outFile.Close()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", outputFile, err)
+		fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", opts.outputFile, err)
 		os.Exit(1)
 	}
 
-	if inputFile != "" {
-		inFile, err := chesstools.OpenPgn(inputFile)
+	if opts.inputFile != "" {
+		inFile, err := chesstools.OpenPgn(opts.inputFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", inputFile, err)
+			fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", opts.inputFile, err)
 			os.Exit(1)
 		}
 		defer inFile.Close()
 
-		err = processOnePGN(color, inFile, inputFile, dag, keepExisting)
+		err = processOnePGN(opts.color, inFile, opts.inputFile, dag, opts.keepExisting)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", inputFile, err)
+			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.inputFile, err)
 			os.Exit(1)
 		}
 	}
 
 	var openingGame *chesstools.OpeningGame
-	if startMoves != "" {
-		startMovesReader := strings.NewReader(startMoves)
+	if opts.startMoves != "" {
+		startMovesReader := strings.NewReader(opts.startMoves)
 		var pgnReader func(*chess.Game)
 		pgnReader, err = chess.PGN(startMovesReader)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", startMoves, err)
+			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.startMoves, err)
 			os.Exit(1)
 		}
 		startGame := chess.NewGame(pgnReader)
 		openingGame, err = chesstools.NewOpeningGame2(startGame, true,
-			threshold, color == startGame.Position().Turn())
+			opts.threshold, opts.color == startGame.Position().Turn())
 	} else {
 		openingGame, err = chesstools.NewOpeningGame(nil, "", true,
-			threshold, color == chess.White)
+			opts.threshold, opts.color == chess.White)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to init: %v\n", err)
 		os.Exit(1)
 		return
 	}
-	_, err = buildRep(color, openingGame, 1.0, outFile, 0, maxDepth)
+	_, err = buildRep(opts.color, openingGame, 1.0, outFile, 0, opts.maxDepth)
 
 	dag.emit(outFile)
 
