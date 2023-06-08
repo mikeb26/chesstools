@@ -1,7 +1,7 @@
 *.test
 *.out
 /vendor
-/chessrep
+/repvld
 /cache
 /pgnfilt
 /repbld

@@ -128,7 +128,7 @@ func main() {
 func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
 	cacheOnly *bool, gapThreshold *float64, gapSkip *int) ([]string, error) {
 
-	f := flag.NewFlagSet("chessrep", flag.ExitOnError)
+	f := flag.NewFlagSet("repvld", flag.ExitOnError)
 	var colorFlag string
 
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
