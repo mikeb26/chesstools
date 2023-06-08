@@ -5,7 +5,7 @@ export GOFLAGS=-mod=vendor
 all: build test
 
 .PHONY: build
-build: eco/all_fen.tsv
+build: eco/all_fen.tsv pgn2fen
 	go build github.com/mikeb26/chesstools/cmd/chessrep
 	go build github.com/mikeb26/chesstools/cmd/repbld
 	go build github.com/mikeb26/chesstools/cmd/eval
@@ -14,7 +14,7 @@ build: eco/all_fen.tsv
 eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv pgn2fen
 	cd eco; ./build.sh
 
-pgn2fen:
+pgn2fen: FORCE
 	go build github.com/mikeb26/chesstools/cmd/pgn2fen
 
 .PHONY: test
@@ -40,3 +40,5 @@ vendor: go.mod
 .PHONY: clean
 clean:
 	rm -f chessrep repbld eval pgnfilt pgn2fen eco/all_fen.tsv
+
+FORCE:
