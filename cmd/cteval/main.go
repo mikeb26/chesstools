@@ -34,7 +34,7 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult) {
 }
 
 func parseArgs(evalCtx *chesstools.EvalCtx) {
-	f := flag.NewFlagSet("eval", flag.ExitOnError)
+	f := flag.NewFlagSet("cteval", flag.ExitOnError)
 
 	var pgnFile string
 	f.StringVar(&pgnFile, "pgn", "", "<pgnFileName>")
