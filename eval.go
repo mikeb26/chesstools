@@ -242,6 +242,9 @@ func (evalCtx *EvalCtx) SetFEN(fen string) *EvalCtx {
 }
 
 func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
+	if evalCtx.fen == "" && evalCtx.pgnFile == "" {
+		evalCtx.fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+	}
 	if evalCtx.fen != "" {
 		fen, err := chess.FEN(evalCtx.fen)
 		if err != nil {

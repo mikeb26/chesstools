@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/mikeb26/chesstools"
@@ -258,17 +259,36 @@ func (dag *Dag) emitGameToOutput(output io.Writer, node *DagNode) error {
 		node.moveListSet.allMoveListsHaveSameFEN() {
 		dag.emitGameHeadersToOutput(output, node,
 			node.moveListSet.moveLists[0].fen)
-		fmt.Fprintf(output, "\n%v *\n\n\n", node.moveListSet.String())
+		fmt.Fprintf(output, "\n%v %v *\n\n\n", node.moveListSet.String(),
+			node.getEvalStr())
 	} else {
 		for _, moveList := range node.moveListSet.moveLists {
 			dag.emitGameHeadersToOutput(output, node, moveList.fen)
-			fmt.Fprintf(output, "\n%v *\n\n\n", moveList.String())
+			fmt.Fprintf(output, "\n%v %v *\n\n\n", moveList.String(),
+				node.getEvalStr())
 		}
 	}
 
 	node.alreadyEmitted = true
 
 	return nil
+}
+
+func (node *DagNode) getEvalStr() string {
+	evalCtx := chesstools.NewEvalCtx(true).WithFEN(node.position.XFENString())
+	defer evalCtx.Close()
+	evalCtx.InitEngine()
+	er := evalCtx.Eval()
+	if er == nil {
+		return ""
+	}
+	if er.Mate != 0 {
+		return fmt.Sprintf("{ [%%eval #%v] }", er.Mate)
+	} // else
+
+	scoreFloat := float64(er.CP) / 100.0
+	scoreStr := strconv.FormatFloat(scoreFloat, 'f', 2, 64)
+	return fmt.Sprintf("{ [%%eval %v] }", scoreStr)
 }
 
 func (dag *Dag) getOpeningName(parent *DagNode, node *DagNode,

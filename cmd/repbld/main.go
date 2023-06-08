@@ -26,6 +26,8 @@ type RepBldOpts struct {
 	outputFile   string
 	outputMode   OutputMode
 	keepExisting bool
+	engineSelect bool
+	engineDepth  int
 }
 
 type MoveMapValue struct {
@@ -41,6 +43,7 @@ type MoveMapValue struct {
 
 var moveMap map[string]*MoveMapValue
 var dag *Dag
+var evalCtx *chesstools.EvalCtx
 
 const MinGames = 200
 
@@ -58,6 +61,8 @@ func parseArgs(opts *RepBldOpts) error {
 	f.Float64Var(&opts.threshold, "threshold", 0.02, "<thresholdPct>")
 	f.IntVar(&opts.maxDepth, "maxdepth", 14, "<max depth>")
 	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
+	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
+	f.IntVar(&opts.engineDepth, "enginedepth", 50, "<max engine search depth>")
 
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -99,6 +104,11 @@ func main() {
 func mainWork(opts *RepBldOpts) {
 	moveMap = make(map[string]*MoveMapValue)
 	dag = NewDag(opts.color, opts.outputMode)
+	if opts.engineSelect {
+		evalCtx = chesstools.NewEvalCtx(false).WithEvalDepth(opts.engineDepth)
+		defer evalCtx.Close()
+		evalCtx.InitEngine()
+	}
 
 	_ = os.Remove(opts.outputFile)
 	outFile, err := os.OpenFile(opts.outputFile, os.O_CREATE|os.O_RDWR, 0644)
@@ -111,14 +121,17 @@ func mainWork(opts *RepBldOpts) {
 	if opts.inputFile != "" {
 		inFile, err := chesstools.OpenPgn(opts.inputFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", opts.inputFile, err)
+			fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", opts.inputFile,
+				err)
 			os.Exit(1)
 		}
 		defer inFile.Close()
 
-		err = processOnePGN(opts.color, inFile, opts.inputFile, dag, opts.keepExisting)
+		err = processOnePGN(opts.color, inFile, opts.inputFile, dag,
+			opts.keepExisting)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.inputFile, err)
+			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.inputFile,
+				err)
 			os.Exit(1)
 		}
 	}
@@ -129,7 +142,8 @@ func mainWork(opts *RepBldOpts) {
 		var pgnReader func(*chess.Game)
 		pgnReader, err = chess.PGN(startMovesReader)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.startMoves, err)
+			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.startMoves,
+				err)
 			os.Exit(1)
 		}
 		startGame := chess.NewGame(pgnReader)
@@ -144,7 +158,7 @@ func mainWork(opts *RepBldOpts) {
 		os.Exit(1)
 		return
 	}
-	_, err = buildRep(opts.color, openingGame, 1.0, outFile, 0, opts.maxDepth)
+	_, err = buildRep(opts, openingGame, 1.0, outFile, 0)
 
 	dag.emit(outFile)
 
@@ -157,19 +171,18 @@ func mainWork(opts *RepBldOpts) {
 	return
 }
 
-func buildRep(color chess.Color,
+func buildRep(opts *RepBldOpts,
 	openingGame *chesstools.OpeningGame,
 	totalPct float64,
 	output io.Writer,
-	stackDepth int,
-	maxMoveDepth int) (bool, error) {
+	stackDepth int) (bool, error) {
 
-	if openingGame.Turn() == color {
+	if openingGame.Turn() == opts.color {
 		var mv string
 		err := io.EOF
 		var childGame *chesstools.OpeningGame
 		for {
-			mv, err = selectMove(openingGame, totalPct)
+			mv, err = selectMove(openingGame, totalPct, opts.engineSelect)
 			if err != nil {
 				time.Sleep(1 * time.Second)
 				continue
@@ -196,9 +209,9 @@ func buildRep(color chess.Color,
 			return false, err
 		}
 		emittedAny := false
-		if childGame.GetMoveCount() < maxMoveDepth {
-			emittedAny, err = buildRep(color, childGame, totalPct, output,
-				stackDepth+1, maxMoveDepth)
+		if childGame.GetMoveCount() < opts.maxDepth {
+			emittedAny, err = buildRep(opts, childGame, totalPct, output,
+				stackDepth+1)
 			if err != nil {
 				return false, err
 			}
@@ -222,17 +235,16 @@ func buildRep(color chess.Color,
 			continue
 		}
 		needEvals := true
-		if alreadyKnowMove(openingGame, mv.San) {
+		if alreadyKnowMove(openingGame, mv.San) || opts.engineSelect {
 			needEvals = false
 		}
-		childGame, err := chesstools.NewOpeningGame(openingGame, mv.San, needEvals,
-			openingGame.Threshold, needEvals)
+		childGame, err := chesstools.NewOpeningGame(openingGame, mv.San,
+			needEvals, openingGame.Threshold, needEvals)
 		if err != nil {
 			return false, err
 		}
 		emittedAny = true
-		_, err = buildRep(color, childGame, childTotalPct, output, stackDepth+1,
-			maxMoveDepth)
+		_, err = buildRep(opts, childGame, childTotalPct, output, stackDepth+1)
 		if err != nil {
 			return false, err
 		}
@@ -242,7 +254,7 @@ func buildRep(color chess.Color,
 }
 
 func selectMove(openingGame *chesstools.OpeningGame,
-	totalPct float64) (string, error) {
+	totalPct float64, engineSelect bool) (string, error) {
 
 	fen, err := chesstools.NormalizeFEN(openingGame.G.Position().XFENString())
 	if err != nil {
@@ -254,6 +266,15 @@ func selectMove(openingGame *chesstools.OpeningGame,
 		return val.move, nil
 	}
 
+	if engineSelect {
+		return selectMoveViaEngine(openingGame, fen)
+	} // else
+
+	return selectMoveInteractive(openingGame, totalPct)
+}
+
+func selectMoveInteractive(openingGame *chesstools.OpeningGame,
+	totalPct float64) (string, error) {
 	numBookMoves := len(openingGame.OpeningResp.Moves)
 
 	fmt.Printf("\nOpening: %v (%v)\n", openingGame.String(), openingGame.Eco)
@@ -285,6 +306,18 @@ func selectMove(openingGame *chesstools.OpeningGame,
 	}
 
 	return mv, nil
+}
+
+func selectMoveViaEngine(openingGame *chesstools.OpeningGame,
+	fen string) (string, error) {
+
+	evalCtx.SetFEN(fen)
+
+	fmt.Fprintf(os.Stderr, "Scoring %v mv %v FEN:%v\n", openingGame.String(),
+		openingGame.GetMoveCount(), fen)
+	er := evalCtx.Eval()
+
+	return er.BestMove, nil
 }
 
 func processOnePGN(color chess.Color, f io.Reader, pgnFilename string,
