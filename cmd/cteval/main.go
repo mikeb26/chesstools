@@ -54,6 +54,8 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	f.Uint64Var(&hashSizeInMiB, "hash", 0, "<hashSizeInMiB>")
 	var cacheOnly bool
 	f.BoolVar(&cacheOnly, "cacheonly", false, "only return cached evaluations")
+	var noCloudCache bool
+	f.BoolVar(&noCloudCache, "nocloudcache", false, "do not reference lichess APIs for cached evaluations")
 
 	f.Parse(os.Args[1:])
 
@@ -104,5 +106,8 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	}
 	if cacheOnly {
 		evalCtx = evalCtx.WithCacheOnly()
+	}
+	if noCloudCache {
+		evalCtx = evalCtx.WithoutCloudCache()
 	}
 }

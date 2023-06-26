@@ -14,7 +14,7 @@ build: eco/all_fen.tsv pgn2fen
 eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv pgn2fen
 	cd eco; ./build.sh
 
-pgn2fen: FORCE
+pgn2fen:
 	go build github.com/mikeb26/chesstools/cmd/pgn2fen
 
 .PHONY: test

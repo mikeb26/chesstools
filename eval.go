@@ -52,6 +52,8 @@ type EvalCtx struct {
 	evalDepth     int    // default == infinite
 	g             *chess.Game
 	cacheOnly     bool
+	cloudCache    bool
+	doLazyInit    bool
 
 	engine     *uci.Engine
 	engVersion float64
@@ -79,6 +81,8 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.g = nil
 	rv.position = nil
 	rv.cacheOnly = cacheOnlyIn
+	rv.cloudCache = true
+	rv.doLazyInit = false
 
 	var err error
 	if cacheOnlyIn == false {
@@ -102,6 +106,11 @@ func (evalCtx *EvalCtx) WithCacheOnly() *EvalCtx {
 		evalCtx.engine.Close()
 		evalCtx.engine = nil
 	}
+	return evalCtx
+}
+
+func (evalCtx *EvalCtx) WithoutCloudCache() *EvalCtx {
+	evalCtx.cloudCache = false
 	return evalCtx
 }
 
@@ -156,49 +165,6 @@ func getSystemMem() uint64 {
 
 func (evalCtx *EvalCtx) InitEngine() {
 	evalCtx.g = evalCtx.loadPgnOrFEN()
-
-	if evalCtx.engine != nil {
-		err := evalCtx.engine.Renice()
-		if err != nil {
-			panic(err)
-		}
-
-		err = evalCtx.engine.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame)
-		if err != nil {
-			panic(err)
-		}
-
-		engineVer := evalCtx.engine.ID()["name"]
-		engineVerParts := strings.Split(engineVer, " ")
-		if len(engineVerParts) < 2 {
-			panic("Cannot find stockfish version number")
-		}
-		evalCtx.engVersion, err = strconv.ParseFloat(engineVerParts[1], 64)
-		if err != nil {
-			panic("Cannot parse stockfish version number")
-		}
-
-		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
-		if err != nil {
-			panic(err)
-		}
-		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Hash", Value: strconv.FormatUint(evalCtx.hashSizeInMiB, 10)})
-		if err != nil {
-			panic(err)
-		}
-
-		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
-		if err != nil {
-			panic(err)
-		}
-
-		err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
-		if err != nil {
-			panic(err)
-		}
-		//err = evalCtx.engine.Run(uci.CmdSetOption{Name: "MultiPV", Value: "5"})
-	}
-
 	if evalCtx.fen != "" {
 		evalCtx.position = evalCtx.g.Position()
 	} else {
@@ -215,12 +181,62 @@ func (evalCtx *EvalCtx) InitEngine() {
 		evalCtx.position = p[halfMoveIndex]
 	}
 
-	if evalCtx.engine != nil {
-		err := evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
-		if err != nil {
-			panic(err)
-		}
+	// actual init is deferred until first use as it is exensive and unneeded
+	// when we get a cache hit
+	evalCtx.doLazyInit = true
+}
+
+func (evalCtx *EvalCtx) lazyInitEngine() {
+	if evalCtx.engine == nil {
+		return
 	}
+
+	err := evalCtx.engine.Renice()
+	if err != nil {
+		panic(err)
+	}
+
+	err = evalCtx.engine.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame)
+	if err != nil {
+		panic(err)
+	}
+
+	engineVer := evalCtx.engine.ID()["name"]
+	engineVerParts := strings.Split(engineVer, " ")
+	if len(engineVerParts) < 2 {
+		panic("Cannot find stockfish version number")
+	}
+	evalCtx.engVersion, err = strconv.ParseFloat(engineVerParts[1], 64)
+	if err != nil {
+		panic("Cannot parse stockfish version number")
+	}
+
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
+	if err != nil {
+		panic(err)
+	}
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Hash", Value: strconv.FormatUint(evalCtx.hashSizeInMiB, 10)})
+	if err != nil {
+		panic(err)
+	}
+
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
+	if err != nil {
+		panic(err)
+	}
+
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
+	if err != nil {
+		panic(err)
+	}
+	//err = evalCtx.engine.Run(uci.CmdSetOption{Name: "MultiPV", Value: "5"})
+
+	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
+	if err != nil {
+		panic(err)
+	}
+
+	evalCtx.doLazyInit = false
 }
 
 func (evalCtx *EvalCtx) SetFEN(fen string) *EvalCtx {
@@ -298,6 +314,15 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 
 	encodedResult, err := ioutil.ReadFile(cacheFileFullName)
 	if os.IsNotExist(err) {
+		fen = evalCtx.position.XFENString()
+		cacheFileName = fen2CacheFileName(fen)
+		cacheFilePath = fen2CacheFilePath(fen)
+		cacheFileFullName = filepath.Join(cacheFilePath, cacheFileName)
+		encodedResult, err = ioutil.ReadFile(cacheFileFullName)
+	}
+	if os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "Could not find %v for fen:%v\n",
+			cacheFileFullName, fen)
 		return nil, ErrCacheMiss
 	}
 	if err != nil {
@@ -335,6 +360,10 @@ type CloudEvalResp struct {
 
 func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	staleOk bool) (*EvalResult, error) {
+
+	if evalCtx.cloudCache == false {
+		return nil, ErrCacheMiss
+	}
 	const BaseUrl = "https://lichess.org/api/cloud-eval"
 
 	fen := evalCtx.position.XFENString()
@@ -472,12 +501,18 @@ func (evalCtx *EvalCtx) loadResultFromCache(
 }
 
 func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
-	cacheFileName := fen2CacheFileName(evalCtx.position.XFENString())
-	cacheFilePath := fen2CacheFilePath(evalCtx.position.XFENString())
+	fen := evalCtx.position.XFENString()
+	var err error
+	fen, err = NormalizeFEN(fen)
+	if err != nil {
+		panic(err)
+	}
+	cacheFileName := fen2CacheFileName(fen)
+	cacheFilePath := fen2CacheFilePath(fen)
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	_ = os.Remove(cacheFileFullName)
-	err := os.MkdirAll(cacheFilePath, 0755)
+	err = os.MkdirAll(cacheFilePath, 0755)
 	if err != nil && !os.IsExist(err) {
 		panic(err)
 	}
@@ -533,6 +568,9 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 
 	if evalCtx.engine == nil {
 		panic("eval: BUG: engine should be non-nil for uncached eval")
+	}
+	if evalCtx.doLazyInit {
+		evalCtx.lazyInitEngine()
 	}
 	if evalCtx.evalDepth != DefaultDepth {
 		err = evalCtx.engine.Run(uci.CmdGo{Depth: evalCtx.evalDepth})
