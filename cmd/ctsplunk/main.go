@@ -260,7 +260,11 @@ func getFENGameInfosByPlayers(fen string,
 
 	gameInfos := make([]chesstools.GameInfo, 0)
 
-	for _, player := range playerList {
+	numPlayers := len(playerList)
+
+	for idx, player := range playerList {
+		fmt.Fprintf(os.Stderr, "\nChecking whether player %v has had FEN '%v' as %v (%v of %v)...",
+			player, fen, color, idx+1, numPlayers)
 		openingGame, err := chesstools.NewOpeningGame3(fen, player, color)
 		if err != nil {
 			return nil, err

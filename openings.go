@@ -352,15 +352,23 @@ func getTopMoves(g *chess.Game, fullRatingRange bool,
 		defer resp.Body.Close()
 		break
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("opening: failed to read http response: %w", err)
+
+	// can't use json.Unmarshal() because results may be newline delimited
+	// JSON
+	decoder := json.NewDecoder(resp.Body)
+	decodedOne := false
+	for decoder.More() { // just use the last result
+		if decodedOne {
+			fmt.Fprintf(os.Stderr, ".")
+		}
+		err := decoder.Decode(&openingResp)
+		if err != nil {
+			return nil, fmt.Errorf("opening: failed to unmarshal json response.\n\turl:%v\n\terr:%w\n\tcode:%v\n",
+				requestURL.String(), err, resp.StatusCode)
+		}
+		decodedOne = true
 	}
 
-	err = json.Unmarshal(body, &openingResp)
-	if err != nil {
-		return nil, fmt.Errorf("opening: failed to unmarshal json response.\n\terr:%w\n\tcode:%v\n\tbody:%v", err, resp.StatusCode, string(body))
-	}
 	if openingResp.TopGames == nil || len(openingResp.TopGames) == 0 {
 		openingResp.TopGames = openingResp.RecentGames
 		openingResp.RecentGames = make([]GameInfo, 0)
