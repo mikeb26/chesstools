@@ -17,7 +17,10 @@ import (
 	"github.com/notnil/chess"
 )
 
-const BaseUrl = "https://explorer.lichess.ovh/lichess"
+const (
+	LichessDbBaseUrl = "https://explorer.lichess.ovh/lichess"
+	PlayerDbBaseUrl  = "https://explorer.lichess.ovh/player"
+)
 
 //go:embed eco/all_fen.tsv
 var openingNamesTsvText string
@@ -39,11 +42,30 @@ type MoveStats struct {
 	Eval *EvalResult //only valid when getEval==true
 }
 
+type PlayerInfo struct {
+	Name   string `json:"name"`
+	Rating int    `json:"rating"`
+}
+
+type GameInfo struct {
+	Uci    string     `json:"uci"`
+	Id     string     `json:"id"`
+	Winner string     `json:"winner"`
+	Speed  string     `json:"speed"`
+	Mode   string     `json:"mode"`
+	Year   int        `json:"year"`
+	Month  string     `json:"month"`
+	Black  PlayerInfo `json:"black"`
+	White  PlayerInfo `json:"white"`
+}
+
 type OpeningResp struct {
-	WhiteWins int         `json:"white"`
-	BlackWins int         `json:"black"`
-	Draws     int         `json:"draws"`
-	Moves     []MoveStats `json:"moves"`
+	WhiteWins   int         `json:"white"`
+	BlackWins   int         `json:"black"`
+	Draws       int         `json:"draws"`
+	Moves       []MoveStats `json:"moves"`
+	TopGames    []GameInfo  `json:"topGames"`
+	RecentGames []GameInfo  `json:"recentGames"`
 }
 
 type OpeningGame struct {
@@ -54,7 +76,12 @@ type OpeningGame struct {
 	OpeningResp *OpeningResp
 	Threshold   float64 // percent of games
 
-	eval bool
+	eval            bool
+	fullRatingRange bool
+	allSpeeds       bool
+	fromFen         bool
+	player          string
+	color           string
 }
 
 func (openingGame *OpeningGame) String() string {
@@ -67,19 +94,52 @@ func (openingGame *OpeningGame) Turn() chess.Color {
 
 func NewOpeningGame(parent *OpeningGame, move string, getTop bool,
 	threshold float64, getEval bool) (*OpeningGame, error) {
-	return NewOpeningGameActual(parent, nil, move, getTop, threshold, getEval)
+	return NewOpeningGameActual(parent, nil, move, getTop, threshold, getEval,
+		false, false, "", "")
 }
 
 func NewOpeningGame2(game *chess.Game, getTop bool,
 	threshold float64, getEval bool) (*OpeningGame, error) {
-	return NewOpeningGameActual(nil, game, "", getTop, threshold, getEval)
+	return NewOpeningGameActual(nil, game, "", getTop, threshold, getEval,
+		false, false, "", "")
+}
+
+func NewOpeningGame3(fen string, playerIn string,
+	colorIn string) (*OpeningGame, error) {
+
+	newGameArgs, err := chess.FEN(fen)
+	if err != nil {
+		return nil, err
+	}
+
+	g := chess.NewGame(newGameArgs)
+	openingGame, err := NewOpeningGameActual(nil, g, "", true, 0.999999999,
+		false, true, true, playerIn, colorIn)
+	if err != nil {
+		return nil, err
+	}
+
+	openingGame.fromFen = true
+
+	return openingGame, nil
+}
+
+func NewOpeningGame4(parent *OpeningGame, move string) (*OpeningGame, error) {
+	return NewOpeningGameActual(parent, nil, move, true, 0.999999999, false,
+		true, true, "", "")
 }
 
 func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
-	getTop bool, threshold float64, getEval bool) (*OpeningGame, error) {
+	getTop bool, threshold float64, getEval bool,
+	fullRatingRange bool, allSpeeds bool, playerIn string,
+	colorIn string) (*OpeningGame, error) {
 
 	var openingGame OpeningGame
+	openingGame.fromFen = false
 	openingGame.Threshold = threshold
+	openingGame.player = playerIn
+	openingGame.color = colorIn
+
 	if parent == nil {
 		if game == nil {
 			openingGame.G = chess.NewGame()
@@ -87,13 +147,24 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 			openingGame.G = game
 		}
 	} else {
-		parentMovesStr := parent.G.String()
-		parentMovesReader := strings.NewReader(parentMovesStr)
-		parentMoves, err := chess.PGN(parentMovesReader)
-		if err != nil {
-			return nil, err
+		if !parent.fromFen {
+			parentMovesStr := parent.G.String()
+			parentMovesReader := strings.NewReader(parentMovesStr)
+			parentMoves, err := chess.PGN(parentMovesReader)
+			if err != nil {
+				return nil, err
+			}
+			openingGame.G = chess.NewGame(parentMoves)
+		} else {
+			parentFen := parent.G.Position().XFENString()
+			newGameArgs, err := chess.FEN(parentFen)
+			if err != nil {
+				return nil, err
+			}
+			openingGame.G = chess.NewGame(newGameArgs)
+			openingGame.fromFen = true
 		}
-		openingGame.G = chess.NewGame(parentMoves)
+		openingGame.player = parent.player
 	}
 	var err error
 	if move != "" {
@@ -111,7 +182,8 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 	}
 	openingGame.Parent = parent
 	if getTop {
-		openingGame.OpeningResp, err = getTopMoves(openingGame.G)
+		openingGame.OpeningResp, err = getTopMoves(openingGame.G,
+			fullRatingRange, allSpeeds, openingGame.player, openingGame.color)
 		if err != nil {
 			return nil, err
 		}
@@ -132,6 +204,7 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 		openingGame.Eco = opening.eco
 	}
 	openingGame.eval = getEval
+	openingGame.fullRatingRange = fullRatingRange
 	if getEval {
 		err = openingGame.getEvalsForResp()
 		if err != nil {
@@ -205,17 +278,41 @@ func PctS2(pctf float64) string {
 	return fmt.Sprintf("%v%%", pctInt)
 }
 
-func getTopMoves(g *chess.Game) (*OpeningResp, error) {
-	position := url.QueryEscape(g.FEN())
-	ratingBuckets := url.QueryEscape("2200,2500")
-	speeds := url.QueryEscape("blitz,rapid,classical")
+func getTopMoves(g *chess.Game, fullRatingRange bool,
+	allSpeeds bool, player string, color string) (*OpeningResp, error) {
 
-	queryParams :=
-		fmt.Sprintf("?fen=%v&ratings=%v&speeds=%v", position, ratingBuckets,
-			speeds)
-	requestURL, err := url.Parse(BaseUrl + queryParams)
+	position := url.QueryEscape(g.FEN())
+	var ratingBuckets string
+	if fullRatingRange {
+		ratingBuckets =
+			url.QueryEscape("400,1000,1200,1400,1600,1800,2000,2200,2500")
+	} else {
+		ratingBuckets = url.QueryEscape("2200,2500")
+	}
+	var speeds string
+	if allSpeeds {
+		speeds = url.QueryEscape("ultraBullet,bullet,blitz,rapid,classical,correspondence")
+	} else {
+		speeds = url.QueryEscape("blitz,rapid,classical")
+	}
+
+	var queryParams string
+	var requestURL *url.URL
+	var err error
+
+	if player == "" {
+		queryParams =
+			fmt.Sprintf("?fen=%v&ratings=%v&speeds=%v", position, ratingBuckets,
+				speeds)
+		requestURL, err = url.Parse(LichessDbBaseUrl + queryParams)
+	} else {
+		queryParams =
+			fmt.Sprintf("?player=%v&fen=%v&ratings=%v&speeds=%v&color=%v", player,
+				position, ratingBuckets, speeds, color)
+		requestURL, err = url.Parse(PlayerDbBaseUrl + queryParams)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("gapcheck: failed to parse url:%w", err)
+		return nil, fmt.Errorf("opening: failed to parse url:%w", err)
 	}
 
 	var openingResp OpeningResp
@@ -225,7 +322,7 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 	for {
 		req, err := http.NewRequest("GET", requestURL.String(), nil)
 		if err != nil {
-			return nil, fmt.Errorf("gapcheck: failed to create request:%w", err)
+			return nil, fmt.Errorf("opening: failed to create request:%w", err)
 		}
 
 		req.Header.Set("Accept", "application/json")
@@ -233,7 +330,7 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 		client := &http.Client{}
 		resp, err = client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("gapcheck: GET %v failed: %w",
+			return nil, fmt.Errorf("opening: GET %v failed: %w",
 				requestURL.String(), err)
 		}
 		if resp.StatusCode == 429 {
@@ -257,12 +354,16 @@ func getTopMoves(g *chess.Game) (*OpeningResp, error) {
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("gapcheck: failed to read http response: %w", err)
+		return nil, fmt.Errorf("opening: failed to read http response: %w", err)
 	}
 
 	err = json.Unmarshal(body, &openingResp)
 	if err != nil {
-		return nil, fmt.Errorf("gapcheck: failed to unmarshel json response.\n\terr:%w\n\tcode:%v\n\tbody:%v", err, resp.StatusCode, string(body))
+		return nil, fmt.Errorf("opening: failed to unmarshal json response.\n\terr:%w\n\tcode:%v\n\tbody:%v", err, resp.StatusCode, string(body))
+	}
+	if openingResp.TopGames == nil || len(openingResp.TopGames) == 0 {
+		openingResp.TopGames = openingResp.RecentGames
+		openingResp.RecentGames = make([]GameInfo, 0)
 	}
 
 	return &openingResp, nil
