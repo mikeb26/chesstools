@@ -15,6 +15,8 @@ import (
 
 type SplunkOpts struct {
 	fenColorList string
+	playerList   []string
+	opponent     string
 }
 
 const (
@@ -42,15 +44,19 @@ func decodeKey(key string) (string, string) {
 func parseArgs(opts *SplunkOpts) error {
 	f := flag.NewFlagSet("ctsplunk", flag.ContinueOnError)
 
+	var playerList string
 	f.StringVar(&opts.fenColorList, "fencolorlist", "", "<fen1:color1>[,<fen2:color2>...]")
+	f.StringVar(&playerList, "playerlist", "", "<player1>[,<player2>...]")
+	f.StringVar(&opts.opponent, "opponent", "", "<player1>")
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
 		return err
 	}
-	if opts.fenColorList == "" {
-		return fmt.Errorf("must specify list of FENs")
+	if opts.fenColorList == "" && playerList == "" {
+		return fmt.Errorf("must specify at least 1 of --fencolorlist or --playerlist")
 	}
+	opts.playerList = strings.Split(playerList, ",")
 
 	return err
 }
@@ -90,26 +96,28 @@ func mainWork(opts *SplunkOpts) ([]string, error) {
 	// the initial position and the position after 1. e4.
 
 	// 1st pass
-	for _, fenAndColor := range strings.Split(opts.fenColorList, ",") {
-		fenAndColorParts := strings.Split(fenAndColor, ":")
-		if len(fenAndColorParts) != 2 {
-			return playerList, fmt.Errorf("Could not parse position&color %v within %v",
-				fenAndColor, opts.fenColorList)
-		}
-		fen := fenAndColorParts[0]
-		color := fenAndColorParts[1]
-		key := encodeKey(fen, color)
-		gameInfos, err := getFENGameInfos(fen)
-		if errors.Is(err, ErrTooManyGames) {
-			fenColor2InfosMap[key] = nil // nil is a sentinel used in the 2nd pass
-		} else if err != nil {
-			return playerList, err
-		} // else no err
+	if opts.fenColorList != "" {
+		for _, fenAndColor := range strings.Split(opts.fenColorList, ",") {
+			fenAndColorParts := strings.Split(fenAndColor, ":")
+			if len(fenAndColorParts) != 2 {
+				return playerList, fmt.Errorf("Could not parse position&color %v within %v",
+					fenAndColor, opts.fenColorList)
+			}
+			fen := fenAndColorParts[0]
+			color := fenAndColorParts[1]
+			key := encodeKey(fen, color)
+			gameInfos, err := getFENGameInfos(fen)
+			if errors.Is(err, ErrTooManyGames) {
+				fenColor2InfosMap[key] = nil // nil is a sentinel used in the 2nd pass
+			} else if err != nil {
+				return playerList, err
+			} // else no err
 
-		fenColor2InfosMap[key] = gameInfos
+			fenColor2InfosMap[key] = gameInfos
+		}
 	}
 
-	playerList = computePlayerList(fenColor2InfosMap)
+	playerList = computePlayerList(opts.playerList, fenColor2InfosMap)
 
 	// 2nd pass
 	for key, gameInfos := range fenColor2InfosMap {
@@ -123,10 +131,17 @@ func mainWork(opts *SplunkOpts) ([]string, error) {
 		}
 	}
 
-	playerList = computePlayerList(fenColor2InfosMap)
+	playerList = computePlayerList(opts.playerList, fenColor2InfosMap)
+
+	// check against opponent if specified
+	var err error
+	playerList, err = trimByOpponent(playerList, opts.opponent)
+	if err != nil {
+		return playerList, err
+	}
 
 	// output
-	fmt.Printf("The following players have had all positions:\n  %v\n",
+	fmt.Printf("The following players meet all search criteria:\n  %v\n",
 		playerList)
 
 	gameCount := 0
@@ -206,7 +221,8 @@ func getGameInfos(openingGame *chesstools.OpeningGame,
 	return gameInfos, nil
 }
 
-func computePlayerList(fenColor2InfosMap map[string][]chesstools.GameInfo) []string {
+func computePlayerList(initPlayerList []string,
+	fenColor2InfosMap map[string][]chesstools.GameInfo) []string {
 
 	playerPosCount := make(map[string]int)
 	totalPositions := 0
@@ -244,12 +260,19 @@ func computePlayerList(fenColor2InfosMap map[string][]chesstools.GameInfo) []str
 	}
 
 	playerList := make([]string, 0)
-	for player, posCount := range playerPosCount {
-		if posCount != totalPositions {
-			continue
-		}
+	if len(fenColor2InfosMap) == 0 {
+		playerList = initPlayerList
+	} else {
+		for player, posCount := range playerPosCount {
+			if posCount != totalPositions {
+				continue
+			}
+			if len(initPlayerList) != 0 && !contains(initPlayerList, player) {
+				continue
+			}
 
-		playerList = append(playerList, player)
+			playerList = append(playerList, player)
+		}
 	}
 
 	return playerList
@@ -285,4 +308,26 @@ func getFENGameInfosByPlayers(fen string,
 	}
 
 	return gameInfos, nil
+}
+
+func trimByOpponent(playerList []string, opponent string) ([]string, error) {
+
+	if opponent == "" {
+		return playerList, nil
+	}
+
+	outList := make([]string, 0)
+
+	for _, player := range playerList {
+		numGames, err := chesstools.GetCrossTable(player, opponent)
+		if err != nil {
+			return outList, err
+		}
+		if numGames == 0 {
+			continue
+		}
+		outList = append(outList, player)
+	}
+
+	return outList, nil
 }
