@@ -56,7 +56,11 @@ func parseArgs(opts *SplunkOpts) error {
 	if opts.fenColorList == "" && playerList == "" {
 		return fmt.Errorf("must specify at least 1 of --fencolorlist or --playerlist")
 	}
-	opts.playerList = strings.Split(playerList, ",")
+	if playerList != "" {
+		opts.playerList = strings.Split(playerList, ",")
+	} else {
+		opts.playerList = make([]string, 0)
+	}
 
 	return err
 }
@@ -260,7 +264,7 @@ func computePlayerList(initPlayerList []string,
 	}
 
 	playerList := make([]string, 0)
-	if len(fenColor2InfosMap) == 0 {
+	if len(fenColor2InfosMap) == 0 || totalPositions == 0 {
 		playerList = initPlayerList
 	} else {
 		for player, posCount := range playerPosCount {
