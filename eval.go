@@ -52,6 +52,7 @@ type EvalCtx struct {
 	evalDepth     int    // default == infinite
 	g             *chess.Game
 	cacheOnly     bool
+	staleOk       bool
 	cloudCache    bool
 	doLazyInit    bool
 
@@ -75,12 +76,13 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.pgnFile = ""
 	rv.fen = ""
 	rv.numThreads = uint64(runtime.NumCPU())
-	rv.hashSizeInMiB = (getSystemMem() * 3) / (MiB * 4)
+	rv.hashSizeInMiB = (getSystemMem() * 2) / (MiB * 4)
 	rv.evalTimeInSec = DefaultEvalTimeInSec
 	rv.evalDepth = DefaultDepth
 	rv.g = nil
 	rv.position = nil
 	rv.cacheOnly = cacheOnlyIn
+	rv.staleOk = cacheOnlyIn
 	rv.cloudCache = true
 	rv.doLazyInit = false
 
@@ -102,10 +104,16 @@ func (evalCtx *EvalCtx) WithPgnFile(pgnFile string) *EvalCtx {
 
 func (evalCtx *EvalCtx) WithCacheOnly() *EvalCtx {
 	evalCtx.cacheOnly = true
+	evalCtx.staleOk = true
 	if evalCtx.engine != nil {
 		evalCtx.engine.Close()
 		evalCtx.engine = nil
 	}
+	return evalCtx
+}
+
+func (evalCtx *EvalCtx) WithStaleOk() *EvalCtx {
+	evalCtx.staleOk = true
 	return evalCtx
 }
 
@@ -335,6 +343,11 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 		panic(err)
 	}
 
+	if evalCtx.engVersion == 0.0 {
+		evalCtx.engVersion = 16.0
+	}
+	fmt.Fprintf(os.Stderr, "Cache entry found staleok:%v engVer:%v entryEngVer:%v\n",
+		staleOk, evalCtx.engVersion, er.EngVersion)
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
 	}
@@ -552,7 +565,7 @@ func fen2CacheFilePath(cacheFileName string) string {
 
 func (evalCtx *EvalCtx) Eval() *EvalResult {
 	fromCache := false
-	er, err := evalCtx.loadResultFromCache(evalCtx.cacheOnly)
+	er, err := evalCtx.loadResultFromCache(evalCtx.staleOk)
 	if err == nil {
 		fromCache = true
 
