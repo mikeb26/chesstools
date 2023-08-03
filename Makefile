@@ -7,7 +7,7 @@ all: build test
 .PHONY: build
 build: eco/all_fen.tsv pgn2fen
 	go build github.com/mikeb26/chesstools/cmd/repvld
-	go build github.com/mikeb26/chesstools/cmd/repbld
+	go build github.com/mikeb26/chesstools/cmd/repmk
 	go build github.com/mikeb26/chesstools/cmd/cteval
 	go build github.com/mikeb26/chesstools/cmd/pgnfilt
 	go build github.com/mikeb26/chesstools/cmd/pgnmk
@@ -21,7 +21,7 @@ pgn2fen:
 
 .PHONY: test
 test:
-	go test github.com/mikeb26/chesstools/cmd/repvld github.com/mikeb26/chesstools/cmd/repbld github.com/mikeb26/chesstools/cmd/cteval github.com/mikeb26/chesstools/cmd/pgnfilt github.com/mikeb26/chesstools/cmd/pgnmk github.com/mikeb26/chesstools/cmd/ctsplunk github.com/mikeb26/chesstools/cmd/pgn2fen
+	go test github.com/mikeb26/chesstools/cmd/repvld github.com/mikeb26/chesstools/cmd/repmk github.com/mikeb26/chesstools/cmd/cteval github.com/mikeb26/chesstools/cmd/pgnfilt github.com/mikeb26/chesstools/cmd/pgnmk github.com/mikeb26/chesstools/cmd/ctsplunk github.com/mikeb26/chesstools/cmd/pgn2fen
 
 .PHONY: deps
 deps:
@@ -41,6 +41,6 @@ vendor: go.mod
 
 .PHONY: clean
 clean:
-	rm -f repvld repbld cteval pgnfilt pgnmk ctsplunk pgn2fen eco/all_fen.tsv
+	rm -f repvld repmk cteval pgnfilt pgnmk ctsplunk pgn2fen eco/all_fen.tsv
 
 FORCE:
