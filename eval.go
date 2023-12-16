@@ -329,8 +329,6 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 		encodedResult, err = ioutil.ReadFile(cacheFileFullName)
 	}
 	if os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "Could not find %v for fen:%v\n",
-			cacheFileFullName, fen)
 		return nil, ErrCacheMiss
 	}
 	if err != nil {
@@ -346,8 +344,6 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	if evalCtx.engVersion == 0.0 {
 		evalCtx.engVersion = 16.0
 	}
-	fmt.Fprintf(os.Stderr, "Cache entry found staleok:%v engVer:%v entryEngVer:%v\n",
-		staleOk, evalCtx.engVersion, er.EngVersion)
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
 	}
@@ -585,6 +581,9 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	if evalCtx.doLazyInit {
 		evalCtx.lazyInitEngine()
 	}
+
+	fmt.Fprintf(os.Stderr, "eval: scoring position:%v\n", evalCtx.position)
+
 	if evalCtx.evalDepth != DefaultDepth {
 		err = evalCtx.engine.Run(uci.CmdGo{Depth: evalCtx.evalDepth})
 	} else {

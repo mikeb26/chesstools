@@ -339,7 +339,6 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	} else {
 		rv.evalCtx.SetFEN(fen)
 	}
-	fmt.Fprintf(os.Stderr, "Scoring mv %v in fen %v\n", m, fen)
 
 	er := rv.evalCtx.Eval()
 	if er == nil {

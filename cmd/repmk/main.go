@@ -114,7 +114,8 @@ func mainWork(opts *RepBldOpts) {
 	outFile, err := os.OpenFile(opts.outputFile, os.O_CREATE|os.O_RDWR, 0644)
 	defer outFile.Close()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to open %v: %v\n", opts.outputFile, err)
+		fmt.Fprintf(os.Stderr, "Failed to open output '%v': %v\n",
+			opts.outputFile, err)
 		os.Exit(1)
 	}
 
@@ -313,8 +314,6 @@ func selectMoveViaEngine(openingGame *chesstools.OpeningGame,
 
 	evalCtx.SetFEN(fen)
 
-	fmt.Fprintf(os.Stderr, "Scoring %v mv %v FEN:%v\n", openingGame.String(),
-		openingGame.GetMoveCount(), fen)
 	er := evalCtx.Eval()
 
 	return er.BestMove, nil

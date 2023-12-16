@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"time"
 
@@ -140,7 +139,6 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 		if dagNode.openingNameType != Direct {
 			newName, newType := dag.getOpeningName(parent, dagNode, mv)
 			if newType < dagNode.openingNameType {
-				fmt.Fprintf(os.Stderr, "REPLACE\n")
 				dagNode.openingName = newName
 				dagNode.openingNameType = newType
 			}
@@ -313,26 +311,18 @@ func (dag *Dag) getOpeningName(parent *DagNode, node *DagNode,
 
 	opening := chesstools.GetOpeningName(node.position.XFENString())
 	if opening != "" {
-		fmt.Fprintf(os.Stderr, "** Found opening name for fen:%v\n",
-			node.position.XFENString())
 		return opening, Direct
 	}
 
 	// only allow a single move suffix
 	if parent.openingNameType != Direct {
-		fmt.Fprintf(os.Stderr, "** Could not find opening name for fen:%v parent:%v hasSuffix:1\n",
-			node.position.XFENString(), parent.position.XFENString())
 		return parent.openingName, FromAncestor
 	}
 
 	if dag.repColor == parent.position.Turn() {
-		fmt.Fprintf(os.Stderr, "** Could not find opening name for fen:%v parent:%v hasSuffix:0\n",
-			node.position.XFENString(), parent.position.XFENString())
 		return parent.openingName, Direct
 	}
 
-	fmt.Fprintf(os.Stderr, "** Could not find opening name for fen:%v parent:%v append:1\n",
-		node.position.XFENString(), parent.position.XFENString())
 	mvNumStr := fmt.Sprintf("%v.", parent.moveNum)
 	if parent.position.Turn() == chess.Black {
 		mvNumStr = fmt.Sprintf("%v..", mvNumStr)
