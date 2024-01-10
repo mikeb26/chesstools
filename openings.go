@@ -81,7 +81,7 @@ type OpeningGame struct {
 	allSpeeds       bool
 	fromFen         bool
 	opponent        string
-	opponentColor   string
+	opponentColor   chess.Color
 	haveTopReplies  bool
 }
 
@@ -108,7 +108,7 @@ func NewOpeningGame() *OpeningGame {
 		allSpeeds:       false,
 		fromFen:         false,
 		opponent:        "",
-		opponentColor:   "",
+		opponentColor:   chess.NoColor,
 		haveTopReplies:  false,
 	}
 
@@ -121,7 +121,7 @@ func (openingGame *OpeningGame) WithThreshold(threshold float64) *OpeningGame {
 	return openingGame
 }
 
-func (openingGame *OpeningGame) WithOpponent(playerIn string, colorIn string) *OpeningGame {
+func (openingGame *OpeningGame) WithOpponent(playerIn string, colorIn chess.Color) *OpeningGame {
 	openingGame.opponent = playerIn
 	openingGame.opponentColor = colorIn
 
@@ -174,6 +174,7 @@ func (openingGame *OpeningGame) WithParent(parent *OpeningGame) *OpeningGame {
 		openingGame.fromFen = true
 	}
 	openingGame.opponent = parent.opponent
+	openingGame.opponentColor = parent.opponentColor
 	openingGame.Parent = parent
 
 	return openingGame.withECO()
@@ -317,9 +318,10 @@ func PctS2(pctf float64) string {
 }
 
 func getTopReplies(g *chess.Game, fullRatingRange bool,
-	allSpeeds bool, opponent string, opponentColor string) (*OpeningResp, error) {
+	allSpeeds bool, opponent string, opponentColor chess.Color) (*OpeningResp, error) {
 
-	position := url.QueryEscape(g.FEN())
+	fen := g.Position().XFENString()
+	position := url.QueryEscape(fen)
 	var ratingBuckets string
 	if fullRatingRange {
 		ratingBuckets =
@@ -338,7 +340,7 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 	var requestURL *url.URL
 	var err error
 
-	if opponent == "" {
+	if opponent == "" || opponentColor != g.Position().Turn() {
 		queryParams =
 			fmt.Sprintf("?fen=%v&ratings=%v&speeds=%v", position, ratingBuckets,
 				speeds)
@@ -346,12 +348,15 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 	} else {
 		queryParams =
 			fmt.Sprintf("?player=%v&fen=%v&ratings=%v&speeds=%v&color=%v", opponent,
-				position, ratingBuckets, speeds, opponentColor)
+				position, ratingBuckets, speeds, strings.ToLower(opponentColor.Name()))
 		requestURL, err = url.Parse(PlayerDbBaseUrl + queryParams)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("opening: failed to parse url:%w", err)
 	}
+
+	//fmt.Fprintf(os.Stderr, "Getting top replies for %v url:%v....\n", g.Moves(),
+	//	requestURL)
 
 	var openingResp OpeningResp
 	var resp *http.Response
@@ -373,8 +378,8 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 		}
 		if resp.StatusCode == 429 {
 			// https://lichess.org/page/api-tips says wait a minute
-			fmt.Fprintf(os.Stderr, "opening: 429 recv; sleeping 1min retry:%v...",
-				retryCount)
+			fmt.Fprintf(os.Stderr, "opening: 429 recv; sleeping 1min fen:%v retry:%v...\n",
+				fen, retryCount)
 			retryCount++
 
 			io.Copy(ioutil.Discard, resp.Body)

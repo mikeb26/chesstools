@@ -28,6 +28,7 @@ type RepBldOpts struct {
 	keepExisting bool
 	engineSelect bool
 	engineDepth  int
+	opponent     string
 }
 
 type MoveMapValue struct {
@@ -63,6 +64,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
 	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
 	f.IntVar(&opts.engineDepth, "enginedepth", 50, "<max engine search depth>")
+	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
 
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -148,9 +150,18 @@ func mainWork(opts *RepBldOpts) {
 			os.Exit(1)
 		}
 		startGame := chess.NewGame(pgnReader)
-		openingGame = chesstools.NewOpeningGame().WithGame(startGame).WithThreshold(opts.threshold).WithTopReplies(true).WithEval(opts.color == startGame.Position().Turn())
+		openingGame =
+			chesstools.NewOpeningGame().WithGame(startGame).WithThreshold(opts.threshold)
+		if opts.opponent != "" {
+			openingGame = openingGame.WithOpponent(opts.opponent, opts.color.Other()).WithFullRatingRange(true)
+		}
+		openingGame = openingGame.WithTopReplies(true).WithEval(opts.color == startGame.Position().Turn())
 	} else {
-		openingGame = chesstools.NewOpeningGame().WithThreshold(opts.threshold).WithTopReplies(true).WithEval(opts.color == chess.White)
+		openingGame = chesstools.NewOpeningGame().WithThreshold(opts.threshold)
+		if opts.opponent != "" {
+			openingGame = openingGame.WithOpponent(opts.opponent, opts.color.Other()).WithFullRatingRange(true)
+		}
+		openingGame = openingGame.WithTopReplies(true).WithEval(opts.color == chess.White)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to init: %v\n", err)
@@ -195,6 +206,7 @@ func buildRep(opts *RepBldOpts,
 				return false, nil
 			}
 			childGame = chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv).WithThreshold(openingGame.Threshold).WithTopReplies(true)
+			break
 		}
 
 		totalPct, err = processOneMove(openingGame.G, "<stdin>", 0,
@@ -217,7 +229,7 @@ func buildRep(opts *RepBldOpts,
 	} // else opponent's turn
 
 	respTotal := openingGame.OpeningResp.Total()
-	if respTotal < MinGames {
+	if opts.opponent == "" && respTotal < MinGames {
 		return false, nil
 	}
 

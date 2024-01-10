@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/mikeb26/chesstools"
+	"github.com/notnil/chess"
 )
 
 type SplunkOpts struct {
@@ -35,10 +36,17 @@ func encodeKey(fen string, color string) string {
 	return fmt.Sprintf("%s:%s", fen, color)
 }
 
-func decodeKey(key string) (string, string) {
+func decodeKey(key string) (string, chess.Color) {
 	parts := strings.Split(key, ":")
 
-	return parts[0], parts[1]
+	var c chess.Color
+	if strings.ToLower(parts[1]) == "white" {
+		c = chess.White
+	} else {
+		c = chess.Black
+	}
+
+	return parts[0], c
 }
 
 func parseArgs(opts *SplunkOpts) error {
@@ -155,8 +163,8 @@ func mainWork(opts *SplunkOpts) ([]string, error) {
 		fmt.Printf("\nSample of games where one of these players has had FEN '%v' as %v:\n", fen, color)
 
 		for _, gi := range gameInfos {
-			if (color == "black" && !contains(playerList, gi.Black.Name)) ||
-				(color == "white" && !contains(playerList, gi.White.Name)) {
+			if (color == chess.Black && !contains(playerList, gi.Black.Name)) ||
+				(color == chess.White && !contains(playerList, gi.White.Name)) {
 				continue
 			}
 			gameCount++
@@ -237,7 +245,7 @@ func computePlayerList(initPlayerList []string,
 		playerSeenInThisPos := make(map[string]bool)
 		for _, gi := range gameInfos {
 			var player string
-			if color == "white" {
+			if color == chess.White {
 				player = gi.White.Name
 			} else {
 				player = gi.Black.Name
@@ -278,7 +286,7 @@ func computePlayerList(initPlayerList []string,
 }
 
 func getFENGameInfosByPlayers(fen string,
-	color string, playerList []string) ([]chesstools.GameInfo, error) {
+	color chess.Color, playerList []string) ([]chesstools.GameInfo, error) {
 
 	gameInfos := make([]chesstools.GameInfo, 0)
 
