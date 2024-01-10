@@ -40,11 +40,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 			}
 			return false, nil
 		}
-		childGame, err := chesstools.NewOpeningGame(openingGame, mv, true,
-			openingGame.Threshold, false)
-		if err != nil {
-			return false, err
-		}
+		childGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv).WithThreshold(openingGame.Threshold).WithTopReplies(true)
 		return rv.buildRep(childGame, color, totalPct, gapSkip, stackDepth+1)
 	} // else
 
@@ -57,11 +53,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 		}
 		pushedOne = true
 
-		childGame, err := chesstools.NewOpeningGame(openingGame, mv.San, true,
-			openingGame.Threshold, false)
-		if err != nil {
-			return false, err
-		}
+		childGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold).WithTopReplies(true)
 		var childTotalPct float64
 		var childGapSkip int
 		childGapSkip = gapSkip
@@ -71,7 +63,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 		} else {
 			childTotalPct = totalPct * chesstools.Pct(mvTotal, total)
 		}
-		_, err = rv.buildRep(childGame, color, childTotalPct, childGapSkip,
+		_, err := rv.buildRep(childGame, color, childTotalPct, childGapSkip,
 			stackDepth+1)
 		if err != nil {
 			return false, err
@@ -82,13 +74,9 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 }
 
 func (rv *RepValidator) checkForGaps() error {
-	openingGame, err := chesstools.NewOpeningGame(nil, "", true,
-		rv.gapThreshold, false)
-	if err != nil {
-		return err
-	}
+	openingGame := chesstools.NewOpeningGame().WithThreshold(rv.gapThreshold).WithTopReplies(true)
 
-	_, err = rv.buildRep(openingGame, rv.color, 1.0, rv.gapSkip, 0)
+	_, err := rv.buildRep(openingGame, rv.color, 1.0, rv.gapSkip, 0)
 
 	return err
 }

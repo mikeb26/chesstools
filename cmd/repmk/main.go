@@ -148,11 +148,9 @@ func mainWork(opts *RepBldOpts) {
 			os.Exit(1)
 		}
 		startGame := chess.NewGame(pgnReader)
-		openingGame, err = chesstools.NewOpeningGame2(startGame, true,
-			opts.threshold, opts.color == startGame.Position().Turn())
+		openingGame = chesstools.NewOpeningGame().WithGame(startGame).WithThreshold(opts.threshold).WithTopReplies(true).WithEval(opts.color == startGame.Position().Turn())
 	} else {
-		openingGame, err = chesstools.NewOpeningGame(nil, "", true,
-			opts.threshold, opts.color == chess.White)
+		openingGame = chesstools.NewOpeningGame().WithThreshold(opts.threshold).WithTopReplies(true).WithEval(opts.color == chess.White)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to init: %v\n", err)
@@ -196,12 +194,7 @@ func buildRep(opts *RepBldOpts,
 				dag.addNodesFromGame(openingGame.Parent.G)
 				return false, nil
 			}
-			childGame, err = chesstools.NewOpeningGame(openingGame, mv, true,
-				openingGame.Threshold, false)
-
-			if err == nil {
-				break
-			}
+			childGame = chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv).WithThreshold(openingGame.Threshold).WithTopReplies(true)
 		}
 
 		totalPct, err = processOneMove(openingGame.G, "<stdin>", 0,
@@ -239,13 +232,9 @@ func buildRep(opts *RepBldOpts,
 		if alreadyKnowMove(openingGame, mv.San) || opts.engineSelect {
 			needEvals = false
 		}
-		childGame, err := chesstools.NewOpeningGame(openingGame, mv.San,
-			needEvals, openingGame.Threshold, needEvals)
-		if err != nil {
-			return false, err
-		}
+		childGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold).WithTopReplies(needEvals).WithEval(needEvals)
 		emittedAny = true
-		_, err = buildRep(opts, childGame, childTotalPct, output, stackDepth+1)
+		_, err := buildRep(opts, childGame, childTotalPct, output, stackDepth+1)
 		if err != nil {
 			return false, err
 		}
@@ -431,11 +420,7 @@ func processOneMove(g *chess.Game, pgnFilenameLocal string,
 }
 
 func alreadyKnowMove(openingGame *chesstools.OpeningGame, mv string) bool {
-	tmpGame, err := chesstools.NewOpeningGame(openingGame, mv, false,
-		openingGame.Threshold, false)
-	if err != nil {
-		panic(err)
-	}
+	tmpGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv).WithThreshold(openingGame.Threshold)
 
 	fen, err := chesstools.NormalizeFEN(tmpGame.G.Position().XFENString())
 	if err != nil {

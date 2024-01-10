@@ -62,12 +62,7 @@ func NewMkCtx(optsIn MkOpts) *MkCtx {
 		in:         bufio.NewReader(os.Stdin),
 	}
 
-	var err error
-	rv.openingGame, err = chesstools.NewOpeningGame(nil, "", false, 0.999,
-		false)
-	if err != nil {
-		panic(err)
-	}
+	rv.openingGame = chesstools.NewOpeningGame()
 
 	return rv
 }
@@ -458,8 +453,7 @@ func (mkCtx *MkCtx) getMovesAndClock(halfMoveCount int) error {
 		}
 
 		if mv != "" {
-			mkCtx.openingGame, err = chesstools.NewOpeningGame(openingGame, mv, false,
-				0.999, false)
+			mkCtx.openingGame = chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv)
 		} else {
 			err = fmt.Errorf("empty move")
 		}

@@ -80,8 +80,9 @@ type OpeningGame struct {
 	fullRatingRange bool
 	allSpeeds       bool
 	fromFen         bool
-	player          string
-	color           string
+	opponent        string
+	opponentColor   string
+	haveTopReplies  bool
 }
 
 func (openingGame *OpeningGame) String() string {
@@ -92,81 +93,103 @@ func (openingGame *OpeningGame) Turn() chess.Color {
 	return openingGame.G.Position().Turn()
 }
 
-func NewOpeningGame(parent *OpeningGame, move string, getTop bool,
-	threshold float64, getEval bool) (*OpeningGame, error) {
-	return NewOpeningGameActual(parent, nil, move, getTop, threshold, getEval,
-		false, false, "", "")
+func NewOpeningGame() *OpeningGame {
+	g := chess.NewGame()
+
+	openingGame := &OpeningGame{
+		G:               g,
+		Parent:          nil,
+		openingName:     "",
+		Eco:             "",
+		OpeningResp:     &OpeningResp{},
+		Threshold:       0.9999999999,
+		eval:            false,
+		fullRatingRange: false,
+		allSpeeds:       false,
+		fromFen:         false,
+		opponent:        "",
+		opponentColor:   "",
+		haveTopReplies:  false,
+	}
+
+	return openingGame
 }
 
-func NewOpeningGame2(game *chess.Game, getTop bool,
-	threshold float64, getEval bool) (*OpeningGame, error) {
-	return NewOpeningGameActual(nil, game, "", getTop, threshold, getEval,
-		false, false, "", "")
+func (openingGame *OpeningGame) WithThreshold(threshold float64) *OpeningGame {
+	openingGame.Threshold = threshold
+
+	return openingGame
 }
 
-func NewOpeningGame3(fen string, playerIn string,
-	colorIn string) (*OpeningGame, error) {
+func (openingGame *OpeningGame) WithOpponent(playerIn string, colorIn string) *OpeningGame {
+	openingGame.opponent = playerIn
+	openingGame.opponentColor = colorIn
 
+	return openingGame
+}
+
+func (openingGame *OpeningGame) WithAllSpeeds(fetchAllSpeeds bool) *OpeningGame {
+	openingGame.allSpeeds = fetchAllSpeeds
+
+	return openingGame
+}
+
+func (openingGame *OpeningGame) WithFullRatingRange(fetchFullRatingRange bool) *OpeningGame {
+	openingGame.fullRatingRange = fetchFullRatingRange
+
+	return openingGame
+}
+
+func (openingGame *OpeningGame) WithFEN(fen string) *OpeningGame {
 	newGameArgs, err := chess.FEN(fen)
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("FEN invalid err:%v fen:%v", err, fen))
 	}
 
-	g := chess.NewGame(newGameArgs)
-	openingGame, err := NewOpeningGameActual(nil, g, "", true, 0.999999999,
-		false, true, true, playerIn, colorIn)
-	if err != nil {
-		return nil, err
-	}
-
+	openingGame = openingGame.WithGame(chess.NewGame(newGameArgs))
 	openingGame.fromFen = true
 
-	return openingGame, nil
+	return openingGame
 }
 
-func NewOpeningGame4(parent *OpeningGame, move string) (*OpeningGame, error) {
-	return NewOpeningGameActual(parent, nil, move, true, 0.999999999, false,
-		true, true, "", "")
-}
-
-func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
-	getTop bool, threshold float64, getEval bool,
-	fullRatingRange bool, allSpeeds bool, playerIn string,
-	colorIn string) (*OpeningGame, error) {
-
-	var openingGame OpeningGame
-	openingGame.fromFen = false
-	openingGame.Threshold = threshold
-	openingGame.player = playerIn
-	openingGame.color = colorIn
-
-	if parent == nil {
-		if game == nil {
-			openingGame.G = chess.NewGame()
-		} else {
-			openingGame.G = game
+func (openingGame *OpeningGame) WithParent(parent *OpeningGame) *OpeningGame {
+	if !parent.fromFen {
+		parentMovesStr := parent.G.String()
+		parentMovesReader := strings.NewReader(parentMovesStr)
+		parentMoves, err := chess.PGN(parentMovesReader)
+		if err != nil {
+			panic(fmt.Sprintf("Could not parse parent err:%v moveList:%v", err,
+				parentMovesStr))
 		}
+		openingGame.G = chess.NewGame(parentMoves)
+
 	} else {
-		if !parent.fromFen {
-			parentMovesStr := parent.G.String()
-			parentMovesReader := strings.NewReader(parentMovesStr)
-			parentMoves, err := chess.PGN(parentMovesReader)
-			if err != nil {
-				return nil, err
-			}
-			openingGame.G = chess.NewGame(parentMoves)
-		} else {
-			parentFen := parent.G.Position().XFENString()
-			newGameArgs, err := chess.FEN(parentFen)
-			if err != nil {
-				return nil, err
-			}
-			openingGame.G = chess.NewGame(newGameArgs)
-			openingGame.fromFen = true
+		parentFen := parent.G.Position().XFENString()
+		newGameArgs, err := chess.FEN(parentFen)
+		if err != nil {
+			panic(fmt.Sprintf("Could not parse parent err:%v fen:%v", err,
+				parentFen))
 		}
-		openingGame.player = parent.player
+		openingGame.G = chess.NewGame(newGameArgs)
+		openingGame.fromFen = true
 	}
-	var err error
+	openingGame.opponent = parent.opponent
+	openingGame.Parent = parent
+
+	return openingGame.withECO()
+}
+
+func (openingGame *OpeningGame) WithGame(game *chess.Game) *OpeningGame {
+	openingGame.G = game
+
+	if openingGame.Parent != nil {
+		panic("WithGame() and WithParent() are mutually exclusive")
+	}
+
+	return openingGame.withECO()
+}
+
+func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 	if move != "" {
 		notation := chess.UseNotation(chess.UCINotation{})
 		notation(openingGame.G)
@@ -177,24 +200,40 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 			err = openingGame.G.MoveStr(move)
 		}
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("Could not parse move:%v in %v", move,
+				openingGame.String()))
 		}
 	}
-	openingGame.Parent = parent
-	if getTop {
-		openingGame.OpeningResp, err = getTopMoves(openingGame.G,
-			fullRatingRange, allSpeeds, openingGame.player, openingGame.color)
-		if err != nil {
-			return nil, err
-		}
+
+	return openingGame.withECO()
+}
+
+func (openingGame *OpeningGame) WithTopReplies(fetchTop bool) *OpeningGame {
+	if !fetchTop {
+		return openingGame
 	}
+
+	var err error
+	openingGame.OpeningResp, err = getTopReplies(openingGame.G,
+		openingGame.fullRatingRange, openingGame.allSpeeds, openingGame.opponent,
+		openingGame.opponentColor)
+	if err != nil {
+		panic(fmt.Sprintf("Could not fetch top moves err:%v in %v", err,
+			openingGame.String()))
+	}
+	openingGame.haveTopReplies = true
+
+	return openingGame
+}
+
+func (openingGame *OpeningGame) withECO() *OpeningGame {
 	var ok bool
 
 	opening, ok := openings[openingGame.G.Position().XFENString()]
 	if !ok {
-		if parent != nil {
-			openingGame.openingName = parent.openingName
-			openingGame.Eco = parent.Eco
+		if openingGame.Parent != nil {
+			openingGame.openingName = openingGame.Parent.openingName
+			openingGame.Eco = openingGame.Parent.Eco
 		} else {
 			openingGame.openingName = ""
 			openingGame.Eco = ""
@@ -203,16 +242,21 @@ func NewOpeningGameActual(parent *OpeningGame, game *chess.Game, move string,
 		openingGame.openingName = opening.name
 		openingGame.Eco = opening.eco
 	}
-	openingGame.eval = getEval
-	openingGame.fullRatingRange = fullRatingRange
-	if getEval {
-		err = openingGame.getEvalsForResp()
+
+	return openingGame
+}
+
+func (openingGame *OpeningGame) WithEval(doEval bool) *OpeningGame {
+	openingGame.eval = doEval
+	if doEval {
+		err := openingGame.getEvalsForResp()
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("Could not fetch evals err:%v in %v", err,
+				openingGame.String()))
 		}
 	}
 
-	return &openingGame, nil
+	return openingGame
 }
 
 func (openingGame *OpeningGame) ChoicesString(ignoreThreshold bool) string {
@@ -221,14 +265,8 @@ func (openingGame *OpeningGame) ChoicesString(ignoreThreshold bool) string {
 	total := openingGame.OpeningResp.Total()
 
 	for idx, mv := range openingGame.OpeningResp.Moves {
-		tmpGame, err := NewOpeningGame(openingGame, mv.San, false,
-			openingGame.Threshold, false)
-		var gameName string
-		if err != nil {
-			gameName = fmt.Sprintf("err:%v", err)
-		} else {
-			gameName = tmpGame.String()
-		}
+		tmpGame := NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold)
+		gameName := tmpGame.String()
 
 		mvTotal := mv.Total()
 		if !ignoreThreshold && Pct(mvTotal, total) < openingGame.Threshold {
@@ -278,8 +316,8 @@ func PctS2(pctf float64) string {
 	return fmt.Sprintf("%v%%", pctInt)
 }
 
-func getTopMoves(g *chess.Game, fullRatingRange bool,
-	allSpeeds bool, player string, color string) (*OpeningResp, error) {
+func getTopReplies(g *chess.Game, fullRatingRange bool,
+	allSpeeds bool, opponent string, opponentColor string) (*OpeningResp, error) {
 
 	position := url.QueryEscape(g.FEN())
 	var ratingBuckets string
@@ -300,15 +338,15 @@ func getTopMoves(g *chess.Game, fullRatingRange bool,
 	var requestURL *url.URL
 	var err error
 
-	if player == "" {
+	if opponent == "" {
 		queryParams =
 			fmt.Sprintf("?fen=%v&ratings=%v&speeds=%v", position, ratingBuckets,
 				speeds)
 		requestURL, err = url.Parse(LichessDbBaseUrl + queryParams)
 	} else {
 		queryParams =
-			fmt.Sprintf("?player=%v&fen=%v&ratings=%v&speeds=%v&color=%v", player,
-				position, ratingBuckets, speeds, color)
+			fmt.Sprintf("?player=%v&fen=%v&ratings=%v&speeds=%v&color=%v", opponent,
+				position, ratingBuckets, speeds, opponentColor)
 		requestURL, err = url.Parse(PlayerDbBaseUrl + queryParams)
 	}
 	if err != nil {
@@ -397,15 +435,14 @@ func init() {
 }
 
 func (openingGame *OpeningGame) getEvalsForResp() error {
+	if !openingGame.haveTopReplies {
+		return fmt.Errorf("bug: caller must call WithTopReplies() prior to WithEval()")
+	}
 	evalCtx := NewEvalCtx(true)
 	defer evalCtx.Close()
 
 	for idx, mv := range openingGame.OpeningResp.Moves {
-		tmpGame, err := NewOpeningGame(openingGame, mv.San, false,
-			openingGame.Threshold, false)
-		if err != nil {
-			return err
-		}
+		tmpGame := NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold)
 		evalCtx.SetFEN(tmpGame.G.FEN())
 		openingGame.OpeningResp.Moves[idx].Eval = evalCtx.Eval()
 	}

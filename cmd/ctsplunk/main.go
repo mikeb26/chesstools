@@ -185,10 +185,7 @@ func contains(strList []string, str string) bool {
 }
 
 func getFENGameInfos(fen string) ([]chesstools.GameInfo, error) {
-	openingGame, err := chesstools.NewOpeningGame3(fen, "", "")
-	if err != nil {
-		return nil, err
-	}
+	openingGame := chesstools.NewOpeningGame().WithFEN(fen).WithAllSpeeds(true).WithFullRatingRange(true).WithTopReplies(true)
 
 	return getGameInfos(openingGame, false)
 }
@@ -209,10 +206,8 @@ func getGameInfos(openingGame *chesstools.OpeningGame,
 	// else MinGames < total <= MaxGames
 	gameInfos := make([]chesstools.GameInfo, 0)
 	for _, mv := range openingGame.OpeningResp.Moves {
-		childGame, err := chesstools.NewOpeningGame4(openingGame, mv.San)
-		if err != nil {
-			return nil, err
-		}
+		childGame :=
+			chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithAllSpeeds(true).WithTopReplies(true).WithEval(true)
 		childGameInfos, err := getGameInfos(childGame, sampleOk)
 		if errors.Is(err, ErrNoGames) {
 			continue
@@ -292,10 +287,7 @@ func getFENGameInfosByPlayers(fen string,
 	for idx, player := range playerList {
 		fmt.Fprintf(os.Stderr, "\nChecking whether player %v has had FEN '%v' as %v (%v of %v)...",
 			player, fen, color, idx+1, numPlayers)
-		openingGame, err := chesstools.NewOpeningGame3(fen, player, color)
-		if err != nil {
-			return nil, err
-		}
+		openingGame := chesstools.NewOpeningGame().WithFEN(fen).WithOpponent(player, color).WithAllSpeeds(true).WithFullRatingRange(true).WithTopReplies(true)
 
 		playerGameInfos, err := getGameInfos(openingGame, true)
 		if errors.Is(err, ErrNoGames) {
