@@ -29,6 +29,7 @@ type RepBldOpts struct {
 	engineSelect bool
 	engineDepth  int
 	opponent     string
+	dark         bool
 }
 
 type MoveMapValue struct {
@@ -62,6 +63,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.Float64Var(&opts.threshold, "threshold", 0.02, "<thresholdPct>")
 	f.IntVar(&opts.maxDepth, "maxdepth", 14, "<max depth>")
 	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
+	f.BoolVar(&opts.dark, "dark", false, "<true|false>")
 	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
 	f.IntVar(&opts.engineDepth, "enginedepth", 50, "<max engine search depth>")
 	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
@@ -192,7 +194,7 @@ func buildRep(opts *RepBldOpts,
 		err := io.EOF
 		var childGame *chesstools.OpeningGame
 		for {
-			mv, err = selectMove(openingGame, totalPct, opts.engineSelect)
+			mv, err = selectMove(openingGame, totalPct, opts.engineSelect, opts)
 			if err != nil {
 				time.Sleep(1 * time.Second)
 				continue
@@ -256,7 +258,7 @@ func buildRep(opts *RepBldOpts,
 }
 
 func selectMove(openingGame *chesstools.OpeningGame,
-	totalPct float64, engineSelect bool) (string, error) {
+	totalPct float64, engineSelect bool, opts *RepBldOpts) (string, error) {
 
 	fen, err := chesstools.NormalizeFEN(openingGame.G.Position().XFENString())
 	if err != nil {
@@ -272,22 +274,25 @@ func selectMove(openingGame *chesstools.OpeningGame,
 		return selectMoveViaEngine(openingGame, fen)
 	} // else
 
-	return selectMoveInteractive(openingGame, totalPct)
+	return selectMoveInteractive(openingGame, totalPct, opts)
 }
 
 func selectMoveInteractive(openingGame *chesstools.OpeningGame,
-	totalPct float64) (string, error) {
+	totalPct float64, opts *RepBldOpts) (string, error) {
 	numBookMoves := len(openingGame.OpeningResp.Moves)
 
+	g := openingGame.G
+	pos := g.Position()
+	board := pos.Board()
+
 	fmt.Printf("\nOpening: %v (%v)\n", openingGame.String(), openingGame.Eco)
-	fmt.Printf("PGN:%v\nFEN: \"%v\"\n", openingGame.G.String(),
-		openingGame.G.Position().XFENString())
+	fmt.Printf("PGN:%v\nFEN: \"%v\"\n", g.String(), pos.XFENString())
 	fmt.Printf("Percent of total: %v\n", chesstools.PctS2(totalPct))
 	fmt.Printf("Move Choices: \n%v", openingGame.ChoicesString(true))
 	fmt.Printf("  %v. End this variation\n", numBookMoves+1)
 	fmt.Printf("  %v. Quit\n", numBookMoves+2)
 
-	fmt.Printf("%v", openingGame.G.Position().Board().Draw())
+	fmt.Printf("%v", board.Draw2(pos.Turn(), opts.dark))
 	fmt.Printf("\nEnter move: ")
 	selection := ""
 	fmt.Scanf("%s", &selection)
