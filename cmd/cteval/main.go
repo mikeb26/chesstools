@@ -14,26 +14,40 @@ func main() {
 	evalCtx := chesstools.NewEvalCtx(false)
 	defer evalCtx.Close()
 
-	parseArgs(evalCtx)
+	dark := parseArgs(evalCtx)
 	evalCtx.InitEngine()
 	er := evalCtx.Eval()
-	displayOutput(evalCtx, er)
+	displayOutput(evalCtx, er, dark)
 }
 
-func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult) {
+func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
+	dark bool) {
 	if er == nil {
 		fmt.Printf("Not found\n")
 		return
 	}
-	fmt.Printf("FEN: %v\n", evalCtx.GetPosition())
+
+	fen := evalCtx.GetPosition()
+	fmt.Printf("FEN: %v\n", fen)
 	fmt.Printf("Best Move: %v\n", er.BestMove)
 	fmt.Printf("Score: cp: %v\n", er.CP)
 	fmt.Printf("Score: mate: %v\n", er.Mate)
 	fmt.Printf("Depth: %v\n", er.Depth)
 	fmt.Printf("k-nodes/s: %v\n", er.KNPS)
+
+	newGameArgs, err := chess.FEN(fen)
+	if err != nil {
+		panic(fmt.Sprintf("FEN invalid err:%v fen:%v", err, fen))
+	}
+
+	g := chess.NewGame(newGameArgs)
+	p := g.Position()
+	b := p.Board()
+
+	fmt.Printf(b.Draw2(p.Turn(), dark))
 }
 
-func parseArgs(evalCtx *chesstools.EvalCtx) {
+func parseArgs(evalCtx *chesstools.EvalCtx) bool {
 	f := flag.NewFlagSet("cteval", flag.ExitOnError)
 
 	var pgnFile string
@@ -52,6 +66,8 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	f.Uint64Var(&numThreads, "thread", 0, "<numThreads>")
 	var hashSizeInMiB uint64
 	f.Uint64Var(&hashSizeInMiB, "hash", 0, "<hashSizeInMiB>")
+	var dark bool
+	f.BoolVar(&dark, "dark", false, "<true|false>")
 	var cacheOnly bool
 	f.BoolVar(&cacheOnly, "cacheonly", false, "only return cached evaluations")
 	var staleOk bool
@@ -115,4 +131,6 @@ func parseArgs(evalCtx *chesstools.EvalCtx) {
 	if noCloudCache {
 		evalCtx = evalCtx.WithoutCloudCache()
 	}
+
+	return dark
 }
