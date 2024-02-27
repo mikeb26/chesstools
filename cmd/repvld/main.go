@@ -23,6 +23,7 @@ import (
 type RepValidator struct {
 	color               chess.Color
 	scoreDepth          int
+	scoreTime           uint
 	gapThreshold        float64
 	gapSkip             int
 	scoreExceptions     map[string]string
@@ -60,13 +61,14 @@ type Conflict struct {
 	conflictMove MoveMapValue
 }
 
-func NewRepValidator(c chess.Color, sd int, pgns []string,
+func NewRepValidator(c chess.Color, sd int, st uint, pgns []string,
 	scoreExceptionsFileIn string, cacheOnly bool, staleOk bool,
 	gapThresholdIn float64, gapSkipIn int) *RepValidator {
 
 	rv := &RepValidator{
 		color:               c,
 		scoreDepth:          sd,
+		scoreTime:           st,
 		gapThreshold:        gapThresholdIn,
 		gapSkip:             gapSkipIn,
 		scoreExceptions:     make(map[string]string, 0),
@@ -101,20 +103,21 @@ func NewRepValidator(c chess.Color, sd int, pgns []string,
 func main() {
 	var color chess.Color
 	var scoreDepth int
+	var scoreTime uint
 	var gapThreshold float64
 	var gapSkip int
 	var scoreExceptionsFile string
 	var cacheOnly bool
 	var staleOk bool
-	pgnList, err := parseArgs(&color, &scoreDepth, &scoreExceptionsFile,
-		&cacheOnly, &staleOk, &gapThreshold, &gapSkip)
+	pgnList, err := parseArgs(&color, &scoreDepth, &scoreTime,
+		&scoreExceptionsFile, &cacheOnly, &staleOk, &gapThreshold, &gapSkip)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	rv := NewRepValidator(color, scoreDepth, pgnList, scoreExceptionsFile,
-		cacheOnly, staleOk, gapThreshold, gapSkip)
+	rv := NewRepValidator(color, scoreDepth, scoreTime, pgnList,
+		scoreExceptionsFile, cacheOnly, staleOk, gapThreshold, gapSkip)
 	err = rv.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize validator: %v\n", err)
@@ -128,16 +131,17 @@ func main() {
 	}
 }
 
-func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
-	cacheOnly *bool, staleOk *bool, gapThreshold *float64,
-	gapSkip *int) ([]string, error) {
+func parseArgs(c *chess.Color, scoreDepth *int, scoreTime *uint,
+	scoreExceptionsFile *string, cacheOnly *bool, staleOk *bool,
+	gapThreshold *float64, gapSkip *int) ([]string, error) {
 
 	f := flag.NewFlagSet("repvld", flag.ExitOnError)
 	var colorFlag string
 
 	f.StringVar(&colorFlag, "color", "", "<white|black> (repertoire color)")
 	f.StringVar(scoreExceptionsFile, "exceptions", "", "file with score exceptions")
-	f.IntVar(scoreDepth, "depth", 0, "<evalDepthInPlies>")
+	f.IntVar(scoreDepth, "depth", 0, "<evalDepthInPliesPerMove>")
+	f.UintVar(scoreTime, "time", 0, "<evalTimePerMove>")
 	f.Float64Var(gapThreshold, "gapthreshold", 0.04, "<gapThresholdPct>")
 	f.IntVar(gapSkip, "gapskip", 0, "<gapMoveSkipCount>")
 	f.BoolVar(cacheOnly, "cacheonly", false, "only return cached evaluations")
@@ -159,6 +163,10 @@ func parseArgs(c *chess.Color, scoreDepth *int, scoreExceptionsFile *string,
 	if len(f.Args()) == 0 {
 		return nil, fmt.Errorf("please specify 1 or more PGN files representing a repertoire for %v", (*c).Name())
 	}
+	if *scoreTime != 0 && *scoreDepth != 0 {
+		return nil, fmt.Errorf("--depth and --time are mutually exclusive; please choose one or the other")
+	}
+
 	return f.Args(), nil
 }
 
@@ -218,10 +226,14 @@ func (rv *RepValidator) loadExceptions() error {
 	return nil
 }
 
+func (rv *RepValidator) shouldScoreMoves() bool {
+	return rv.scoreDepth > 0 || rv.scoreTime > 0
+}
+
 func (rv *RepValidator) Load() error {
 	var err error
 
-	if rv.scoreDepth > 0 && rv.scoreExceptionsFile != "" {
+	if rv.shouldScoreMoves() && rv.scoreExceptionsFile != "" {
 		err = rv.loadExceptions()
 		if err != nil {
 			return err
@@ -331,7 +343,13 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	gameNumLocal int, fen string, moveCount int, m string) bool {
 
 	if rv.evalCtx == nil {
-		rv.evalCtx = chesstools.NewEvalCtx(rv.cacheOnly).WithFEN(fen).WithEvalDepth(rv.scoreDepth).WithoutCloudCache()
+		rv.evalCtx =
+			chesstools.NewEvalCtx(rv.cacheOnly).WithFEN(fen).WithoutCloudCache()
+		if rv.scoreDepth > 0 {
+			rv.evalCtx = rv.evalCtx.WithEvalDepth(rv.scoreDepth)
+		} else if rv.scoreTime > 0 {
+			rv.evalCtx = rv.evalCtx.WithEvalTime(rv.scoreTime)
+		}
 		if rv.staleOk {
 			rv.evalCtx = rv.evalCtx.WithStaleOk()
 		}
@@ -391,7 +409,7 @@ func (rv *RepValidator) processOneMove(g *chess.Game, pgnFilenameLocal string,
 		rv.moveMap[fen] = MoveMapValue{move: m, game: g, gameNum: gameNumLocal,
 			pgnFilename: pgnFilenameLocal}
 		rv.uniquePosCount++
-		if p.Turn() == rv.color && rv.scoreDepth != 0 && moveCount > 3 {
+		if p.Turn() == rv.color && rv.shouldScoreMoves() && moveCount > 3 {
 			if *scoreFutureMovesThisGame {
 				*scoreFutureMovesThisGame = rv.scoreMove(g, pgnFilenameLocal,
 					gameNumLocal, fen, moveCount, m)
