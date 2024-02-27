@@ -27,18 +27,21 @@ const (
 
 	DefaultEvalTimeInSec = 300
 	DefaultDepth         = -1 // infinite
+	UnknownSearchTime    = 0.0
+	UnknownEngVer        = 0.0
 )
 
 var ErrCacheMiss = errors.New("cache miss")
 var ErrCacheStale = errors.New("cache stale")
 
 type EvalResult struct {
-	CP         int
-	Mate       int
-	BestMove   string
-	Depth      int
-	EngVersion float64
-	KNPS       string
+	CP                  int
+	Mate                int
+	BestMove            string
+	Depth               int
+	EngVersion          float64
+	KNPS                string
+	SearchTimeInSeconds float64
 }
 
 type EvalCtx struct {
@@ -189,12 +192,15 @@ func (evalCtx *EvalCtx) InitEngine() {
 		evalCtx.position = p[halfMoveIndex]
 	}
 
+	evalCtx.earlyInitEngine()
+
 	// actual init is deferred until first use as it is exensive and unneeded
 	// when we get a cache hit
 	evalCtx.doLazyInit = true
 }
 
-func (evalCtx *EvalCtx) lazyInitEngine() {
+// just renice and grab the version; full init occurs in lazyInitEngine()
+func (evalCtx *EvalCtx) earlyInitEngine() {
 	if evalCtx.engine == nil {
 		return
 	}
@@ -219,7 +225,14 @@ func (evalCtx *EvalCtx) lazyInitEngine() {
 		panic("Cannot parse stockfish version number")
 	}
 
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
+}
+
+func (evalCtx *EvalCtx) lazyInitEngine() {
+	if evalCtx.engine == nil {
+		return
+	}
+
+	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
 	if err != nil {
 		panic(err)
 	}
@@ -341,8 +354,8 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 		panic(err)
 	}
 
-	if evalCtx.engVersion == 0.0 {
-		evalCtx.engVersion = 16.0
+	if evalCtx.engVersion == UnknownEngVer {
+		panic("Unknown current engine version")
 	}
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
@@ -456,8 +469,9 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	algNotation := chess.AlgebraicNotation{}
 	evalResult.BestMove = algNotation.Encode(evalCtx.position, bestMove)
 	evalResult.Depth = cloudResp.Depth
-	evalResult.EngVersion = 14.1 // not in response; hardcode for now
+	evalResult.EngVersion = UnknownEngVer // not in response
 	evalResult.KNPS = fmt.Sprintf("%v (cloud cache)", cloudResp.KNodes)
+	evalResult.SearchTimeInSeconds = UnknownSearchTime // not in response
 
 	if !staleOk && evalCtx.engVersion > evalResult.EngVersion {
 		return nil, ErrCacheStale
@@ -565,10 +579,10 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	if err == nil {
 		fromCache = true
 
-		if evalCtx.cacheOnly || (evalCtx.evalDepth != DefaultDepth &&
-			er.Depth >= evalCtx.evalDepth) {
-			// we were asked to search by depth, have a cache hit, and the cached
-			// entry has a greater depth than was requested so we can use it
+		if evalCtx.cacheOnly ||
+			(evalCtx.evalDepth != DefaultDepth && er.Depth >= evalCtx.evalDepth) ||
+			(evalCtx.evalDepth == DefaultDepth && er.SearchTimeInSeconds >= float64(evalCtx.evalTimeInSec)) {
+
 			return er
 		}
 	} else if evalCtx.cacheOnly {
@@ -584,6 +598,8 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 
 	fmt.Fprintf(os.Stderr, "eval: scoring position:%v\n", evalCtx.position)
 
+	searchStartTime := time.Now()
+
 	if evalCtx.evalDepth != DefaultDepth {
 		err = evalCtx.engine.Run(uci.CmdGo{Depth: evalCtx.evalDepth})
 	} else {
@@ -595,6 +611,8 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	}
 
 	results := evalCtx.engine.SearchResults()
+
+	searchEndTime := time.Now()
 
 	if fromCache && results.Info.Depth < er.Depth {
 		// we had a cached result, searched with the engine anyway, and
@@ -620,12 +638,13 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	}
 
 	er = &EvalResult{
-		CP:         results.Info.Score.CP,
-		Mate:       results.Info.Score.Mate,
-		BestMove:   algNotation.Encode(evalCtx.position, bestMoveFixed),
-		Depth:      results.Info.Depth,
-		KNPS:       fmt.Sprintf("%v", results.Info.NPS/1000),
-		EngVersion: evalCtx.engVersion,
+		CP:                  results.Info.Score.CP,
+		Mate:                results.Info.Score.Mate,
+		BestMove:            algNotation.Encode(evalCtx.position, bestMoveFixed),
+		Depth:               results.Info.Depth,
+		KNPS:                fmt.Sprintf("%v", results.Info.NPS/1000),
+		EngVersion:          evalCtx.engVersion,
+		SearchTimeInSeconds: searchEndTime.Sub(searchStartTime).Seconds(),
 	}
 
 	if evalCtx.g.Position().Turn() == chess.Black {

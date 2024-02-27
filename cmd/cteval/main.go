@@ -30,10 +30,16 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	fen := evalCtx.GetPosition()
 	fmt.Printf("FEN: %v\n", fen)
 	fmt.Printf("Best Move: %v\n", er.BestMove)
-	fmt.Printf("Score: cp: %v\n", er.CP)
-	fmt.Printf("Score: mate: %v\n", er.Mate)
+	if er.Mate == 0 {
+		fmt.Printf("Eval: %.2v\n", float32(er.CP)/100)
+	} else {
+		fmt.Printf("Eval: mate-in-%v\n", er.Mate)
+	}
 	fmt.Printf("Depth: %v\n", er.Depth)
 	fmt.Printf("k-nodes/s: %v\n", er.KNPS)
+	if er.SearchTimeInSeconds != chesstools.UnknownSearchTime {
+		fmt.Printf("SearchTime: %.2vs\n", er.SearchTimeInSeconds)
+	}
 
 	newGameArgs, err := chess.FEN(fen)
 	if err != nil {
