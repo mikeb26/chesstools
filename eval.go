@@ -7,6 +7,7 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,6 +30,8 @@ const (
 	DefaultDepth         = -1 // infinite
 	UnknownSearchTime    = 0.0
 	UnknownEngVer        = 0.0
+	FileNamePrefix       = "fen."
+	CacheFileDir         = "cache"
 )
 
 var ErrCacheMiss = errors.New("cache miss")
@@ -50,7 +53,7 @@ type EvalCtx struct {
 	pgnFile       string
 	fen           string
 	numThreads    uint64 // default == num CPU hyperthreads
-	hashSizeInMiB uint64 // default == 75% system RAM
+	hashSizeInMiB uint64 // default == 50% system RAM
 	evalTimeInSec uint   // default == 5 minutes
 	evalDepth     int    // default == infinite
 	g             *chess.Game
@@ -90,11 +93,9 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.doLazyInit = false
 
 	var err error
-	if cacheOnlyIn == false {
-		rv.engine, err = uci.New("stockfish")
-		if err != nil {
-			panic("Unable to initialize stockfish")
-		}
+	rv.engine, err = uci.New("stockfish")
+	if err != nil {
+		panic("Unable to initialize stockfish")
 	}
 
 	return rv
@@ -108,10 +109,6 @@ func (evalCtx *EvalCtx) WithPgnFile(pgnFile string) *EvalCtx {
 func (evalCtx *EvalCtx) WithCacheOnly() *EvalCtx {
 	evalCtx.cacheOnly = true
 	evalCtx.staleOk = true
-	if evalCtx.engine != nil {
-		evalCtx.engine.Close()
-		evalCtx.engine = nil
-	}
 	return evalCtx
 }
 
@@ -201,10 +198,6 @@ func (evalCtx *EvalCtx) InitEngine() {
 
 // just renice and grab the version; full init occurs in lazyInitEngine()
 func (evalCtx *EvalCtx) earlyInitEngine() {
-	if evalCtx.engine == nil {
-		return
-	}
-
 	err := evalCtx.engine.Renice()
 	if err != nil {
 		panic(err)
@@ -228,10 +221,6 @@ func (evalCtx *EvalCtx) earlyInitEngine() {
 }
 
 func (evalCtx *EvalCtx) lazyInitEngine() {
-	if evalCtx.engine == nil {
-		return
-	}
-
 	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
 	if err != nil {
 		panic(err)
@@ -268,11 +257,9 @@ func (evalCtx *EvalCtx) SetFEN(fen string) *EvalCtx {
 	}
 	evalCtx.g = chess.NewGame(fenCheck)
 	evalCtx.position = evalCtx.g.Position()
-	if evalCtx.engine != nil {
-		err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
-		if err != nil {
-			panic(err)
-		}
+	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
+	if err != nil {
+		panic(err)
 	}
 
 	return evalCtx
@@ -359,6 +346,12 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	}
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
+	}
+	// temporary special case; remove when new sf version is released
+	if er.SearchTimeInSeconds == UnknownSearchTime &&
+		er.EngVersion == 16.1 &&
+		er.Depth == 50 {
+		er.SearchTimeInSeconds = 600
 	}
 
 	er.KNPS = er.KNPS + " (local cache)"
@@ -562,15 +555,29 @@ func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
 func fen2CacheFileName(fen string) string {
 	fileName := strings.ReplaceAll(fen, "/", "@@@")
 	fileName = strings.ReplaceAll(fileName, " ", "___")
-	fileName = fmt.Sprintf("fen.%v", fileName)
+	fileName = fmt.Sprintf("%v%v", FileNamePrefix, fileName)
 
 	return fileName
 }
 
+func cacheFileName2Fen(fileName string) string {
+	fen := fileName[len(FileNamePrefix):]
+	fen = strings.ReplaceAll(fen, "___", " ")
+	fen = strings.ReplaceAll(fen, "@@@", "/")
+
+	var err error
+	fen, err = NormalizeFEN(fen)
+	if err != nil {
+		panic(err)
+	}
+
+	return fen
+}
+
 func fen2CacheFilePath(cacheFileName string) string {
 	xsum := crc32.ChecksumIEEE([]byte(cacheFileName))
-	return fmt.Sprintf("cache/%02x/%02x/%02x/%02x", xsum>>24, (xsum>>16)&0xff,
-		(xsum>>8)&0xff, xsum&0xff)
+	return fmt.Sprintf("%v/%02x/%02x/%02x/%02x", CacheFileDir, xsum>>24,
+		(xsum>>16)&0xff, (xsum>>8)&0xff, xsum&0xff)
 }
 
 func (evalCtx *EvalCtx) Eval() *EvalResult {
@@ -581,7 +588,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 
 		if evalCtx.cacheOnly ||
 			(evalCtx.evalDepth != DefaultDepth && er.Depth >= evalCtx.evalDepth) ||
-			(evalCtx.evalDepth == DefaultDepth && er.SearchTimeInSeconds >= float64(evalCtx.evalTimeInSec)) {
+			(evalCtx.evalDepth == DefaultDepth && uint(math.Round(er.SearchTimeInSeconds)) >= evalCtx.evalTimeInSec) {
 
 			return er
 		}
@@ -589,9 +596,6 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		return nil
 	}
 
-	if evalCtx.engine == nil {
-		panic("eval: BUG: engine should be non-nil for uncached eval")
-	}
 	if evalCtx.doLazyInit {
 		evalCtx.lazyInitEngine()
 	}
@@ -655,4 +659,81 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	evalCtx.persistResultToCache(er)
 
 	return er
+}
+
+type cachedEvalEntryList struct {
+	entries []string
+}
+
+// filepath.Walk() doesn't work with symlinks so walk ourselves
+func findAllCacheEvalFiles(dirPath string) (cachedEvalEntryList, error) {
+
+	curList := cachedEvalEntryList{}
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		fmt.Printf("Failed to open dir %v: %v\n", dirPath, err)
+		return curList, err
+	}
+	defer dir.Close()
+
+	fileList, err := dir.ReadDir(-1)
+	if err != nil {
+		fmt.Printf("Failed to read dir %v: %v\n", dirPath, err)
+		return curList, err
+	}
+
+	for _, file := range fileList {
+		if file.IsDir() {
+			childList, err := findAllCacheEvalFiles(filepath.Join(dirPath, file.Name()))
+			if err != nil {
+				return curList, err
+			}
+			curList.entries = append(curList.entries, childList.entries...)
+		} else if strings.HasPrefix(file.Name(), FileNamePrefix) {
+			curList.entries = append(curList.entries, filepath.Join(dirPath, file.Name()))
+		}
+	}
+
+	return curList, nil
+}
+
+func (evalCtx *EvalCtx) UpgradeCache() error {
+	entryList, err := findAllCacheEvalFiles(CacheFileDir)
+	if err != nil {
+		fmt.Printf("Failed to find all cached evals: %v", err)
+		return err
+	}
+
+	numEntries := len(entryList.entries)
+	fmt.Printf("Checking %v cached entries...\n", numEntries)
+
+	ii := 0
+	for _, entry := range entryList.entries {
+		ii++
+		cacheFile := filepath.Base(entry)
+		fen := cacheFileName2Fen(cacheFile)
+
+		evalCtx.SetFEN(fen)
+		er, err := evalCtx.loadResultFromLocalCache(true)
+		if err != nil {
+			return err
+		}
+		if er.EngVersion == evalCtx.engVersion {
+			continue
+		}
+		evalCtx.staleOk = false
+		evalCtx.evalDepth = DefaultDepth
+		evalCtx.evalTimeInSec = uint(math.Round(er.SearchTimeInSeconds))
+		if evalCtx.evalTimeInSec == UnknownSearchTime {
+			evalCtx.evalTimeInSec = DefaultEvalTimeInSec
+		}
+		fmt.Printf("  Upgrading(%v of %v) fen:%v...\n", ii, numEntries, fen)
+		newEr := evalCtx.Eval()
+		if er.BestMove != newEr.BestMove {
+			fmt.Printf("    *** best move changed from %v(ver %v) to %v(ver %v)\n",
+				er.BestMove, er.EngVersion, newEr.BestMove, newEr.EngVersion)
+		}
+	}
+
+	return nil
 }

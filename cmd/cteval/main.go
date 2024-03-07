@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -14,8 +15,13 @@ func main() {
 	evalCtx := chesstools.NewEvalCtx(false)
 	defer evalCtx.Close()
 
-	dark := parseArgs(evalCtx)
+	dark, doUpgrade := parseArgs(evalCtx)
 	evalCtx.InitEngine()
+	if doUpgrade {
+		evalCtx.UpgradeCache()
+		return
+	} // else
+
 	er := evalCtx.Eval()
 	displayOutput(evalCtx, er, dark)
 }
@@ -38,7 +44,12 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	fmt.Printf("Depth: %v\n", er.Depth)
 	fmt.Printf("k-nodes/s: %v\n", er.KNPS)
 	if er.SearchTimeInSeconds != chesstools.UnknownSearchTime {
-		fmt.Printf("SearchTime: %.2vs\n", er.SearchTimeInSeconds)
+		fmt.Printf("SearchTime: %vs\n", uint(math.Round(er.SearchTimeInSeconds)))
+	}
+	if er.EngVersion != chesstools.UnknownEngVer {
+		fmt.Printf("EngVer: %v\n", er.EngVersion)
+	} else {
+		fmt.Printf("EngVer: <unknown>\n")
 	}
 
 	newGameArgs, err := chess.FEN(fen)
@@ -53,7 +64,7 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	fmt.Printf(b.Draw2(p.Turn(), dark))
 }
 
-func parseArgs(evalCtx *chesstools.EvalCtx) bool {
+func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 	f := flag.NewFlagSet("cteval", flag.ExitOnError)
 
 	var pgnFile string
@@ -80,8 +91,14 @@ func parseArgs(evalCtx *chesstools.EvalCtx) bool {
 	f.BoolVar(&staleOk, "staleok", false, "accept cached evals from older engine versions")
 	var noCloudCache bool
 	f.BoolVar(&noCloudCache, "nocloudcache", false, "do not reference lichess APIs for cached evaluations")
+	var doUpgrade bool
+	f.BoolVar(&doUpgrade, "upgrade", false, "upgrade all existing cached evaluations using the most recently installed engine version")
 
 	f.Parse(os.Args[1:])
+
+	if doUpgrade {
+		return false, true
+	}
 
 	var turn chess.Color
 	if pgnFile == "" && fen == "" {
@@ -138,5 +155,5 @@ func parseArgs(evalCtx *chesstools.EvalCtx) bool {
 		evalCtx = evalCtx.WithoutCloudCache()
 	}
 
-	return dark
+	return dark, false
 }

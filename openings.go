@@ -445,6 +445,7 @@ func (openingGame *OpeningGame) getEvalsForResp() error {
 	}
 	evalCtx := NewEvalCtx(true)
 	defer evalCtx.Close()
+	evalCtx.InitEngine()
 
 	for idx, mv := range openingGame.OpeningResp.Moves {
 		tmpGame := NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold)
