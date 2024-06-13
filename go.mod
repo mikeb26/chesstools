@@ -1,6 +1,6 @@
 module github.com/mikeb26/chesstools
 
-go 1.22.0
+go 1.22.3
 
 replace github.com/notnil/chess => github.com/mikeb26/chess v1.5.1-0.20240117221713-2c91017f4920
 
