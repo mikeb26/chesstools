@@ -47,6 +47,7 @@ type RepValidator struct {
 	evalCtx           *chesstools.EvalCtx
 	cacheOnly         bool
 	staleOk           bool
+	minMoveNum2Eval   uint
 }
 
 type MoveMapValue struct {
@@ -63,7 +64,7 @@ type Conflict struct {
 
 func NewRepValidator(c chess.Color, sd int, st uint, pgns []string,
 	scoreExceptionsFileIn string, cacheOnly bool, staleOk bool,
-	gapThresholdIn float64, gapSkipIn int) *RepValidator {
+	gapThresholdIn float64, gapSkipIn int, minMoveNum2EvalIn uint) *RepValidator {
 
 	rv := &RepValidator{
 		color:               c,
@@ -83,6 +84,7 @@ func NewRepValidator(c chess.Color, sd int, st uint, pgns []string,
 		blackConflictList:   make([]Conflict, 0),
 		cacheOnly:           cacheOnly,
 		staleOk:             staleOk,
+		minMoveNum2Eval:     minMoveNum2EvalIn,
 	}
 	for ii, p := range pgns {
 		rv.pgnFileList[ii] = p
@@ -109,15 +111,18 @@ func main() {
 	var scoreExceptionsFile string
 	var cacheOnly bool
 	var staleOk bool
+	var minMoveNum2Eval uint
 	pgnList, err := parseArgs(&color, &scoreDepth, &scoreTime,
-		&scoreExceptionsFile, &cacheOnly, &staleOk, &gapThreshold, &gapSkip)
+		&scoreExceptionsFile, &cacheOnly, &staleOk, &gapThreshold, &gapSkip,
+		&minMoveNum2Eval)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
 	rv := NewRepValidator(color, scoreDepth, scoreTime, pgnList,
-		scoreExceptionsFile, cacheOnly, staleOk, gapThreshold, gapSkip)
+		scoreExceptionsFile, cacheOnly, staleOk, gapThreshold, gapSkip,
+		minMoveNum2Eval)
 	err = rv.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize validator: %v\n", err)
@@ -133,7 +138,7 @@ func main() {
 
 func parseArgs(c *chess.Color, scoreDepth *int, scoreTime *uint,
 	scoreExceptionsFile *string, cacheOnly *bool, staleOk *bool,
-	gapThreshold *float64, gapSkip *int) ([]string, error) {
+	gapThreshold *float64, gapSkip *int, minMoveNum2Eval *uint) ([]string, error) {
 
 	f := flag.NewFlagSet("repvld", flag.ExitOnError)
 	var colorFlag string
@@ -146,6 +151,7 @@ func parseArgs(c *chess.Color, scoreDepth *int, scoreTime *uint,
 	f.IntVar(gapSkip, "gapskip", 0, "<gapMoveSkipCount>")
 	f.BoolVar(cacheOnly, "cacheonly", false, "only return cached evaluations")
 	f.BoolVar(staleOk, "staleok", false, "accept cached evals from older engine versions")
+	f.UintVar(minMoveNum2Eval, "minevalmovenum", 3, "<minevalmovenum>")
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
@@ -409,7 +415,8 @@ func (rv *RepValidator) processOneMove(g *chess.Game, pgnFilenameLocal string,
 		rv.moveMap[fen] = MoveMapValue{move: m, game: g, gameNum: gameNumLocal,
 			pgnFilename: pgnFilenameLocal}
 		rv.uniquePosCount++
-		if p.Turn() == rv.color && rv.shouldScoreMoves() && moveCount > 3 {
+		if p.Turn() == rv.color && rv.shouldScoreMoves() &&
+			moveCount > int(rv.minMoveNum2Eval) {
 			if *scoreFutureMovesThisGame {
 				*scoreFutureMovesThisGame = rv.scoreMove(g, pgnFilenameLocal,
 					gameNumLocal, fen, moveCount, m)
