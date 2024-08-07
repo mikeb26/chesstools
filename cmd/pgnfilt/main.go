@@ -14,19 +14,22 @@ import (
 )
 
 type FiltOpts struct {
-	minELO        uint64
-	minTimeInSecs uint64
+	fen string
 }
 
 type FiltCtx struct {
 	pgnFileList []string
-	opts        chess.ScannerOpts
+	fopts       FiltOpts
+	sopts       chess.ScannerOpts
 }
 
-func NewFiltCtx(pgns []string, optsIn chess.ScannerOpts) *FiltCtx {
+func NewFiltCtx(pgns []string, foptsIn FiltOpts,
+	soptsIn chess.ScannerOpts) *FiltCtx {
+
 	rv := &FiltCtx{
 		pgnFileList: make([]string, len(pgns)),
-		opts:        optsIn,
+		fopts:       foptsIn,
+		sopts:       soptsIn,
 	}
 	for ii, p := range pgns {
 		rv.pgnFileList[ii] = p
@@ -36,14 +39,15 @@ func NewFiltCtx(pgns []string, optsIn chess.ScannerOpts) *FiltCtx {
 }
 
 func main() {
-	opts := chess.ScannerOpts{}
-	pgnList, err := parseArgs(&opts)
+	fopts := FiltOpts{}
+	sopts := chess.ScannerOpts{}
+	pgnList, err := parseArgs(&fopts, &sopts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	filtCtx := NewFiltCtx(pgnList, opts)
+	filtCtx := NewFiltCtx(pgnList, fopts, sopts)
 	err = filtCtx.LoadAndFilter()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load PGN files: %v\n", err)
@@ -51,11 +55,10 @@ func main() {
 	}
 }
 
-func parseArgs(opts *chess.ScannerOpts) ([]string, error) {
+func parseArgs(fopts *FiltOpts, sopts *chess.ScannerOpts) ([]string, error) {
 	f := flag.NewFlagSet("pgnfilt", flag.ExitOnError)
 
-	//	f.Uint64Var(&opts.MinELO, "minelo", 0, "minimum ELO of both players")
-	//	f.Uint64Var(&opts.MinTimeInSecs, "mintime", 0, "minimum clock in seconds")
+	f.StringVar(&fopts.fen, "fen", "", "includes this specific position")
 	f.Parse(os.Args[1:])
 
 	if len(f.Args()) == 0 {
@@ -82,7 +85,7 @@ func (filtCtx *FiltCtx) LoadAndFilter() error {
 }
 
 func (filtCtx *FiltCtx) processOnePGN(f io.Reader) error {
-	scanner := chess.NewScannerWithOptions(f, filtCtx.opts)
+	scanner := chess.NewScannerWithOptions(f, filtCtx.sopts)
 
 	var err error
 	for scanner.Scan() {
@@ -106,7 +109,30 @@ func (filtCtx *FiltCtx) processOnePGN(f io.Reader) error {
 }
 
 func (filtCtx *FiltCtx) processOneGame(g *chess.Game) error {
-	fmt.Printf("%v\n", g.String())
+	if !filtCtx.filterMatches(g) {
+		return nil
+	}
+
+	fmt.Printf("%v\n\n\n", g.String())
 
 	return nil
+}
+
+func (filtCtx *FiltCtx) filterMatches(g *chess.Game) bool {
+	isMatch := true
+
+	if filtCtx.fopts.fen != "" {
+		isMatch = false
+
+		for _, p := range g.Positions() {
+			foptsFen, _ := chesstools.NormalizeFEN(filtCtx.fopts.fen)
+			gameFen, _ := chesstools.NormalizeFEN(p.XFENString())
+			if foptsFen == gameFen {
+				isMatch = true
+				break
+			}
+		}
+	}
+
+	return isMatch
 }
