@@ -30,6 +30,7 @@ type RepBldOpts struct {
 	engineDepth  int
 	opponent     string
 	dark         bool
+	minGames     int
 }
 
 type MoveMapValue struct {
@@ -47,7 +48,7 @@ var moveMap map[string]*MoveMapValue
 var dag *Dag
 var evalCtx *chesstools.EvalCtx
 
-const MinGames = 200
+const DefaultMinGames = 200
 
 func parseArgs(opts *RepBldOpts) error {
 
@@ -67,6 +68,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
 	f.IntVar(&opts.engineDepth, "enginedepth", 50, "<max engine search depth>")
 	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
+	f.IntVar(&opts.minGames, "mingames", DefaultMinGames, "<minimum games to consider from an opening book position>")
 
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -231,7 +233,7 @@ func buildRep(opts *RepBldOpts,
 	} // else opponent's turn
 
 	respTotal := openingGame.OpeningResp.Total()
-	if opts.opponent == "" && respTotal < MinGames {
+	if opts.opponent == "" && respTotal < opts.minGames {
 		return false, nil
 	}
 
