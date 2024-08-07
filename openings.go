@@ -30,7 +30,8 @@ type Opening struct {
 	name string
 }
 
-var openings map[string]*Opening
+var openingsByFEN map[string]*Opening
+var openingsByNormalFEN map[string]*Opening
 
 type MoveStats struct {
 	Uci       string `json:"uci"`
@@ -230,7 +231,14 @@ func (openingGame *OpeningGame) WithTopReplies(fetchTop bool) *OpeningGame {
 func (openingGame *OpeningGame) withECO() *OpeningGame {
 	var ok bool
 
-	opening, ok := openings[openingGame.G.Position().XFENString()]
+	fen := openingGame.G.Position().XFENString()
+	opening, ok := openingsByFEN[fen]
+	if !ok {
+		fen, err := NormalizeFEN(fen)
+		if err == nil {
+			opening, ok = openingsByNormalFEN[fen]
+		}
+	}
 	if !ok {
 		if openingGame.Parent != nil {
 			openingGame.openingName = openingGame.Parent.openingName
@@ -422,7 +430,8 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 }
 
 func init() {
-	openings = make(map[string]*Opening)
+	openingsByFEN = make(map[string]*Opening)
+	openingsByNormalFEN = make(map[string]*Opening)
 	for _, openingRow := range strings.Split(openingNamesTsvText, "\n") {
 		openingFields := strings.Split(openingRow, ";")
 		if len(openingFields) != 3 {
@@ -432,9 +441,16 @@ func init() {
 		fen := openingFields[0]
 		ecoIn := openingFields[1]
 		nameIn := openingFields[2]
-		openings[fen] = &Opening{
+		openingsByFEN[fen] = &Opening{
 			eco:  ecoIn,
 			name: nameIn,
+		}
+		normalizedFen, err := NormalizeFEN(fen)
+		if err == nil {
+			openingsByNormalFEN[normalizedFen] = &Opening{
+				eco:  ecoIn,
+				name: nameIn,
+			}
 		}
 	}
 }
@@ -470,7 +486,13 @@ func (openingGame *OpeningGame) GetMoveCount() int {
 }
 
 func GetOpeningName(fen string) string {
-	opening, ok := openings[fen]
+	opening, ok := openingsByFEN[fen]
+	if !ok {
+		fen, err := NormalizeFEN(fen)
+		if err == nil {
+			opening, ok = openingsByNormalFEN[fen]
+		}
+	}
 	if !ok {
 		return ""
 	}
@@ -479,7 +501,13 @@ func GetOpeningName(fen string) string {
 }
 
 func GetOpeningEco(fen string) string {
-	opening, ok := openings[fen]
+	opening, ok := openingsByFEN[fen]
+	if !ok {
+		fen, err := NormalizeFEN(fen)
+		if err == nil {
+			opening, ok = openingsByNormalFEN[fen]
+		}
+	}
 	if !ok {
 		return ""
 	}
