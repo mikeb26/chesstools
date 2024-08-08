@@ -1,3 +1,7 @@
+/* Copyright © 2021-2024 Mike Brown. All Rights Reserved.
+ *
+ * See LICENSE file at the root of this package for license terms
+ */
 package chesstools
 
 import (
@@ -221,7 +225,12 @@ func (evalCtx *EvalCtx) earlyInitEngine() {
 }
 
 func (evalCtx *EvalCtx) lazyInitEngine() {
-	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
+	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_Chess960",
+		Value: "true"})
+	if err != nil {
+		panic(err)
+	}
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
 	if err != nil {
 		panic(err)
 	}
@@ -229,12 +238,10 @@ func (evalCtx *EvalCtx) lazyInitEngine() {
 	if err != nil {
 		panic(err)
 	}
-
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
 	if err != nil {
 		panic(err)
 	}
-
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
 	if err != nil {
 		panic(err)
@@ -373,6 +380,12 @@ type CloudEvalResp struct {
 	PVs    []CloudPV `json:"pvs"`
 }
 
+/* @todo consider also checking chessdb evals.
+ *
+ *  https://www.chessdb.cn/cloudbookc_api_en.html
+ *
+ * curl -G --data-urlencode "action=queryall" --data-urlencode "board=r2qkbnr/pp1n1ppp/2p5/4p3/2BPP1b1/5N2/PPP3PP/RNBQK2R w KQkq - 4 7" http://www.chessdb.cn/cdb.php --output -
+ */
 func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	staleOk bool) (*EvalResult, error) {
 
