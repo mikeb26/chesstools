@@ -299,11 +299,23 @@ func (openingGame *OpeningGame) ChoicesString(ignoreThreshold bool) string {
 		if openingGame.eval && mv.Eval != nil {
 			sb.WriteString(fmt.Sprintf("      Eval: "))
 			if mv.Eval.Mate != 0 {
-				sb.WriteString(fmt.Sprintf("Mate:%v ", mv.Eval.Mate))
+				sb.WriteString(fmt.Sprintf("Mate:%v [", mv.Eval.Mate))
 			} else {
-				sb.WriteString(fmt.Sprintf("%v ", mv.Eval.CP))
+				sb.WriteString(fmt.Sprintf("%v [", mv.Eval.CP))
 			}
-			sb.WriteString(fmt.Sprintf("(depth:%v)\n", mv.Eval.Depth))
+			if mv.Eval.WinPct != 0.0 || mv.Eval.DrawPct != 0.0 ||
+				mv.Eval.LossPct != 0.0 {
+				sb.WriteString(fmt.Sprintf("wdl:%v%%/%v%%/%v%% ",
+					uint(mv.Eval.WinPct*100), uint(mv.Eval.DrawPct*100),
+					uint(mv.Eval.LossPct*100)))
+			}
+			if mv.Eval.SearchTimeInSeconds != 0.0 {
+				sb.WriteString(fmt.Sprintf("time:%vs ",
+					uint(mv.Eval.SearchTimeInSeconds)))
+			} else if mv.Eval.Depth != 0 {
+				sb.WriteString(fmt.Sprintf("depth:%v ", mv.Eval.Depth))
+			}
+			sb.WriteString(fmt.Sprintf("type:%v]\n", mv.Eval.Type))
 		}
 	}
 

@@ -41,6 +41,31 @@ const (
 var ErrCacheMiss = errors.New("cache miss")
 var ErrCacheStale = errors.New("cache stale")
 
+type EvalType uint64
+
+const (
+	EvalTypeLocalStockfish EvalType = iota
+	EvalTypeLichess
+
+	EvalTypeInvalid // must be last
+)
+
+func (t EvalType) String() string {
+	var ret string
+
+	switch t {
+	case EvalTypeLocalStockfish:
+		ret = "local stockfish"
+	case EvalTypeLichess:
+		ret = "lichess"
+	case EvalTypeInvalid:
+	default:
+		ret = "invalid"
+	}
+
+	return ret
+}
+
 type EvalResult struct {
 	CP                  int
 	WinPct              float32
@@ -52,6 +77,7 @@ type EvalResult struct {
 	EngVersion          float64
 	KNPS                string
 	SearchTimeInSeconds float64
+	Type                EvalType
 }
 
 type EvalCtx struct {
@@ -364,6 +390,7 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	}
 
 	er.KNPS = er.KNPS + " (local cache)"
+	er.Type = EvalTypeLocalStockfish
 
 	return &er, nil
 }
@@ -486,6 +513,7 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	evalResult.EngVersion = UnknownEngVer // not in response
 	evalResult.KNPS = fmt.Sprintf("%v (cloud cache)", cloudResp.KNodes)
 	evalResult.SearchTimeInSeconds = UnknownSearchTime // not in response
+	evalResult.Type = EvalTypeLichess
 
 	if !staleOk && evalCtx.engVersion > evalResult.EngVersion {
 		return nil, ErrCacheStale
@@ -675,6 +703,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		KNPS:                fmt.Sprintf("%v", results.Info.NPS/1000),
 		EngVersion:          evalCtx.engVersion,
 		SearchTimeInSeconds: searchEndTime.Sub(searchStartTime).Seconds(),
+		Type:                EvalTypeLocalStockfish,
 	}
 
 	if evalCtx.g.Position().Turn() == chess.Black {

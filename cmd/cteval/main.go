@@ -41,12 +41,14 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	} else {
 		fmt.Printf("Eval: mate-in-%v\n", er.Mate)
 	}
-	fmt.Printf("Win/Draw/Loss: %v/%v/%v\n", er.WinPct, er.DrawPct, er.LossPct)
+	fmt.Printf("Win/Draw/Loss: %v%%/%v%%/%v%%\n", uint(er.WinPct*100),
+		uint(er.DrawPct*100), uint(er.LossPct*100))
 	fmt.Printf("Depth: %v\n", er.Depth)
 	fmt.Printf("k-nodes/s: %v\n", er.KNPS)
 	if er.SearchTimeInSeconds != chesstools.UnknownSearchTime {
 		fmt.Printf("SearchTime: %vs\n", uint(math.Round(er.SearchTimeInSeconds)))
 	}
+	fmt.Printf("Type: %v\n", er.Type)
 	if er.EngVersion != chesstools.UnknownEngVer {
 		fmt.Printf("EngVer: %v\n", er.EngVersion)
 	} else {
