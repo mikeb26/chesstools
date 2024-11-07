@@ -373,6 +373,9 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 	// BestMove is occasionally missing the check+ symbol
 	if er.BestMove != m &&
 		er.BestMove+"+" != m {
+		if er.BestMove == "Kh1" && m == "O-O" {
+			return true
+		}
 		exceptionsMove, ok := rv.scoreExceptions[fen]
 		if !ok {
 			fmt.Printf("** Engine recommends %v instead of %v in game %v(%v#%v) FEN:%v\n",

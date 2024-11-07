@@ -202,8 +202,16 @@ func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 			err = openingGame.G.MoveStr(move)
 		}
 		if err != nil {
+			if move == "Kh1" {
+				move = "O-O"
+				notation := chess.UseNotation(chess.AlgebraicNotation{})
+				notation(openingGame.G)
+				err = openingGame.G.MoveStr(move)
+			}
+		}
+		if err != nil {
 			panic(fmt.Sprintf("Could not parse move:%v in %v", move,
-				openingGame.String()))
+				openingGame.G.Moves()))
 		}
 	}
 
