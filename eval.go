@@ -43,6 +43,9 @@ var ErrCacheStale = errors.New("cache stale")
 
 type EvalResult struct {
 	CP                  int
+	WinPct              float32
+	DrawPct             float32
+	LossPct             float32
 	Mate                int
 	BestMove            string
 	Depth               int
@@ -230,6 +233,11 @@ func (evalCtx *EvalCtx) lazyInitEngine() {
 	if err != nil {
 		panic(err)
 	}
+	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_ShowWDL",
+		Value: "true"})
+	if err != nil {
+		panic(err)
+	}
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
 	if err != nil {
 		panic(err)
@@ -354,12 +362,6 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
 	}
-	// temporary special case; remove when new sf version is released
-	if er.SearchTimeInSeconds == UnknownSearchTime &&
-		er.EngVersion == 16.1 &&
-		er.Depth == 50 {
-		er.SearchTimeInSeconds = 600
-	}
 
 	er.KNPS = er.KNPS + " (local cache)"
 
@@ -464,6 +466,12 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	var evalResult EvalResult
 	evalResult.CP = cloudResp.PVs[0].CP
 	evalResult.Mate = cloudResp.PVs[0].Mate
+
+	// WDL unavailable from cloud cache
+	evalResult.WinPct = 0.0
+	evalResult.DrawPct = 0.0
+	evalResult.LossPct = 0.0
+
 	moveList := strings.Split(cloudResp.PVs[0].Moves, " ")
 	uciNotation := chess.UCINotation{}
 	bestMove, err := uciNotation.Decode(evalCtx.position, moveList[0])
@@ -653,10 +661,15 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		panic(fmt.Sprintf("BUG: could not re-encode decoded uci str %v: %v",
 			bestMvUciStr, err))
 	}
-
+	winPct, _ := results.Info.Score.WinPct()
+	lossPct, _ := results.Info.Score.LossPct()
+	drawPct, _ := results.Info.Score.DrawPct()
 	er = &EvalResult{
 		CP:                  results.Info.Score.CP,
 		Mate:                results.Info.Score.Mate,
+		WinPct:              winPct,
+		LossPct:             lossPct,
+		DrawPct:             drawPct,
 		BestMove:            algNotation.Encode(evalCtx.position, bestMoveFixed),
 		Depth:               results.Info.Depth,
 		KNPS:                fmt.Sprintf("%v", results.Info.NPS/1000),

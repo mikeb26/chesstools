@@ -41,6 +41,7 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	} else {
 		fmt.Printf("Eval: mate-in-%v\n", er.Mate)
 	}
+	fmt.Printf("Win/Draw/Loss: %v/%v/%v\n", er.WinPct, er.DrawPct, er.LossPct)
 	fmt.Printf("Depth: %v\n", er.Depth)
 	fmt.Printf("k-nodes/s: %v\n", er.KNPS)
 	if er.SearchTimeInSeconds != chesstools.UnknownSearchTime {
