@@ -27,7 +27,7 @@ type RepBldOpts struct {
 	outputMode   OutputMode
 	keepExisting bool
 	engineSelect bool
-	engineDepth  int
+	engineTime   uint
 	opponent     string
 	dark         bool
 	minGames     int
@@ -66,7 +66,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
 	f.BoolVar(&opts.dark, "dark", false, "<true|false>")
 	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
-	f.IntVar(&opts.engineDepth, "enginedepth", 50, "<max engine search depth>")
+	f.UintVar(&opts.engineTime, "enginetime", 300, "<engine search time per position>")
 	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
 	f.IntVar(&opts.minGames, "mingames", DefaultMinGames, "<minimum games to consider from an opening book position>")
 
@@ -111,7 +111,7 @@ func mainWork(opts *RepBldOpts) {
 	moveMap = make(map[string]*MoveMapValue)
 	dag = NewDag(opts.color, opts.outputMode)
 	if opts.engineSelect {
-		evalCtx = chesstools.NewEvalCtx(false).WithEvalDepth(opts.engineDepth)
+		evalCtx = chesstools.NewEvalCtx(false).WithEvalTime(opts.engineTime)
 		defer evalCtx.Close()
 		evalCtx.InitEngine()
 	}
