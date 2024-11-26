@@ -1648,10 +1648,13 @@ rnb1k1nr/ppq2ppp/4p3/2ppP3/3P4/P1P5/2P2PPP/R1BQKBNR w KQkq - 1 7;C18;French Defe
 rnb1k1nr/pp3ppp/4p3/q1ppP3/3P4/P1P5/2P2PPP/R1BQKBNR w KQkq - 1 7;C18;French Defense: Winawer Variation, Portisch-Hook Variation
 rnbqk2r/pp2nppp/4p3/2ppP3/3P4/P1P5/2P2PPP/R1BQKBNR w KQkq - 1 7;C19;French Defense: Winawer Variation, Advance Variation
 rnbqk2r/pp2nppp/4p3/2ppP3/P2P4/2P5/2P2PPP/R1BQKBNR b KQkq - 0 7;C19;French Defense: Winawer Variation, Advance Variation
-rnbqk2r/pp2nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR b KQkq - 2 7;C19;French Defense: Winawer Variation, Poisoned Pawn Variation
+rnbqk2r/pp2nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR b KQkq - 2 7;C19;French Defense: Winawer Variation, Advance Variation
+rnbq1k1r/pp2nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR w KQ - 3 8;C19;French Defense: Winawer Variation, Eingorn Variation
+rnb1k2r/ppq1nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR w KQkq - 3 8;C19;French Defense: Winawer Variation, Poisoned Pawn Variation
 rnb1k1r1/ppq1np1Q/4p3/3pP3/3p4/P1P5/2P1NPPP/R1B1KB1R b KQq - 1 10;C19;French Defense: Winawer Variation, Poisoned Pawn Variation, Main Line
 rnb1k1r1/ppq1np1Q/4p3/3pP3/3p4/P1P5/2P2PPP/R1BK1BNR b q - 1 10;C19;French Defense: Winawer Variation, Poisoned Pawn Variation, Paoli Variation
 rnbqk2r/pp2nppp/4p3/2ppP3/3P4/P1P2N2/2P2PPP/R1BQKB1R b KQkq - 2 7;C19;French Defense: Winawer Variation, Positional Variation
+rnbq1rk1/pp2nppp/4p3/2ppP3/3P2Q1/P1P5/2P2PPP/R1B1KBNR w KQ - 3 8;C19;French Defense: Winawer Variation, Warsaw Variation
 rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/5P2/PPPP2PP/RNBQK1NR b KQkq - 2 3;C20;Barnes Opening: Walkerling
 rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPPKPPP/RNBQ1BNR b kq - 1 2;C20;Bongcloud Attack
 rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq - 0 2;C20;Center Game
@@ -2814,6 +2817,7 @@ rnbqkbnr/pp3ppp/2p5/3pp3/2PPP3/2N5/PP3PPP/R1BQKBNR b KQkq - 0 4;D10;Slav Defense
 rnbqkb1r/pp2pppp/2p2n2/3p2B1/2PP4/5N2/PP2PPPP/RN1QKB1R b KQkq - 3 4;D11;Slav Defense: Bonet Gambit
 rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/5N2/PP1NPPPP/R1BQKB1R b KQkq - 3 4;D11;Slav Defense: Breyer Variation
 rnbqkbnr/pp2pppp/2p5/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R b KQkq - 1 3;D11;Slav Defense: Modern Line
+rnbqkb1r/pp2pp1p/2p2np1/8/2pP4/5NP1/PP2PPBP/RNBQK2R w KQkq - 0 6;D11;Slav Defense: Modern Line
 rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/4PN2/PP3PPP/RNBQKB1R b KQkq - 0 4;D11;Slav Defense: Quiet Variation
 rn1qkb1r/pp2pppp/2p2n2/3p4/2PP2b1/4PN2/PP3PPP/RNBQKB1R w KQkq - 1 5;D11;Slav Defense: Quiet Variation, Pin Defense
 rn1qkb1r/pp1n1ppp/4p3/3pNb2/3P4/2N1P3/PP3PPP/R1BQKB1R w KQkq - 2 8;D12;Slav Defense: Quiet Variation, Amsterdam Variation
@@ -3193,6 +3197,7 @@ rnbqkb1r/ppp2ppp/4pn2/8/2pP4/6P1/PP2PPBP/RNBQK1NR w KQkq - 0 5;E02;Catalan Openi
 r1bqkb1r/pppn1ppp/4pn2/8/2QP4/6P1/PP2PPBP/RNB1K1NR b KQkq - 0 6;E03;Catalan Opening: Open Defense
 r1bqkb1r/1ppn1ppp/p3pn2/8/3P4/6P1/PPQ1PPBP/RNB1K1NR b KQkq - 1 7;E03;Catalan Opening: Open Defense, Alekhine Variation
 rnbqkb1r/ppp2ppp/4pn2/8/2pP4/5NP1/PP2PPBP/RNBQK2R b KQkq - 1 5;E04;Catalan Opening: Open Defense
+rnbqkb1r/pp3ppp/2p1pn2/8/2pP4/5NP1/PP2PPBP/RNBQK2R w KQkq - 0 6;E04;Catalan Opening: Open Defense
 r1bqk2r/ppp2ppp/2n1pn2/8/QbpP4/5NP1/PP2PPBP/RNB1K2R w KQkq - 4 7;E04;Catalan Opening: Open Defense, Modern Sharp Variation
 rnbqk2r/ppp1bppp/4pn2/8/2pP4/5NP1/PP2PPBP/RNBQK2R w KQkq - 2 6;E05;Catalan Opening: Open Defense, Classical Line
 rnbq1rk1/ppp1bppp/4pn2/8/2pP4/5NP1/PP2PPBP/RNBQ1RK1 w - - 0 7;E05;Catalan Opening: Open Defense, Classical Line
@@ -3510,3 +3515,4 @@ r2qkbnr/pp1n1ppp/2p5/4p3/2BPP1b1/5N2/PPP3PP/RNBQ1RK1 b kq - 5 7;B12;Caro-Kann De
 r2qkb1r/pp1n1ppp/2p2n2/4p3/2BPP1b1/5N2/PPP3PP/RNBQ1RK1 w kq - 6 8;B12;Caro-Kann Defense: Fantasy Variation, Main Line
 rnbqkbnr/pp3ppp/2p5/8/2BpP3/5N2/PPP3PP/RNBQK2R b KQkq - 1 6;B12;Caro-Kann Defense: Fantasy Variation, Maróczy Gambit
 rnbqkb1r/pp2pppp/2p2n2/6N1/3P4/8/PPP2PPP/R1BQKBNR b KQkq - 2 5;B15;Caro-Kann Defense: Alien Gambit
+rnbqk2r/pp2nppp/4p3/2ppP3/3P3P/P1P5/2P2PP1/R1BQKBNR b KQkq - 0 7;C19;French Defense: Winawer, Kasparov Variation

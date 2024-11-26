@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -229,9 +230,15 @@ func (evalCtx *EvalCtx) InitEngine() {
 	evalCtx.doLazyInit = true
 }
 
+func renice(pid int) error {
+	cmd := exec.Command("renice", "-n", "19", "-p",
+		strconv.FormatInt(int64(pid), 10))
+	return cmd.Run()
+}
+
 // just renice and grab the version; full init occurs in lazyInitEngine()
 func (evalCtx *EvalCtx) earlyInitEngine() {
-	err := evalCtx.engine.Renice()
+	err := renice(evalCtx.engine.Getpid())
 	if err != nil {
 		panic(err)
 	}
