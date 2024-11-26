@@ -376,6 +376,9 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 		if er.BestMove == "Kh1" && m == "O-O" {
 			return true
 		}
+		if er.BestMove == "Kh8" && m == "O-O" {
+			return true
+		}
 		exceptionsMove, ok := rv.scoreExceptions[fen]
 		if !ok {
 			fmt.Printf("** Engine recommends %v instead of %v in game %v(%v#%v) FEN:%v\n",
