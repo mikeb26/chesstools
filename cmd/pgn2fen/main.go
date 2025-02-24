@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strings"
 
@@ -13,10 +14,25 @@ import (
 )
 
 type Pgn2FenOpts struct {
-	all      bool
-	color    string
-	colorc   chess.Color
-	pgnFiles []string
+	all          bool
+	startMoveNum int
+	endMoveNum   int
+	color        string
+	colorc       chess.Color
+	pgnFiles     []string
+}
+
+func NewPgn2FenOpts() *Pgn2FenOpts {
+	opts := &Pgn2FenOpts{
+		all:          false,
+		startMoveNum: 0,
+		endMoveNum:   math.MaxInt,
+		color:        "",
+		colorc:       chess.NoColor,
+		pgnFiles:     make([]string, 0),
+	}
+
+	return opts
 }
 
 func parseArgs(opts *Pgn2FenOpts) error {
@@ -25,8 +41,12 @@ func parseArgs(opts *Pgn2FenOpts) error {
 	f := flag.NewFlagSet("pgn2fen", flag.ExitOnError)
 
 	opts.colorc = chess.NoColor
-	f.BoolVar(&opts.all, "all", false, "<true|false>")
-	f.StringVar(&opts.color, "color", "", "<white|black>")
+	f.BoolVar(&opts.all, "all", opts.all, "<true|false>")
+	f.StringVar(&opts.color, "color", opts.color, "<white|black>")
+	f.IntVar(&opts.startMoveNum, "startmove", opts.startMoveNum,
+		"start move number (defaults to 0)")
+	f.IntVar(&opts.endMoveNum, "endmove", opts.endMoveNum,
+		"ending move number (default is infinite)")
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
@@ -35,6 +55,16 @@ func parseArgs(opts *Pgn2FenOpts) error {
 
 	if opts.color != "" && opts.all {
 		return fmt.Errorf("--all and --color are mutually exclusive")
+	}
+	if opts.all && opts.startMoveNum != 0 {
+		return fmt.Errorf("--all and --startmove are mutually exclusive")
+	}
+	if opts.all && opts.endMoveNum != math.MaxInt {
+		return fmt.Errorf("--all and --endmove are mutually exclusive")
+	}
+	if opts.startMoveNum > opts.endMoveNum {
+		return fmt.Errorf("--startmove(%v) must be <= --endmove(%v)",
+			opts.startMoveNum, opts.endMoveNum)
 	}
 	if opts.color != "" {
 		if strings.ToLower(opts.color) == "white" {
@@ -53,8 +83,9 @@ func parseArgs(opts *Pgn2FenOpts) error {
 }
 
 func main() {
-	var opts Pgn2FenOpts
-	err := parseArgs(&opts)
+	opts := NewPgn2FenOpts()
+
+	err := parseArgs(opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)
@@ -70,13 +101,14 @@ func main() {
 
 		g := chess.NewGame(pgn)
 
-		processOneGame(&opts, g)
+		fens := game2FENs(opts, g)
+		fmt.Printf("%v", fens)
 
 		return
 	}
 
 	for _, pgnFile := range opts.pgnFiles {
-		err = processOnePgn(&opts, pgnFile)
+		err = processOnePgn(opts, pgnFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
@@ -102,7 +134,8 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 		if len(g.Moves()) == 0 {
 			continue
 		}
-		processOneGame(opts, g)
+		fens := game2FENs(opts, g)
+		fmt.Printf("%v", fens)
 		ii++
 	}
 
@@ -114,15 +147,22 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 	return err
 }
 
-func processOneGame(opts *Pgn2FenOpts, g *chess.Game) {
-	if !opts.all && opts.colorc == chess.NoColor {
-		fmt.Printf("%v\n", g.Position().XFENString())
-		return
+func game2FENs(opts *Pgn2FenOpts, g *chess.Game) string {
+	if !opts.all && opts.colorc == chess.NoColor && opts.startMoveNum == 0 &&
+		opts.endMoveNum == math.MaxInt {
+
+		return fmt.Sprintf("%v\n", g.Position().XFENString())
 	} // else
 
-	for _, pos := range g.Positions() {
-		if opts.colorc == chess.NoColor || opts.colorc == pos.Turn() {
-			fmt.Printf("%v\n", pos.XFENString())
+	var sb strings.Builder
+
+	for idx, pos := range g.Positions() {
+		if (opts.colorc == chess.NoColor || opts.colorc == pos.Turn()) &&
+			(opts.all || ((idx/2+1) >= opts.startMoveNum &&
+				(idx/2+1) <= opts.endMoveNum)) {
+			sb.WriteString(fmt.Sprintf("%v\n", pos.XFENString()))
 		}
 	}
+
+	return sb.String()
 }
