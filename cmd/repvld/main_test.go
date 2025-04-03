@@ -9,9 +9,13 @@ import (
 )
 
 func TestNewRepValidator(t *testing.T) {
-	rv := NewRepValidator(chess.White, 0, 0, []string{"foo.pgn", "bar.pgn"},
-		"", false, false, 0.04, 0, 3)
-	if rv.color != chess.White {
+	opts := RepValidatorOpts{
+		color:           chess.White,
+		gapThreshold:    0.04,
+		minMoveNum2Eval: 3,
+	}
+	rv := NewRepValidator(&opts, []string{"foo.pgn", "bar.pgn"})
+	if rv.opts.color != chess.White {
 		t.Fatalf("NewRepValidator failed to initialize color")
 	}
 	if rv.pgnFileList == nil || len(rv.pgnFileList) != 2 {
@@ -32,8 +36,12 @@ func TestNewRepValidator(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	rv := NewRepValidator(chess.White, 0, 0, []string{"../../assets/test1.pgn"},
-		"", false, false, 0.04, 0, 3)
+	opts := RepValidatorOpts{
+		color:           chess.White,
+		gapThreshold:    0.04,
+		minMoveNum2Eval: 3,
+	}
+	rv := NewRepValidator(&opts, []string{"../../assets/test1.pgn"})
 	err := rv.Load()
 	if err != nil {
 		t.Fatalf("rv.Load() failed: %v", err)
@@ -73,8 +81,12 @@ func TestLoad(t *testing.T) {
 }
 
 func TestMissingFileLoad(t *testing.T) {
-	rv := NewRepValidator(chess.Black, 0, 0, []string{"bogus.pgn"}, "", false,
-		false, 0.04, 0, 3)
+	opts := RepValidatorOpts{
+		color:           chess.Black,
+		gapThreshold:    0.04,
+		minMoveNum2Eval: 3,
+	}
+	rv := NewRepValidator(&opts, []string{"bogus.pgn"})
 	err := rv.Load()
 	if err == nil {
 		t.Fatalf("rv.Load() succeeded but should have failed")
@@ -85,8 +97,12 @@ func TestMissingFileLoad(t *testing.T) {
 }
 
 func TestCorruptFileLoad(t *testing.T) {
-	rv := NewRepValidator(chess.Black, 0, 0, []string{"../../assets/test2.pgn"},
-		"", false, false, 0.04, 0, 3)
+	opts := RepValidatorOpts{
+		color:           chess.Black,
+		gapThreshold:    0.04,
+		minMoveNum2Eval: 3,
+	}
+	rv := NewRepValidator(&opts, []string{"../../assets/test2.pgn"})
 	err := rv.Load()
 	if err == nil {
 		t.Fatalf("rv.Load() succeeded but should have failed")

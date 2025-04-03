@@ -48,7 +48,7 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 	total := openingGame.OpeningResp.Total()
 	for _, mv := range openingGame.OpeningResp.Moves {
 		mvTotal := mv.Total()
-		if chesstools.Pct(mvTotal, total)*totalPct < rv.gapThreshold {
+		if chesstools.Pct(mvTotal, total)*totalPct < rv.opts.gapThreshold {
 			continue
 		}
 		pushedOne = true
@@ -74,9 +74,9 @@ func (rv *RepValidator) buildRep(openingGame *chesstools.OpeningGame,
 }
 
 func (rv *RepValidator) checkForGaps() error {
-	openingGame := chesstools.NewOpeningGame().WithThreshold(rv.gapThreshold).WithTopReplies(true)
+	openingGame := chesstools.NewOpeningGame().WithThreshold(rv.opts.gapThreshold).WithTopReplies(true)
 
-	_, err := rv.buildRep(openingGame, rv.color, 1.0, rv.gapSkip, 0)
+	_, err := rv.buildRep(openingGame, rv.opts.color, 1.0, rv.opts.gapSkip, 0)
 
 	return err
 }
