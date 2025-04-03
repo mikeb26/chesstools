@@ -4,8 +4,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -24,8 +26,8 @@ const (
 )
 
 type MkOpts struct {
-	evalDepth int
-	outfile   string
+	inPgn   string
+	outfile string
 }
 
 type MkCtx struct {
@@ -90,7 +92,7 @@ func main() {
 func parseArgs(opts *MkOpts) error {
 	f := flag.NewFlagSet("pgnmk", flag.ContinueOnError)
 
-	f.IntVar(&opts.evalDepth, "evaldepth", 0, "<evalDepthInPlies>")
+	f.StringVar(&opts.inPgn, "input", "", "<existingPgnFile>")
 	err := f.Parse(os.Args[1:])
 	if err != nil {
 		return err
@@ -417,6 +419,41 @@ func (mkCtx *MkCtx) getIncrementPostureAndVal(period int) (IncrementPosture,
 	return pos, int(val), nil
 }
 
+func loadExistingGame(pgn string) (*chess.Game, error) {
+	f, err := chesstools.OpenPgn(pgn)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	scanner := chess.NewScanner(f)
+
+	var g *chess.Game
+	for scanner.Scan() {
+		tmp := scanner.Next()
+		if len(tmp.Moves()) == 0 {
+			continue
+		}
+
+		if g != nil {
+			return nil, fmt.Errorf("more than 1 game present in pgn")
+		}
+		g = tmp
+	}
+	err = scanner.Err()
+	if errors.Is(err, io.EOF) {
+		err = nil
+	}
+	if g == nil {
+		if err != nil {
+			return nil, fmt.Errorf("could not parse pgn: %w", err)
+		} else {
+			return nil, fmt.Errorf("could not find any games in pgn")
+		}
+	}
+
+	return g, err
+}
+
 func (mkCtx *MkCtx) getMovesAndClock(halfMoveCount int) error {
 	openingGame := mkCtx.openingGame
 	if openingGame.G.Outcome() != chess.NoOutcome {
@@ -424,22 +461,37 @@ func (mkCtx *MkCtx) getMovesAndClock(halfMoveCount int) error {
 		return nil
 	}
 
+	var err error
+	var existing *chess.Game
+	if mkCtx.opts.inPgn != "" {
+		existing, err = loadExistingGame(mkCtx.opts.inPgn)
+		if err != nil {
+			return err
+		}
+	}
 	var clockVal string
 
-	err := fmt.Errorf("once")
+	err = fmt.Errorf("once")
 	for err != nil {
 		fmt.Printf("\n  Opening: %v (%v)\n", openingGame.String(), openingGame.Eco)
 		fmt.Printf("  PGN:%v\n  FEN: \"%v\"\n", openingGame.G.String(),
 			openingGame.G.Position().XFENString())
 		fmt.Printf("%v", openingGame.G.Position().Board().Draw())
 
-		fmt.Printf("Enter %v Move %v (or timeout/resign/end): ",
-			openingGame.Turn().Name(), halfMoveCount/2+1)
-
 		var mv string
-		err = mkCtx.getUserStringVal(&mv, "", "")
-		if err != nil {
-			return err
+		if existing == nil || len(existing.Moves()) <= halfMoveCount {
+			fmt.Printf("Enter %v Move %v (or timeout/resign/end): ",
+				openingGame.Turn().Name(), halfMoveCount/2+1)
+
+			err = mkCtx.getUserStringVal(&mv, "", "")
+			if err != nil {
+				return err
+			}
+		} else {
+			encoder := chess.AlgebraicNotation{}
+			mv = encoder.Encode(existing.Positions()[halfMoveCount],
+				existing.Moves()[halfMoveCount])
+			err = nil
 		}
 
 		if mv == "end" {

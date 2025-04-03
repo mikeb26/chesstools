@@ -511,7 +511,7 @@ rnbqkbnr/pp3ppp/3p4/2pPp3/4P3/8/PPP2PPP/RNBQKBNR w KQkq - 0 4;A44;Benoni Defense
 rnbqkb1r/ppp1pppp/5n2/3p4/3P4/2NQ4/PPP1PPPP/R1B1KBNR b KQkq - 1 3;A45;Amazon Attack: Siberian Attack
 rnbqkb1r/pppppppp/5n2/8/3P1P2/8/PPP1P1PP/RNBQKBNR b KQkq - 0 2;A45;Canard Opening
 rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 1 2;A45;Indian Defense
-rnbqkb1r/ppp1pppp/5n2/3p4/3P2P1/5P2/PPP1P2P/RNBQKBNR b KQkq - 0 3;A45;Indian Defense: Gedult Attack, Gedult Attack
+rnbqkb1r/ppp1pppp/5n2/3p4/3P2P1/5P2/PPP1P2P/RNBQKBNR b KQkq - 0 3;A45;Indian Defense: Gedult Attack
 rnbqkb1r/pppppppp/5n2/8/3P2P1/8/PPP1PP1P/RNBQKBNR b KQkq - 0 2;A45;Indian Defense: Gibbins-Weidenhagen Gambit
 rnbqkb1r/pppppppp/8/8/3P2n1/8/PPP1PP1P/RNBQKBNR w KQkq - 0 3;A45;Indian Defense: Gibbins-Weidenhagen Gambit Accepted
 rnbqkb1r/pppppppp/5n2/8/3PP3/5P2/PPP4P/RNBQKBNR b KQkq - 0 4;A45;Indian Defense: Gibbins-Weidenhagen Gambit, Maltese Falcon
@@ -737,7 +737,6 @@ rnbqkbnr/ppppp1pp/8/5p2/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2;B00;Duras Gambit
 rnbq1bnr/pppppkpp/5p2/8/3PP3/8/PPP2PPP/RNBQKBNR w KQ - 1 3;B00;Fried Fox Defense
 rnbqkbnr/ppppppp1/8/7p/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2;B00;Goldsmith Defense
 rnbqkb1r/ppppppp1/5n2/7p/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 1 3;B00;Goldsmith Defense: Picklepuss Defense
-rn1qkbnr/p1pppppp/bp6/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 1 3;B00;Guatemala Defense
 rnbqkb1r/pppppppp/7n/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2;B00;Hippopotamus Defense
 rnbqkb1r/ppppp2p/5ppn/8/2PPP3/8/PP3PPP/RNBQKBNR w KQkq - 0 4;B00;Hippopotamus Defense
 rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1;B00;King's Pawn Game
@@ -787,6 +786,7 @@ r1bqkbnr/pppppppp/2n5/8/1P2P3/8/P1PP1PPP/RNBQKBNR b KQkq - 0 2;B00;Nimzowitsch D
 r1bqkbnr/ppp1pppp/2np4/8/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3;B00;Nimzowitsch Defense: Williams Variation
 r1bqkbnr/1ppppppp/p1n5/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3;B00;Nimzowitsch Defense: Woodchuck Variation
 rnbqkbnr/p1pppppp/1p6/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2;B00;Owen Defense
+rn1qkbnr/p1pppppp/bp6/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 1 3;B00;Owen Defense: Guatemala Defense
 r1bqkbnr/p2ppppp/1pn5/2P5/4P3/8/PPP2PPP/RNBQKBNR w KQkq - 1 4;B00;Owen Defense: Hekili-Loa Gambit
 rn1qkbnr/p1ppp2p/1p4p1/5P1Q/3P4/3B4/PPP2PbP/RNB1K1NR w KQkq - 0 6;B00;Owen Defense: Matovinsky Gambit
 rn1qkbnr/pbpppppp/1p6/6B1/3PP3/8/PPP2PPP/RN1QKBNR b KQkq - 2 3;B00;Owen Defense: Naselwaus Gambit
@@ -1128,8 +1128,10 @@ rnbqkbnr/pp1p1ppp/8/4p3/3pP3/2P2N2/PP3PPP/RNBQKB1R b KQkq - 0 4;B21;Sicilian Def
 rnbqkbnr/pp1ppppp/8/2p5/3PP3/8/PPP2PPP/RNBQKBNR b KQkq - 0 2;B21;Sicilian Defense: Smith-Morra Gambit
 rnbqkbnr/pp1ppppp/8/8/3pP3/2P5/PP3PPP/RNBQKBNR b KQkq - 0 3;B21;Sicilian Defense: Smith-Morra Gambit
 rnbqkbnr/pp1ppppp/8/8/4P3/2p5/PP3PPP/RNBQKBNR w KQkq - 0 4;B21;Sicilian Defense: Smith-Morra Gambit Accepted
+2bqkbnr/r4ppp/p1npp3/1p6/4P3/1BN2N2/PP2QPPP/R1B2RK1 w k - 2 10;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Chicago Defense
 rnbqkb1r/1p3ppp/p2ppn2/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 w kq - 0 8;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Chicago Defense
 r1bqkb1r/1p2pppp/p1np1n2/8/2B1P3/2N2N2/PP3PPP/R1BQ1RK1 w kq - 2 8;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Classical Formation
+rnbqkbnr/pp1ppppp/8/8/4P3/2p2N2/PP3PPP/RNBQKB1R b KQkq - 1 4;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Danish Variation
 r1bqkbnr/pp1ppp1p/2n3p1/8/4P3/2N2N2/PP3PPP/R1BQKB1R w KQkq - 0 6;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Fianchetto Defense
 rnbqk2r/1p2bppp/p2ppn2/8/2B1P3/2N2N2/PP2QPPP/R1B2RK1 w kq - 4 9;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Finegold Defense
 rnbqkbnr/1p1p1ppp/p3p3/8/4P3/2N2N2/PP3PPP/R1BQKB1R w KQkq - 0 6;B21;Sicilian Defense: Smith-Morra Gambit Accepted, Kan Formation
@@ -1149,8 +1151,6 @@ rnbqkbnr/pp1ppppp/8/8/2P1P3/3p4/PP3PPP/RNBQKBNR b KQkq - 0 4;B21;Sicilian Defens
 rnbqkbnr/pp1ppppp/8/8/4P3/2Pp4/PP3PPP/RNBQKBNR w KQkq - 0 4;B21;Sicilian Defense: Smith-Morra Gambit Declined, Push Variation
 rnbqkbnr/pp2pppp/8/3p4/3pP3/2P5/PP3PPP/RNBQKBNR w KQkq - 0 4;B21;Sicilian Defense: Smith-Morra Gambit Declined, Scandinavian Formation
 rnb1kbnr/pp1ppppp/8/q7/3pP3/2P5/PP3PPP/RNBQKBNR w KQkq - 1 4;B21;Sicilian Defense: Smith-Morra Gambit Declined, Wing Formation
-2bqkbnr/r4ppp/p1npp3/1p6/4P3/1BN2N2/PP2QPPP/R1B2RK1 w k - 2 10;B21;Sicilian Defense: Smith-Morra Gambit, Chicago Defense
-rnbqkbnr/pp1ppppp/8/8/4P3/2p2N2/PP3PPP/RNBQKB1R b KQkq - 1 4;B21;Sicilian Defense: Smith-Morra Gambit, Danish Variation
 rnbqkbnr/pp1ppppp/8/2p5/4P3/2P5/PP1P1PPP/RNBQKBNR b KQkq - 0 2;B22;Sicilian Defense: Alapin Variation
 rnb1kbnr/pp2pppp/8/2pq4/8/2P5/PP1P1PPP/RNBQKBNR w KQkq - 0 4;B22;Sicilian Defense: Alapin Variation, Barmen Defense
 r3kbnr/pp2pppp/2n5/3q4/3P2b1/5N2/PP3PPP/RNBQKB1R w KQkq - 3 7;B22;Sicilian Defense: Alapin Variation, Barmen Defense, Central Exchange
@@ -1233,10 +1233,10 @@ r1bqk1nr/pp3ppp/2np4/2p1p1b1/2B1P3/2NP4/PPPN1PPP/R1BQK2R w KQkq - 2 7;B30;Sicili
 r1bqk2r/pp1pbppp/2n2n2/2p1p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 1 6;B30;Sicilian Defense: Closed, Anti-Sveshnikov Variation, with Nf6
 r1bqk1nr/pp2bppp/2np4/2p1p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 6;B30;Sicilian Defense: Closed, Anti-Sveshnikov Variation, with d6
 r1bqkbnr/pp1ppppp/2n5/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3;B30;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack
+rnbqkbnr/pp1ppppp/8/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4;B30;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack, Brooklyn Retreat Defense
 r1bqkbnr/pp1ppppp/8/nBp5/1P2P3/5N2/P1PP1PPP/RNBQK2R b KQkq - 0 4;B30;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack, San Francisco Gambit
 r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3;B30;Sicilian Defense: Old Sicilian
 r1bqkbnr/pp1ppppp/2n5/2p5/1P2P3/5N2/P1PP1PPP/RNBQKB1R b KQkq - 0 3;B30;Sicilian Defense: Portsmouth Gambit
-rnbqkbnr/pp1ppppp/8/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4;B30;Sicilian Defense: Rossolimo Variation, Brooklyn Retreat Defense
 r1bqkbnr/pp1ppp1p/2n3p1/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4;B31;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack, Fianchetto Variation
 r1bqk1nr/pp1p1pbp/2n3p1/1Bp1p3/3PP3/2P2N2/PP3PPP/RNBQ1RK1 b kq - 0 6;B31;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack, Fianchetto Variation, Gufeld Gambit
 r1bqk2r/pp1pppbp/2n2np1/1Bp5/3PP3/2P2N2/PP3PPP/RNBQ1RK1 b kq - 0 6;B31;Sicilian Defense: Nyezhmetdinov-Rossolimo Attack, Fianchetto Variation, Lutikov Gambit
@@ -1514,6 +1514,8 @@ rnbqkbnr/ppp2ppp/4p3/3p4/4P3/2N2N2/PPPP1PPP/R1BQKB1R b KQkq - 1 3;C00;French Def
 rnbqkbnr/pp3ppp/4p3/2ppP3/1P6/5N2/P1PP1PPP/RNBQKB1R b KQkq - 0 4;C00;French Defense: Wing Gambit
 rnbqkbnr/ppp2ppp/3pp3/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3;C00;Rat Defense: Small Center Defense
 rnbqkbnr/ppp2ppp/4p3/3P4/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3;C01;French Defense: Exchange Variation
+rnbqkbnr/ppp2ppp/8/3p4/3P4/5N2/PPP2PPP/RNBQKB1R b KQkq - 1 4;C01;French Defense: Exchange Variation
+rnbqkbnr/ppp2ppp/8/3p4/3P4/2N5/PPP2PPP/R1BQKBNR b KQkq - 1 4;C01;French Defense: Exchange Variation
 r1bqkb1r/ppp2ppp/2n2n2/3p2B1/3P4/2N5/PPP2PPP/R2QKBNR w KQkq - 4 6;C01;French Defense: Exchange Variation, Bogoljubow Variation
 rnbqkbnr/ppp2ppp/8/3p4/2PP4/8/PP3PPP/RNBQKBNR b KQkq - 0 4;C01;French Defense: Exchange Variation, Monte Carlo Variation
 rnbqkb1r/ppp2ppp/5n2/3p2B1/3P4/2N5/PPP2PPP/R2QKBNR b KQkq - 1 5;C01;French Defense: Exchange Variation, Svenonius Variation
@@ -1527,6 +1529,9 @@ rnbqkbnr/pp3ppp/4p3/2ppP3/1P1P4/8/P1P2PPP/RNBQKBNR b KQkq - 0 4;C02;French Defen
 r1b1kb1r/pp3ppp/1qn1p2n/2ppP3/3P4/P1P2N2/1P3PPP/RNBQKB1R w KQkq - 1 7;C02;French Defense: Advance Variation, Lputian Variation
 r1b1kbnr/pp3ppp/1qn1p3/2ppP3/3P4/P1P2N2/1P3PPP/RNBQKB1R b KQkq - 0 6;C02;French Defense: Advance Variation, Main Line
 r1b1kbnr/pp3ppp/1qn1p3/2ppP3/3P4/2PB1N2/PP3PPP/RNBQK2R b KQkq - 4 6;C02;French Defense: Advance Variation, Milner-Barry Gambit
+r1b1kbnr/pp3ppp/1qn1p3/3pP3/3p4/2PB1N2/PP3PPP/RNBQ1RK1 b kq - 1 7;C02;French Defense: Advance Variation, Milner-Barry Gambit, Hector Variation
+r3kbnr/pp1b1ppp/1qn1p3/3pP3/3p4/2PB1N2/PP3PPP/RNBQR1K1 b kq - 3 8;C02;French Defense: Advance Variation, Milner-Barry Gambit, Hector Variation
+r3kbnr/pp1b1ppp/1qn1p3/3pP3/3P4/3B1N2/PP3PPP/RNBQ1RK1 b kq - 2 8;C02;French Defense: Advance Variation, Milner-Barry Gambit, Main Line
 r3kbnr/pp1b1ppp/1q2p3/3pP1N1/3n4/3B4/PP3PPP/RNBQ1RK1 b kq - 1 9;C02;French Defense: Advance Variation, Milner-Barry Gambit, Sørensen Variation
 rnbqkbnr/pp3ppp/4p3/2ppP3/3P2Q1/8/PPP2PPP/RNB1KBNR b KQkq - 1 4;C02;French Defense: Advance Variation, Nimzowitsch Attack
 rnbqkbnr/pp3ppp/4p3/3pP3/3p2Q1/5N2/PPP2PPP/RNB1KB1R b KQkq - 1 5;C02;French Defense: Advance Variation, Nimzowitsch Gambit
@@ -1558,7 +1563,8 @@ rnbqkbnr/pp3ppp/4p3/2pp4/3PP3/2P5/PP1N1PPP/R1BQKBNR b KQkq - 0 4;C07;French Defe
 rnbqkbnr/pp3ppp/8/2pp4/3P4/8/PPPN1PPP/R1BQKBNR w KQkq - 0 5;C08;French Defense: Tarrasch Variation, Open System
 rnbqkbnr/pp3ppp/8/3p4/2pP4/5N2/PPPN1PPP/R1BQKB1R w KQkq - 0 6;C08;French Defense: Tarrasch Variation, Open System, Advance Line
 r1bqkbnr/pp3ppp/2n5/2pp4/3P4/5N2/PPPN1PPP/R1BQKB1R w KQkq - 2 6;C09;French Defense: Tarrasch Variation, Open System, Main Line
-r1bqkbnr/ppp2ppp/2n1p3/3P4/3P4/2N5/PPP2PPP/R1BQKBNR b KQkq - 0 4;C10;French Defense: Classical Variation, Svenonius Variation
+r1bqkbnr/ppp2ppp/2n1p3/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4;C10;French Defense: Hecht-Reefschläger Variation
+rnbqkbnr/pp3ppp/4p3/2pp4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4;C10;French Defense: Marshall Gambit
 rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR b KQkq - 1 3;C10;French Defense: Paulsen Variation
 rnbqkbnr/ppp2ppp/4p3/8/3Pp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4;C10;French Defense: Rubinstein Variation
 r1bqkbnr/pppn1ppp/4p3/8/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5;C10;French Defense: Rubinstein Variation, Blackburne Defense
@@ -1567,7 +1573,6 @@ rnbqkbnr/ppp2ppp/8/4p3/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 0 5;C10;French Defense: 
 rn1qkbnr/ppp2ppp/2b1p3/8/3PN3/5N2/PPP2PPP/R1BQKB1R w KQkq - 3 6;C10;French Defense: Rubinstein Variation, Fort Knox Variation
 r1bqkb1r/ppp2ppp/4pn2/8/3P4/2P2N2/PP3PPP/R1BQKB1R b KQkq - 0 7;C10;French Defense: Rubinstein Variation, Kasparov Attack
 rnb1kbnr/ppp2ppp/4p3/3q4/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5;C10;French Defense: Rubinstein Variation, Maric Variation
-rnbqkbnr/pp3ppp/4p3/2pp4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4;C10;Sicilian Defense: Marshall Gambit
 rnbqkb1r/ppp2ppp/4pn2/3p2B1/3PP3/2N5/PPP2PPP/R2QKBNR b KQkq - 3 4;C11;French Defense: Burn Variation
 rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4;C11;French Defense: Classical Variation
 rnbq1rk1/ppp2ppp/4pb2/8/3PN3/5N2/PPP2PPP/R2QKB1R w KQ - 2 8;C11;French Defense: Classical Variation, Burn Variation, Main Line
@@ -1811,6 +1816,7 @@ rnbqk1nr/ppp2ppp/3p4/2b1p3/4PP2/2P2N2/PP1P2PP/RNBQKB1R b KQkq - 0 4;C30;King's G
 rn1qk1nr/ppp2ppp/8/2b1p3/Q3P1b1/2P2N2/PP1P2PP/RNB1KB1R b KQkq - 1 6;C30;King's Gambit Declined: Classical Variation, Euwe Attack
 rnbqk1nr/ppp2ppp/3p4/2b1p3/1P2PP2/5N2/P1PP2PP/RNBQKB1R b KQkq - 0 4;C30;King's Gambit Declined: Classical Variation, Rotlewi Countergambit
 rnbqk1nr/ppp3pp/3p4/2b1pp2/4PP2/2P2N2/PP1P2PP/RNBQKB1R w KQkq - 0 5;C30;King's Gambit Declined: Classical Variation, Rubinstein Countergambit
+rnbqk1nr/pppp1ppp/8/2b1p2Q/4PP2/8/PPPP2PP/RNB1KBNR b KQkq - 2 3;C30;King's Gambit Declined: Classical Variation, Walthoffen Attack
 r1bqk1nr/pppn1ppp/3p4/2b1p3/4PP2/2N2N2/PPPP2PP/R1BQKB1R w KQkq - 2 5;C30;King's Gambit Declined: Classical, Hanham Variation
 rnbqk1nr/ppp3pp/8/2b2p2/2BpP3/2P2N2/PP4PP/RNBQK2R b KQkq - 1 7;C30;King's Gambit Declined: Classical, Réti Variation
 rnbqk1nr/ppp2ppp/3p4/2b1P3/4P3/5N2/PPPP2PP/RNBQKB1R b KQkq - 0 4;C30;King's Gambit Declined: Classical, Soldatenkov Variation
@@ -1898,13 +1904,13 @@ rnbk1bnr/pppp2pp/8/8/2B1pp1q/2N5/PPPPQ1PP/R1BK2NR w - - 2 7;C33;King's Gambit Ac
 rnbqkbnr/pppp1ppp/8/8/4Pp2/2N5/PPPP2PP/R1BQKBNR b KQkq - 1 3;C33;King's Gambit Accepted: Mason-Keres Gambit
 rnbqkbnr/pppp1ppp/8/8/4Pp2/1P6/P1PP2PP/RNBQKBNR b KQkq - 0 3;C33;King's Gambit Accepted: Orsini Gambit
 rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPPN1PP/RNBQKB1R b KQkq - 1 3;C33;King's Gambit Accepted: Paris Gambit
-rnbqkbnr/pppp1ppp/8/8/3PPp2/8/PPP3PP/RNBQKBNR b KQkq - 0 3;C33;King's Gambit Accepted: Polerio Gambit
 rnbqkbnr/pppp1ppp/8/1B6/4Pp2/8/PPPP2PP/RNBQK1NR b KQkq - 1 3;C33;King's Gambit Accepted: Schurig Gambit, with Bb5
 rnbqkbnr/pppp1ppp/8/8/4Pp2/3B4/PPPP2PP/RNBQK1NR b KQkq - 1 3;C33;King's Gambit Accepted: Schurig Gambit, with Bd3
 rnbqkbnr/pppp1ppp/8/8/4Pp1P/8/PPPP2P1/RNBQKBNR b KQkq - 0 3;C33;King's Gambit Accepted: Stamma Gambit
 rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPPB1PP/RNBQK1NR b KQkq - 1 3;C33;King's Gambit Accepted: Tartakower Gambit
 rnbqkbnr/ppp3pp/3p4/5P2/5p2/8/PPPPB1PP/RNBQK1NR w KQkq - 0 5;C33;King's Gambit Accepted: Tartakower Gambit, Weiss Defense
 rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP1KPP/RNBQ1BNR b kq - 1 3;C33;King's Gambit Accepted: Tumbleweed
+rnbqkbnr/pppp1ppp/8/8/3PPp2/8/PPP3PP/RNBQKBNR b KQkq - 0 3;C33;King's Gambit Accepted: Villemson Gambit
 rnbqkbnr/pppp1pp1/7p/8/4Pp2/5N2/PPPP2PP/RNBQKB1R w KQkq - 0 4;C34;King's Gambit Accepted: Becker Defense
 rnbqkb1r/ppppnppp/8/8/4Pp2/5N2/PPPP2PP/RNBQKB1R w KQkq - 2 4;C34;King's Gambit Accepted: Bonsch-Osmolovsky Variation
 rnbqkbnr/ppp2ppp/3p4/8/4Pp2/5N2/PPPP2PP/RNBQKB1R w KQkq - 0 4;C34;King's Gambit Accepted: Fischer Defense
@@ -2218,6 +2224,7 @@ r1bqkbnr/pppp1p1p/2n3p1/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4;C46;Three K
 r1bqkbnr/pppp1p1p/2n3p1/3N4/3pP3/5N2/PPP2PPP/R1BQKB1R b KQkq - 1 5;C46;Three Knights Opening: Steinitz-Rosenthal Variation
 r1bqkbnr/pppp2pp/2n5/4pp2/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4;C46;Three Knights Opening: Winawer Defense
 r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 4 4;C47;Four Knights Game
+r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2NP1/PPPP1P1P/R1BQKB1R b KQkq - 0 4;C47;Four Knights Game: Glek System
 r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/P1N2N2/1PPP1PPP/R1BQKB1R b KQkq - 0 4;C47;Four Knights Game: Gunsberg Variation
 r1bqkb1r/pppp1ppp/2n2n2/4N3/4P3/2N5/PPPP1PPP/R1BQKB1R b KQkq - 0 4;C47;Four Knights Game: Halloween Gambit
 r1bqk1nr/pppp2pp/6n1/4Pp2/1bBP4/2N2Q2/PPP2PPP/R1B1K2R w KQkq f6 0 9;C47;Four Knights Game: Halloween Gambit, Oldtimer Variation
@@ -2608,6 +2615,7 @@ r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/2N2N2/PPPP1PPP/R1BQ1RK1 b kq - 5 6;C84;Ruy Lope
 r1bqk2r/1pppbppp/p1B2n2/4p3/4P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 0 6;C85;Ruy Lopez: Closed, Delayed Exchange
 r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/5N2/PPPPQPPP/RNB2RK1 b kq - 5 6;C86;Ruy Lopez: Closed, Worrall Attack
 r1bq1rk1/2ppbppp/p1n2n2/1p2p3/4P3/1B3N2/PPPPQPPP/RNB2RK1 w - - 2 8;C86;Ruy Lopez: Closed, Worrall Attack, Castling Line
+r1bq1rk1/2p1bppp/p1n2n2/1p1pp3/4P3/1BPP1N2/PP2QPPP/RNB2RK1 b - - 0 9;C86;Ruy Lopez: Closed, Worrall Attack, Castling Line
 r1bqk2r/2p1bppp/p1np1n2/1p2p3/4P3/1B3N2/PPPPQPPP/RNB2RK1 w kq - 0 8;C86;Ruy Lopez: Closed, Worrall Attack, Delayed Castling Line
 r1bqk2r/1pp1bppp/p1np1n2/4p3/B3P3/5N2/PPPP1PPP/RNBQR1K1 w kq - 0 7;C87;Ruy Lopez: Closed, Averbakh Variation
 r1bqk2r/2ppbppp/p1n2n2/1p2p3/4P3/1B3N2/PPPP1PPP/RNBQR1K1 b kq - 1 7;C88;Ruy Lopez: Closed
@@ -2769,6 +2777,8 @@ rnbqkb1r/pp3ppp/4pn2/2pp4/3P4/1P1BPN2/P1P2PPP/RNBQK2R b KQkq - 0 5;D05;Rubinstei
 r1bq1rk1/pp3ppp/2nbpn2/2pp4/3P4/1P1BPN2/PBP2PPP/RN1Q1RK1 w - - 5 8;D05;Rubinstein Opening: Bogoljubow Defense
 r1bq1rk1/pp2bppp/2n1pn2/2pp4/3P4/1P1BPN2/PBP2PPP/RN1Q1RK1 w - - 5 8;D05;Rubinstein Opening: Classical Defense
 r1bq1rk1/pppn1ppp/3bpn2/3p4/3P4/1P1BPN2/PBP2PPP/RN1Q1RK1 b - - 2 7;D05;Rubinstein Opening: Semi-Slav Defense
+r1bq1rk1/pp1n1ppp/2pbpn2/3p4/3P4/1P1BPN2/PBP2PPP/RN1Q1RK1 w - - 0 8;D05;Rubinstein Opening: Semi-Slav Defense
+r1bq1rk1/pp1n1ppp/2pbpn2/3p4/3P4/1P1BPN2/PBPN1PPP/R2Q1RK1 b - - 1 8;D05;Rubinstein Opening: Semi-Slav Defense
 rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2;D06;Queen's Gambit
 rnbqkbnr/pp2pppp/8/2P5/2Pp4/8/PP2PPPP/RNBQKBNR w KQkq - 0 4;D06;Queen's Gambit Declined: Austrian Attack, Salvio Countergambit
 rnbqkbnr/pp2pppp/8/2pp4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;D06;Queen's Gambit Declined: Austrian Defense
@@ -2881,6 +2891,7 @@ rn1qkbnr/1pp2ppp/p3p3/3P4/2B3b1/4PN2/PP3PPP/RNBQK2R b KQkq - 0 6;D22;Queen's Gam
 rnbqkbnr/2p1pppp/p7/1p6/2pP4/4PN2/PP3PPP/RNBQKB1R w KQkq - 0 5;D22;Queen's Gambit Accepted: Alekhine Defense, Haberditz Variation
 rnbqkb1r/ppp1pppp/5n2/8/2pP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 2 4;D23;Queen's Gambit Accepted
 rnbqkb1r/ppp1pppp/5n2/8/Q1pP4/5N2/PP2PPPP/RNB1KB1R b KQkq - 3 4;D23;Queen's Gambit Accepted: Mannheim Variation
+rnbqkb1r/ppp2ppp/4pn2/8/2pPP3/2N2N2/PP3PPP/R1BQKB1R b KQkq - 0 5;D24;Queen's Gambit Accepted
 rnbqkb1r/1pp1pppp/p4n2/8/2pPP3/2N2N2/PP3PPP/R1BQKB1R b KQkq - 0 5;D24;Queen's Gambit Accepted: Bogoljubow Defense
 rnbqkb1r/pp3ppp/5n2/2ppP3/2p5/2N2N2/PP3PPP/R1BQKB1R b KQkq - 0 7;D24;Queen's Gambit Accepted: Gunsberg Defense, Prianishenmo Gambit
 rnbqkb1r/ppp1pppp/5n2/8/2pP4/2N2N2/PP2PPPP/R1BQKB1R b KQkq - 3 4;D24;Queen's Gambit Accepted: Showalter Variation
@@ -3243,8 +3254,6 @@ r1bq1rk1/p2nbppp/1pp1pn2/3p4/2PP1B2/5NP1/PPQNPPBP/R4RK1 b - - 1 10;E11;Bogo-Indi
 r2q1rk1/p2nbppp/bpp1pn2/3p4/2PP1B2/5NP1/PPQNPPBP/R4RK1 w - - 2 11;E11;Bogo-Indian Defense: Retreat Variation
 rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/5N2/PP1BPPPP/RN1QKB1R w KQkq - 0 5;E11;Bogo-Indian Defense: Vitolins Variation
 rnbqk2r/1ppp1ppp/4pn2/p7/1bPP4/5N2/PP1BPPPP/RN1QKB1R w KQkq - 0 5;E11;Bogo-Indian Defense: Wade-Smyslov Variation
-rnbqk2r/p1pp1ppp/1p2pn2/8/1bPP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 2 5;E12;Nimzo-Indian Defense: Three Knights Variation, Duchamp Variation
-rn1qk2r/pbpp1ppp/1p2pn2/6B1/1bPP4/2N5/PP1NPPPP/R2QKB1R b KQkq - 5 6;E12;Nimzo-Indian Defense: Three Knights Variation, Duchamp Variation, Modern Line
 rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4;E12;Queen's Indian Defense
 rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/2N2N2/PP2PPPP/R1BQKB1R b KQkq - 1 4;E12;Queen's Indian Defense: Kasparov Variation
 rn1qkb1r/pbpp1p2/1p2p2p/6pn/2PP4/2N2NB1/PP2PPPP/R2QKB1R w KQkq - 2 8;E12;Queen's Indian Defense: Kasparov Variation, Botvinnik Attack
@@ -3294,6 +3303,7 @@ rn1q1rk1/pbppbppp/1p2pn2/8/2PP4/2N2NP1/PP2PPBP/R1BQ1RK1 b - - 6 7;E18;Queen's In
 rn1q1rk1/pbp1bppp/1p2pn2/3p4/2PP4/2N2NP1/PP2PPBP/R1BQ1RK1 w - - 0 8;E18;Queen's Indian Defense: Classical Variation, Traditional Variation, Nimzowitsch Line
 rn1q1rk1/pbppbppp/1p2p3/8/2PP4/2Q2NP1/PP2PPBP/R1B2RK1 b - - 0 9;E19;Queen's Indian Defense: Classical Variation, Traditional Variation, Main Line
 rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4;E20;Nimzo-Indian Defense
+rnbqk2r/pppp1ppp/4pn2/8/1bPPP3/2N5/PP3PPP/R1BQKBNR b KQkq - 0 4;E20;Nimzo-Indian Defense: Dilworth Gambit
 rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N2P2/PP2P1PP/R1BQKBNR b KQkq - 0 4;E20;Nimzo-Indian Defense: Kmoch Variation
 rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2NQ4/PP2PPPP/R1B1KBNR b KQkq - 3 4;E20;Nimzo-Indian Defense: Mikenas Attack
 rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N3P1/PP2PP1P/R1BQKBNR b KQkq - 0 4;E20;Nimzo-Indian Defense: Romanishin Variation
@@ -3308,7 +3318,7 @@ r1bqk2r/pp1p1ppp/2n1p3/2P5/1bP5/1QN2N2/PP1nPPPP/R3KB1R w KQkq - 0 8;E23;Nimzo-In
 r1bqk2r/pp1p1ppp/2n1pn2/2P5/1bP5/1QN5/PP2PPPP/R1B1KBNR w KQkq - 1 6;E23;Nimzo-Indian Defense: Spielmann Variation, Romanovsky Gambit
 r1bqk2r/pp1p1ppp/2n1p3/2n5/1bP5/1QN2N2/PP1BPPPP/R3KB1R w KQkq - 0 8;E23;Nimzo-Indian Defense: Spielmann Variation, Stahlberg Variation
 r1bqk2r/pp1p2pp/2n1p3/2n2p2/1bP5/2N2NP1/PPQBPP1P/R3KB1R b KQkq - 0 9;E23;Nimzo-Indian Defense: Spielmann Variation, Stahlberg Variation
-rnbqk2r/pppp1ppp/4pn2/8/2PP4/P1P5/4PPPP/R1BQKBNR b KQkq - 0 5;E24;Nimzo-Indian Defense: Sämisch Variation, Accelerated
+rnbqk2r/pppp1ppp/4pn2/8/1bPP4/P1N5/1P2PPPP/R1BQKBNR b KQkq - 0 4;E24;Nimzo-Indian Defense: Sämisch Variation
 rnbq1rk1/pp3ppp/4p3/2pn4/3P4/P1P1PP2/6PP/R1BQKBNR w KQ - 0 9;E24;Nimzo-Indian Defense: Sämisch Variation, Botvinnik Variation
 rnbqk2r/pp3ppp/4pn2/2pP4/3P4/P1P2P2/4P1PP/R1BQKBNR b KQkq - 0 7;E25;Nimzo-Indian Defense: Sämisch Variation
 rnbqk2r/pp3ppp/4p3/2Pn4/8/P1P2P2/4P1PP/R1BQKBNR b KQkq - 0 8;E25;Nimzo-Indian Defense: Sämisch Variation, Keres Variation
@@ -3333,20 +3343,22 @@ rnbqk2r/ppp2ppp/5n2/3p4/1b1P4/2N5/PPQ1PPPP/R1B1KBNR w KQkq - 0 6;E35;Nimzo-India
 rnbqk2r/ppp2ppp/4pn2/3p4/1bPP4/P1N5/1PQ1PPPP/R1B1KBNR b KQkq - 0 5;E36;Nimzo-Indian Defense: Classical Variation, Noa Variation
 r1bqk2r/ppp2ppp/2n1pn2/3p4/2PP4/P1Q5/1P2PPPP/R1B1KBNR w KQkq - 1 7;E36;Nimzo-Indian Defense: Classical Variation, Noa Variation, Botvinnik Variation
 rnbqk2r/ppp2ppp/4p3/3p4/2PPn3/P1Q5/1P2PPPP/R1B1KBNR w KQkq - 1 7;E36;Nimzo-Indian Defense: Classical Variation, Noa Variation, Main Line
+rnbqk2r/pp3ppp/4pn2/2pp4/2PP4/P1Q5/1P2PPPP/R1B1KBNR w KQkq - 0 7;E36;Nimzo-Indian Defense: Classical Variation, Romanishin Gambit
+rnbqk2r/pp3ppp/4p3/2pp4/2PPn3/P7/1PQ1PPPP/R1B1KBNR w KQkq - 0 8;E37;Nimzo-Indian Defense: Classical Variation, Modern Variation
 rnbqk2r/ppp2ppp/4p3/3p4/2PPn3/P7/1PQ1PPPP/R1B1KBNR b KQkq - 2 7;E37;Nimzo-Indian Defense: Classical Variation, Noa Variation
 r1bqk2r/ppp2ppp/2n5/3pp3/2PPn3/P3P3/1PQ2PPP/R1B1KBNR w KQkq - 0 9;E37;Nimzo-Indian Defense: Classical Variation, Noa Variation, San Remo Variation
 rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/2N5/PPQ1PPPP/R1B1KBNR w KQkq - 0 5;E38;Nimzo-Indian Defense: Classical Variation, Berlin Variation
 rnbqk2r/pp1p1ppp/4pn2/2P5/2P5/2b5/PPQ1PPPP/R1B1KBNR w KQkq - 0 6;E38;Nimzo-Indian Defense: Classical Variation, Berlin Variation, Steiner Variation
-rnbq1rk1/p2p1ppp/1p2pn2/2b5/2P2B2/P1N2N2/1PQ1PPPP/R3KB1R b KQ - 1 8;E39;Nimzo-Indian Defense: Classical Variation, Berlin Variation, Macieja System
+rnbq1rk1/p2p1ppp/1p2pn2/2b5/2P5/P1N2N2/1PQ1PPPP/R1B1KB1R w KQ - 0 8;E39;Nimzo-Indian Defense: Classical Variation, Berlin Variation, Macieja System
 rnbq1rk1/pp1p1ppp/4pn2/2P5/1bP5/2N5/PPQ1PPPP/R1B1KBNR w KQ - 1 6;E39;Nimzo-Indian Defense: Classical Variation, Berlin Variation, Pirc Variation
-rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR b KQkq - 0 4;E40;Nimzo-Indian Defense: Normal Line
-r1bqk2r/pppp1ppp/2n1pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 1 5;E40;Nimzo-Indian Defense: Normal Variation, Taimanov Variation
-rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 0 5;E41;Nimzo-Indian Defense: Hübner Variation
-r1bqk2r/pp3ppp/2nppn2/2p5/2PP4/2PBPN2/P4PPP/R1BQK2R w KQkq - 0 8;E41;Nimzo-Indian Defense: Hübner Variation, Main Line
-rnbq1rk1/pp1p1ppp/4pn2/2p5/1bPP4/2N1PN2/PP3PPP/R1BQKB1R w KQ - 2 6;E41;Nimzo-Indian Defense: Normal Variation, Hübner Deferred
-rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/2N1P3/PP2NPPP/R1BQKB1R b KQkq - 1 5;E42;Nimzo-Indian Defense: Hübner Variation, Rubinstein Variation
-rnbq1rk1/pp1p1ppp/4pn2/8/1bPP4/P1N5/1P2NPPP/R1BQKB1R b KQ - 0 7;E42;Nimzo-Indian Defense: Hübner Variation, Rubinstein Variation, Main Line
-rnbq1rk1/pp1p1ppp/4pn2/2P5/1b1P4/2N5/PP2NPPP/R1BQKB1R b KQ - 0 7;E42;Nimzo-Indian Defense: Hübner Variation, Rubinstein Variation, Sherbakov Attack
+rnbqk2r/pppp1ppp/4pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR b KQkq - 0 4;E40;Nimzo-Indian Defense: Rubinstein System
+r1bqk2r/pppp1ppp/2n1pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 1 5;E40;Nimzo-Indian Defense: Rubinstein System, Taimanov Variation
+rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 0 5;E41;Nimzo-Indian Defense: Rubinstein System
+r1bqk2r/pp3ppp/2nppn2/2p5/2PP4/2PBPN2/P4PPP/R1BQK2R w KQkq - 0 8;E41;Nimzo-Indian Defense: Rubinstein System, Hübner Variation
+r1bq1rk1/pp3ppp/2nppn2/2p5/2PP4/2PBPN2/P4PPP/R1BQ1RK1 w - - 2 9;E41;Nimzo-Indian Defense: Rubinstein System, Hübner Variation
+rnbqk2r/pp1p1ppp/4pn2/2p5/1bPP4/2N1P3/PP2NPPP/R1BQKB1R b KQkq - 1 5;E42;Nimzo-Indian Defense: Rubinstein System, Rubinstein Variation
+rnbq1rk1/pp1p1ppp/4pn2/8/1bPP4/P1N5/1P2NPPP/R1BQKB1R b KQ - 0 7;E42;Nimzo-Indian Defense: Rubinstein System, Rubinstein Variation, Main Line
+rnbq1rk1/pp1p1ppp/4pn2/2P5/1b1P4/2N5/PP2NPPP/R1BQKB1R b KQ - 0 7;E42;Nimzo-Indian Defense: Rubinstein System, Rubinstein Variation, Sherbakov Attack
 rnbqk2r/p1pp1ppp/1p2pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 0 5;E43;Nimzo-Indian Defense: St. Petersburg Variation
 rn1qk2r/pbpp1ppp/1p2pn2/8/1bPP4/2NBPN2/PP3PPP/R1BQK2R b KQkq - 3 6;E43;Nimzo-Indian Defense: St. Petersburg Variation
 rn1q1rk1/pbpp1ppp/1p2pn2/8/1bPP4/2NBPN2/PP3PPP/R1BQK2R w KQ - 4 7;E43;Nimzo-Indian Defense: St. Petersburg Variation
@@ -3359,13 +3371,15 @@ rn1q1rk1/pbpp1ppp/1p2pn2/8/2PP4/2PBPN2/P4PPP/R1BQ1RK1 b - - 4 8;E43;Nimzo-Indian
 rnbqk2r/p1pp1ppp/1p2p3/8/1bPPn3/2N1PN2/PPQ2PPP/R1B1KB1R b KQkq - 2 6;E43;Nimzo-Indian Defense: St. Petersburg Variation
 rn1qk2r/pbpp2pp/1p2p3/5p2/2PPn3/2PBPN2/P1Q2PPP/R1B2RK1 b kq - 1 9;E43;Nimzo-Indian Defense: St. Petersburg Variation
 rn1qk2r/pbpp1ppp/1p2p3/8/1bPPn3/2NBPN2/PP3PPP/R1BQK2R w KQkq - 4 7;E43;Nimzo-Indian Defense: St. Petersburg Variation, with Ne4
-rnbqk2r/p1pp1ppp/1p2pn2/8/1bPP4/2N1P3/PP2NPPP/R1BQKB1R b KQkq - 1 5;E44;Nimzo-Indian Defense: Fischer Variation
-rn1qk2r/p1pp1ppp/bp2pn2/8/1bPP4/2N1P3/PP2NPPP/R1BQKB1R w KQkq - 2 6;E45;Nimzo-Indian Defense: Normal Variation, Bronstein (Byrne) Variation
+rnbqk2r/p1pp1ppp/1p2pn2/8/1bPP4/2N1P3/PP2NPPP/R1BQKB1R b KQkq - 1 5;E44;Nimzo-Indian Defense: St. Petersburg Variation
+rnbqk2r/p1pp1ppp/1p2p3/8/1bPPn3/2N1P3/PP2NPPP/R1BQKB1R w KQkq - 2 6;E44;Nimzo-Indian Defense: St. Petersburg Variation, American Variation
+rnbqk2r/p2p1ppp/1p2pn2/b1p5/2PP4/P1N1P3/1P2NPPP/R1BQKB1R w KQkq - 1 7;E44;Nimzo-Indian Defense: St. Petersburg Variation, Romanishin–Psakhis Variation
+rn1qk2r/p1pp1ppp/bp2pn2/8/1bPP4/2N1P3/PP2NPPP/R1BQKB1R w KQkq - 2 6;E45;Nimzo-Indian Defense: St. Petersburg Variation, Fischer Variation
 rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/2N1P3/PP3PPP/R1BQKBNR w KQ - 1 5;E46;Nimzo-Indian Defense: Normal Variation
 rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/2N1P3/PP2NPPP/R1BQKB1R b KQ - 2 5;E46;Nimzo-Indian Defense: Reshevsky Variation
 rnbq1rk1/ppp2ppp/3bpn2/3p4/2PP4/P1N1P3/1P2NPPP/R1BQKB1R w KQ - 1 7;E46;Nimzo-Indian Defense: Simagin Variation
-rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/2NBP3/PP3PPP/R1BQK1NR b KQ - 2 5;E47;Nimzo-Indian Defense: Normal Variation, Bishop Attack
-rnbq1rk1/ppp2ppp/4pn2/3p4/1bPP4/2NBP3/PP3PPP/R1BQK1NR w KQ - 0 6;E48;Nimzo-Indian Defense: Normal Variation, Bishop Attack, Classical Defense
+rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/2NBP3/PP3PPP/R1BQK1NR b KQ - 2 5;E47;Nimzo-Indian Defense: Normal Variation
+rnbq1rk1/ppp2ppp/4pn2/3p4/1bPP4/2NBP3/PP3PPP/R1BQK1NR w KQ - 0 6;E48;Nimzo-Indian Defense: Normal Variation, Classical Defense
 r1bq1rk1/ppp2ppp/2n1pn2/3p4/1bPP4/2NBPN2/PP3PPP/R1BQ1RK1 b - - 3 7;E48;Nimzo-Indian Defense: Ragozin Defense
 rnbq1rk1/ppp2ppp/4pn2/3p4/2PP4/P1PBP3/5PPP/R1BQK1NR b KQ - 0 7;E49;Nimzo-Indian Defense: Normal Variation, Botvinnik System
 rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/2N1PN2/PP3PPP/R1BQKB1R b KQ - 2 5;E50;Nimzo-Indian Defense
@@ -3516,3 +3530,4 @@ r2qkb1r/pp1n1ppp/2p2n2/4p3/2BPP1b1/5N2/PPP3PP/RNBQ1RK1 w kq - 6 8;B12;Caro-Kann 
 rnbqkbnr/pp3ppp/2p5/8/2BpP3/5N2/PPP3PP/RNBQK2R b KQkq - 1 6;B12;Caro-Kann Defense: Fantasy Variation, Maróczy Gambit
 rnbqkb1r/pp2pppp/2p2n2/6N1/3P4/8/PPP2PPP/R1BQKBNR b KQkq - 2 5;B15;Caro-Kann Defense: Alien Gambit
 rnbqk2r/pp2nppp/4p3/2ppP3/3P3P/P1P5/2P2PP1/R1BQKBNR b KQkq - 0 7;C19;French Defense: Winawer, Kasparov Variation
+rnbqkbnr/pp1ppppp/2p5/8/5P2/8/PPPPP1PP/RNBQKBNR w KQkq - 0 2;A02;Bird Opening: Caro-Kann Variation
