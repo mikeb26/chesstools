@@ -5,13 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"strings"
 
 	"github.com/mikeb26/chesstools"
 	"github.com/notnil/chess"
 )
+
+const NoEndMove = 10000
 
 type Pgn2FenOpts struct {
 	all          bool
@@ -20,16 +21,18 @@ type Pgn2FenOpts struct {
 	color        string
 	colorc       chess.Color
 	pgnFiles     []string
+	expandVar    bool
 }
 
 func NewPgn2FenOpts() *Pgn2FenOpts {
 	opts := &Pgn2FenOpts{
 		all:          false,
 		startMoveNum: 0,
-		endMoveNum:   math.MaxInt,
+		endMoveNum:   NoEndMove,
 		color:        "",
 		colorc:       chess.NoColor,
 		pgnFiles:     make([]string, 0),
+		expandVar:    false,
 	}
 
 	return opts
@@ -42,11 +45,12 @@ func parseArgs(opts *Pgn2FenOpts) error {
 
 	opts.colorc = chess.NoColor
 	f.BoolVar(&opts.all, "all", opts.all, "<true|false>")
+	f.BoolVar(&opts.expandVar, "includevar", opts.expandVar, "include variations in pgn <true|false>")
 	f.StringVar(&opts.color, "color", opts.color, "<white|black>")
 	f.IntVar(&opts.startMoveNum, "startmove", opts.startMoveNum,
 		"start move number (defaults to 0)")
 	f.IntVar(&opts.endMoveNum, "endmove", opts.endMoveNum,
-		"ending move number (default is infinite)")
+		"ending move number")
 
 	err := f.Parse(os.Args[1:])
 	if err != nil {
@@ -59,7 +63,7 @@ func parseArgs(opts *Pgn2FenOpts) error {
 	if opts.all && opts.startMoveNum != 0 {
 		return fmt.Errorf("--all and --startmove are mutually exclusive")
 	}
-	if opts.all && opts.endMoveNum != math.MaxInt {
+	if opts.all && opts.endMoveNum != NoEndMove {
 		return fmt.Errorf("--all and --endmove are mutually exclusive")
 	}
 	if opts.startMoveNum > opts.endMoveNum {
@@ -124,7 +128,7 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 	defer f.Close()
 
 	var scanOpts chess.ScannerOpts
-	scanOpts.ExpandVariations = true
+	scanOpts.ExpandVariations = opts.expandVar
 
 	scanner := chess.NewScannerWithOptions(f, scanOpts)
 
@@ -149,7 +153,7 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 
 func game2FENs(opts *Pgn2FenOpts, g *chess.Game) string {
 	if !opts.all && opts.colorc == chess.NoColor && opts.startMoveNum == 0 &&
-		opts.endMoveNum == math.MaxInt {
+		opts.endMoveNum == NoEndMove {
 
 		return fmt.Sprintf("%v\n", g.Position().XFENString())
 	} // else
