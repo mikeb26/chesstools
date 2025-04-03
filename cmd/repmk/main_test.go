@@ -32,6 +32,7 @@ func TestRepBld(t *testing.T) {
 		outputFile:   tmpConsolidatedFile.Name(),
 		outputMode:   Consolidated,
 		keepExisting: true,
+		expandVar:    true,
 	}
 	mainWork(&opts)
 	opts.outputFile = tmpFlattenedFile.Name()

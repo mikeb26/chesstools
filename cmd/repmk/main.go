@@ -31,6 +31,7 @@ type RepBldOpts struct {
 	opponent     string
 	dark         bool
 	minGames     int
+	expandVar    bool
 }
 
 type MoveMapValue struct {
@@ -69,6 +70,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.UintVar(&opts.engineTime, "enginetime", 300, "<engine search time per position>")
 	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
 	f.IntVar(&opts.minGames, "mingames", DefaultMinGames, "<minimum games to consider from an opening book position>")
+	f.BoolVar(&opts.expandVar, "includevar", true, "include variations in input pgn <true|false>")
 
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -134,8 +136,7 @@ func mainWork(opts *RepBldOpts) {
 		}
 		defer inFile.Close()
 
-		err = processOnePGN(opts.color, inFile, opts.inputFile, dag,
-			opts.keepExisting)
+		err = processOnePGN(opts, inFile, dag)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to parse %v: %v\n", opts.inputFile,
 				err)
@@ -327,11 +328,10 @@ func selectMoveViaEngine(openingGame *chesstools.OpeningGame,
 	return er.BestMove, nil
 }
 
-func processOnePGN(color chess.Color, f io.Reader, pgnFilename string,
-	dag *Dag, keepExisting bool) error {
+func processOnePGN(repOpts *RepBldOpts, f io.Reader, dag *Dag) error {
 
 	var opts chess.ScannerOpts
-	opts.ExpandVariations = true
+	opts.ExpandVariations = repOpts.expandVar
 
 	scanner := chess.NewScannerWithOptions(f, opts)
 
@@ -342,11 +342,11 @@ func processOnePGN(color chess.Color, f io.Reader, pgnFilename string,
 		if len(g.Moves()) == 0 {
 			continue
 		}
-		err = processOneGame(color, g, pgnFilename, ii)
+		err = processOneGame(repOpts.color, g, repOpts.inputFile, ii)
 		if err != nil {
 			return err
 		}
-		if keepExisting {
+		if repOpts.keepExisting {
 			dag.addNodesFromGame(g)
 		}
 		ii++
