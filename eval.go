@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -79,6 +80,8 @@ type EvalResult struct {
 	KNPS                string
 	SearchTimeInSeconds float64
 	Type                EvalType
+	Atime               time.Time
+	fen                 string
 }
 
 type EvalCtx struct {
@@ -95,6 +98,7 @@ type EvalCtx struct {
 	staleOk       bool
 	cloudCache    bool
 	doLazyInit    bool
+	atime         bool
 
 	engine     *uci.Engine
 	engVersion float64
@@ -125,6 +129,7 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.staleOk = cacheOnlyIn
 	rv.cloudCache = true
 	rv.doLazyInit = false
+	rv.atime = true
 
 	var err error
 	rv.engine, err = uci.New("stockfish")
@@ -188,6 +193,11 @@ func (evalCtx *EvalCtx) WithEvalTime(evalTimeInSec uint) *EvalCtx {
 
 func (evalCtx *EvalCtx) WithEvalDepth(evalDepth int) *EvalCtx {
 	evalCtx.evalDepth = evalDepth
+	return evalCtx
+}
+
+func (evalCtx *EvalCtx) WithoutAtime() *EvalCtx {
+	evalCtx.atime = false
 	return evalCtx
 }
 
@@ -392,12 +402,18 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 	if evalCtx.engVersion == UnknownEngVer {
 		panic("Unknown current engine version")
 	}
+
+	er.Type = EvalTypeLocalStockfish
+	if evalCtx.atime {
+		er.Atime = time.Now()
+		evalCtx.persistResultToCache(&er)
+	}
+
 	if !staleOk && evalCtx.engVersion > er.EngVersion {
 		return nil, ErrCacheStale
 	}
-
 	er.KNPS = er.KNPS + " (local cache)"
-	er.Type = EvalTypeLocalStockfish
+	er.fen = fen
 
 	return &er, nil
 }
@@ -699,6 +715,13 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	winPct, _ := results.Info.Score.WinPct()
 	lossPct, _ := results.Info.Score.LossPct()
 	drawPct, _ := results.Info.Score.DrawPct()
+
+	fen := evalCtx.position.XFENString()
+	fen, err = NormalizeFEN(fen)
+	if err != nil {
+		panic(err)
+	}
+
 	er = &EvalResult{
 		CP:                  results.Info.Score.CP,
 		Mate:                results.Info.Score.Mate,
@@ -711,6 +734,8 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		EngVersion:          evalCtx.engVersion,
 		SearchTimeInSeconds: searchEndTime.Sub(searchStartTime).Seconds(),
 		Type:                EvalTypeLocalStockfish,
+		Atime:               time.Now(),
+		fen:                 fen,
 	}
 
 	if evalCtx.g.Position().Turn() == chess.Black {
@@ -759,27 +784,44 @@ func findAllCacheEvalFiles(dirPath string) (cachedEvalEntryList, error) {
 	return curList, nil
 }
 
-func (evalCtx *EvalCtx) UpgradeCache() error {
+func (evalCtx *EvalCtx) loadAllERs() ([]*EvalResult, error) {
+	evalCtx = evalCtx.WithoutAtime()
+
+	erList := make([]*EvalResult, 0)
 	entryList, err := findAllCacheEvalFiles(CacheFileDir)
 	if err != nil {
-		fmt.Printf("Failed to find all cached evals: %v", err)
-		return err
+		return erList, fmt.Errorf("Failed to find all cached evals: %w", err)
 	}
 
-	numEntries := len(entryList.entries)
-	fmt.Printf("Checking %v cached entries...\n", numEntries)
-
-	ii := 0
 	for _, entry := range entryList.entries {
-		ii++
 		cacheFile := filepath.Base(entry)
 		fen := cacheFileName2Fen(cacheFile)
 
 		evalCtx.SetFEN(fen)
 		er, err := evalCtx.loadResultFromLocalCache(true)
 		if err != nil {
-			return err
+			return erList, err
 		}
+		erList = append(erList, er)
+	}
+
+	slices.SortFunc(erList, func(a, b *EvalResult) int {
+		return -a.Atime.Compare(b.Atime)
+	})
+
+	return erList, nil
+}
+
+func (evalCtx *EvalCtx) UpgradeCache() error {
+	erList, err := evalCtx.loadAllERs()
+	if err != nil {
+		fmt.Printf("Failed to load cached results: %v\n", err)
+	}
+
+	fmt.Printf("Checking %v cached entries...\n", len(erList))
+
+	for ii, er := range erList {
+		evalCtx.SetFEN(er.fen)
 		if er.EngVersion == evalCtx.engVersion {
 			continue
 		}
@@ -789,7 +831,8 @@ func (evalCtx *EvalCtx) UpgradeCache() error {
 		if evalCtx.evalTimeInSec == UnknownSearchTime {
 			evalCtx.evalTimeInSec = DefaultEvalTimeInSec
 		}
-		fmt.Printf("  Upgrading(%v of %v) fen:%v...\n", ii, numEntries, fen)
+		fmt.Printf("  Upgrading(%v of %v) fen:%v...\n", ii+1, len(erList),
+			er.fen)
 		newEr := evalCtx.Eval()
 		if er.BestMove != newEr.BestMove {
 			fmt.Printf("    *** best move changed from %v(ver %v) to %v(ver %v)\n",
