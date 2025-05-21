@@ -32,12 +32,13 @@ const (
 	KiB = 1024
 	MiB = 1024 * KiB
 
-	DefaultEvalTimeInSec = 300
-	DefaultDepth         = -1 // infinite
-	UnknownSearchTime    = 0.0
-	UnknownEngVer        = 0.0
-	FileNamePrefix       = "fen."
-	CacheFileDir         = "cache"
+	DefaultEvalTimeInSec     = 300
+	DefaultDepth             = -1 // infinite
+	DefaultMaxEntriesUpgrade = 10000
+	UnknownSearchTime        = 0.0
+	UnknownEngVer            = 0.0
+	FileNamePrefix           = "fen."
+	CacheFileDir             = "cache"
 )
 
 var ErrCacheMiss = errors.New("cache miss")
@@ -785,8 +786,6 @@ func findAllCacheEvalFiles(dirPath string) (cachedEvalEntryList, error) {
 }
 
 func (evalCtx *EvalCtx) loadAllERs() ([]*EvalResult, error) {
-	evalCtx = evalCtx.WithoutAtime()
-
 	erList := make([]*EvalResult, 0)
 	entryList, err := findAllCacheEvalFiles(CacheFileDir)
 	if err != nil {
@@ -813,6 +812,8 @@ func (evalCtx *EvalCtx) loadAllERs() ([]*EvalResult, error) {
 }
 
 func (evalCtx *EvalCtx) UpgradeCache() error {
+	evalCtx = evalCtx.WithoutAtime()
+
 	erList, err := evalCtx.loadAllERs()
 	if err != nil {
 		fmt.Printf("Failed to load cached results: %v\n", err)
@@ -823,6 +824,11 @@ func (evalCtx *EvalCtx) UpgradeCache() error {
 	for ii, er := range erList {
 		evalCtx.SetFEN(er.fen)
 		if er.EngVersion == evalCtx.engVersion {
+			continue
+		}
+		if ii >= DefaultMaxEntriesUpgrade {
+			fmt.Printf("  Not upgrading(%v of %v) atime:%v fen:%v...\n", ii+1,
+				len(erList), er.Atime, er.fen)
 			continue
 		}
 		evalCtx.staleOk = false
