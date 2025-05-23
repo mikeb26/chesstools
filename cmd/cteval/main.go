@@ -91,7 +91,7 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 	var cacheOnly bool
 	f.BoolVar(&cacheOnly, "cacheonly", false, "only return cached evaluations")
 	var staleOk bool
-	f.BoolVar(&staleOk, "staleok", false, "accept cached evals from older engine versions")
+	f.BoolVar(&staleOk, "staleok", true, "accept cached evals from older engine versions")
 	var noCloudCache bool
 	f.BoolVar(&noCloudCache, "nocloudcache", false, "do not reference lichess APIs for cached evaluations")
 	var doUpgrade bool
@@ -151,9 +151,7 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 	if cacheOnly {
 		evalCtx = evalCtx.WithCacheOnly()
 	}
-	if staleOk {
-		evalCtx = evalCtx.WithStaleOk()
-	}
+	evalCtx = evalCtx.WithStaleOk(staleOk)
 	if noCloudCache {
 		evalCtx = evalCtx.WithoutCloudCache()
 	}

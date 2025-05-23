@@ -130,7 +130,7 @@ func parseArgs(opts *RepValidatorOpts) ([]string, error) {
 	f.Float64Var(&opts.gapThreshold, "gapthreshold", 0.04, "<gapThresholdPct>")
 	f.IntVar(&opts.gapSkip, "gapskip", 0, "<gapMoveSkipCount>")
 	f.BoolVar(&opts.cacheOnly, "cacheonly", false, "only return cached evaluations")
-	f.BoolVar(&opts.staleOk, "staleok", false, "accept cached evals from older engine versions")
+	f.BoolVar(&opts.staleOk, "staleok", true, "accept cached evals from older engine versions")
 	f.UintVar(&opts.minMoveNum2Eval, "minevalmovenum", 3, "<minevalmovenum>")
 	f.Parse(os.Args[1:])
 	switch strings.ToUpper(colorFlag) {
@@ -336,9 +336,7 @@ func (rv *RepValidator) scoreMove(g *chess.Game, pgnFilename string,
 		} else if rv.opts.scoreTime > 0 {
 			rv.evalCtx = rv.evalCtx.WithEvalTime(rv.opts.scoreTime)
 		}
-		if rv.opts.staleOk {
-			rv.evalCtx = rv.evalCtx.WithStaleOk()
-		}
+		rv.evalCtx = rv.evalCtx.WithStaleOk(rv.opts.staleOk)
 		rv.evalCtx.InitEngine()
 	} else {
 		rv.evalCtx.SetFEN(fen)

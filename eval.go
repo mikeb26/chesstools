@@ -127,7 +127,7 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.g = nil
 	rv.position = nil
 	rv.cacheOnly = cacheOnlyIn
-	rv.staleOk = cacheOnlyIn
+	rv.staleOk = true
 	rv.cloudCache = true
 	rv.doLazyInit = false
 	rv.atime = true
@@ -152,8 +152,8 @@ func (evalCtx *EvalCtx) WithCacheOnly() *EvalCtx {
 	return evalCtx
 }
 
-func (evalCtx *EvalCtx) WithStaleOk() *EvalCtx {
-	evalCtx.staleOk = true
+func (evalCtx *EvalCtx) WithStaleOk(staleOkIn bool) *EvalCtx {
+	evalCtx.staleOk = staleOkIn
 	return evalCtx
 }
 

@@ -61,10 +61,10 @@ func parseArgs(opts *RepBldOpts) error {
 	f.StringVar(&opts.startMoves, "start", "", "<pgnStart> (starting moves)")
 	f.StringVar(&opts.inputFile, "input", "", "<existingRep>")
 	f.StringVar(&opts.outputFile, "output", "", "<outputFile>")
-	f.StringVar(&format, "format", "", "<flattened|consolidated>")
+	f.StringVar(&format, "format", "flattened", "<flattened|consolidated>")
 	f.Float64Var(&opts.threshold, "threshold", 0.02, "<thresholdPct>")
 	f.IntVar(&opts.maxDepth, "maxdepth", 14, "<max depth>")
-	f.BoolVar(&opts.keepExisting, "keepexisting", false, "<true|false>")
+	f.BoolVar(&opts.keepExisting, "keepexisting", true, "<true|false>")
 	f.BoolVar(&opts.dark, "dark", false, "<true|false>")
 	f.BoolVar(&opts.engineSelect, "engineselect", false, "<true|false>")
 	f.UintVar(&opts.engineTime, "enginetime", 300, "<engine search time per position>")
@@ -85,6 +85,7 @@ func parseArgs(opts *RepBldOpts) error {
 	default:
 		return fmt.Errorf("please specify --color <white|black>")
 	}
+
 	switch strings.ToUpper(format) {
 	case "FLATTENED":
 		opts.outputMode = Flattened
@@ -92,6 +93,10 @@ func parseArgs(opts *RepBldOpts) error {
 		opts.outputMode = Consolidated
 	default:
 		return fmt.Errorf("please specify --format <flattened|consolidated>")
+	}
+
+	if opts.outputFile == "" {
+		return fmt.Errorf("please specify --output <outputFile>")
 	}
 
 	return nil
