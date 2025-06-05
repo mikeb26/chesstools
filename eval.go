@@ -70,19 +70,20 @@ func (t EvalType) String() string {
 }
 
 type EvalResult struct {
-	CP                  int
-	WinPct              float32
-	DrawPct             float32
-	LossPct             float32
-	Mate                int
-	BestMove            string
-	Depth               int
-	EngVersion          float64
-	KNPS                string
-	SearchTimeInSeconds float64
-	Type                EvalType
-	Atime               time.Time
-	fen                 string
+	CP                        int
+	WinPct                    float32
+	DrawPct                   float32
+	LossPct                   float32
+	Mate                      int
+	BestMove                  string
+	Depth                     int
+	EngVersion                float64
+	KNPS                      string
+	SearchTimeInSeconds       float64
+	ActualSearchTimeInSeconds float64
+	Type                      EvalType
+	Atime                     time.Time
+	fen                       string
 }
 
 type EvalCtx struct {
@@ -536,7 +537,8 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	evalResult.Depth = cloudResp.Depth
 	evalResult.EngVersion = UnknownEngVer // not in response
 	evalResult.KNPS = fmt.Sprintf("%v (cloud cache)", cloudResp.KNodes)
-	evalResult.SearchTimeInSeconds = UnknownSearchTime // not in response
+	evalResult.SearchTimeInSeconds = UnknownSearchTime       // not in response
+	evalResult.ActualSearchTimeInSeconds = UnknownSearchTime // not in response
 	evalResult.Type = EvalTypeLichess
 
 	if !staleOk && evalCtx.engVersion > evalResult.EngVersion {
@@ -724,19 +726,20 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	}
 
 	er = &EvalResult{
-		CP:                  results.Info.Score.CP,
-		Mate:                results.Info.Score.Mate,
-		WinPct:              winPct,
-		LossPct:             lossPct,
-		DrawPct:             drawPct,
-		BestMove:            algNotation.Encode(evalCtx.position, bestMoveFixed),
-		Depth:               results.Info.Depth,
-		KNPS:                fmt.Sprintf("%v", results.Info.NPS/1000),
-		EngVersion:          evalCtx.engVersion,
-		SearchTimeInSeconds: searchEndTime.Sub(searchStartTime).Seconds(),
-		Type:                EvalTypeLocalStockfish,
-		Atime:               time.Now(),
-		fen:                 fen,
+		CP:                        results.Info.Score.CP,
+		Mate:                      results.Info.Score.Mate,
+		WinPct:                    winPct,
+		LossPct:                   lossPct,
+		DrawPct:                   drawPct,
+		BestMove:                  algNotation.Encode(evalCtx.position, bestMoveFixed),
+		Depth:                     results.Info.Depth,
+		KNPS:                      fmt.Sprintf("%v", results.Info.NPS/1000),
+		EngVersion:                evalCtx.engVersion,
+		SearchTimeInSeconds:       float64(evalCtx.evalTimeInSec),
+		ActualSearchTimeInSeconds: searchEndTime.Sub(searchStartTime).Seconds(),
+		Type:                      EvalTypeLocalStockfish,
+		Atime:                     time.Now(),
+		fen:                       fen,
 	}
 
 	if evalCtx.g.Position().Turn() == chess.Black {
