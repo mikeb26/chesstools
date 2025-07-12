@@ -213,7 +213,7 @@ func (rv *RepValidator) loadExceptions() error {
 }
 
 func (rv *RepValidator) shouldScoreMoves() bool {
-	return rv.opts.scoreDepth > 0 || rv.opts.scoreTime > 0
+	return rv.opts.scoreDepth > 0 || rv.opts.scoreTime > 0 || rv.opts.cacheOnly
 }
 
 func (rv *RepValidator) Load() error {
