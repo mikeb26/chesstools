@@ -4,7 +4,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -13,8 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 type RepBldOpts struct {
@@ -335,15 +334,19 @@ func selectMoveViaEngine(openingGame *chesstools.OpeningGame,
 
 func processOnePGN(repOpts *RepBldOpts, f io.Reader, dag *Dag) error {
 
-	var opts chess.ScannerOpts
-	opts.ExpandVariations = repOpts.expandVar
+	var scanner *chess.Scanner
+	if repOpts.expandVar {
+		scanner = chess.NewScanner(f, chess.WithExpandVariations())
+	} else {
+		scanner = chess.NewScanner(f)
+	}
 
-	scanner := chess.NewScannerWithOptions(f, opts)
-
-	var err error
 	ii := 1
-	for scanner.Scan() {
-		g := scanner.Next()
+	for scanner.HasNext() {
+		g, err := scanner.ParseNext()
+		if err != nil {
+			return err
+		}
 		if len(g.Moves()) == 0 {
 			continue
 		}
@@ -357,12 +360,7 @@ func processOnePGN(repOpts *RepBldOpts, f io.Reader, dag *Dag) error {
 		ii++
 	}
 
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-
-	return err
+	return nil
 }
 
 func processOneGame(color chess.Color, g *chess.Game, pgnFilename string,
@@ -399,8 +397,8 @@ func processOneGame(color chess.Color, g *chess.Game, pgnFilename string,
 func getGameName(g *chess.Game) string {
 	gn := "?"
 	tagPair := g.GetTagPair("Event")
-	if tagPair != nil {
-		gn = tagPair.Value
+	if tagPair != "" {
+		gn = tagPair
 	}
 
 	return gn

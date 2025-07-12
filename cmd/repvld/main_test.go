@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/notnil/chess"
+	"github.com/corentings/chess/v2"
 )
 
 func TestNewRepValidator(t *testing.T) {

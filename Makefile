@@ -2,7 +2,7 @@ export GO111MODULE=on
 export GOFLAGS=-mod=vendor
 
 .PHONY: all
-all: build test
+all: build
 
 .PHONY: build
 build: eco/all_fen.tsv pgn2fen
@@ -29,7 +29,7 @@ test:
 deps:
 	rm -rf go.mod go.sum vendor
 	go mod init github.com/mikeb26/chesstools
-	go mod edit -replace=github.com/notnil/chess=github.com/mikeb26/chess@v1.10.0.mb1
+	go mod edit -replace=github.com/corentings/chess/v2=github.com/mikeb26/corentings-chess/v2@v2.0.10.mb3
 	GOPROXY=direct go mod tidy
 	go mod vendor
 	mkdir /tmp/openings

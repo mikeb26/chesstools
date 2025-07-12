@@ -4,17 +4,15 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 type IncrementPosture int
@@ -428,8 +426,11 @@ func loadExistingGame(pgn string) (*chess.Game, error) {
 	scanner := chess.NewScanner(f)
 
 	var g *chess.Game
-	for scanner.Scan() {
-		tmp := scanner.Next()
+	for scanner.HasNext() {
+		tmp, err := scanner.ParseNext()
+		if err != nil {
+			return nil, err
+		}
 		if len(tmp.Moves()) == 0 {
 			continue
 		}
@@ -439,19 +440,11 @@ func loadExistingGame(pgn string) (*chess.Game, error) {
 		}
 		g = tmp
 	}
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
 	if g == nil {
-		if err != nil {
-			return nil, fmt.Errorf("could not parse pgn: %w", err)
-		} else {
-			return nil, fmt.Errorf("could not find any games in pgn")
-		}
+		return nil, fmt.Errorf("could not find any games in pgn")
 	}
 
-	return g, err
+	return g, nil
 }
 
 func (mkCtx *MkCtx) getMovesAndClock(halfMoveCount int) error {

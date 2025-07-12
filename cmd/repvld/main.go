@@ -8,7 +8,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -16,8 +15,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 type RepValidatorOpts struct {
@@ -249,23 +248,22 @@ func (rv *RepValidator) Load() error {
 func getGameName(g *chess.Game) string {
 	gn := "?"
 	tagPair := g.GetTagPair("Event")
-	if tagPair != nil {
-		gn = tagPair.Value
+	if tagPair != "" {
+		gn = tagPair
 	}
 
 	return gn
 }
 
 func (rv *RepValidator) processOnePGN(f io.Reader, pgnFilename string) error {
-	var opts chess.ScannerOpts
-	opts.ExpandVariations = true
+	scanner := chess.NewScanner(f, chess.WithExpandVariations())
 
-	scanner := chess.NewScannerWithOptions(f, opts)
-
-	var err error
 	ii := 1
-	for scanner.Scan() {
-		g := scanner.Next()
+	for scanner.HasNext() {
+		g, err := scanner.ParseNext()
+		if err != nil {
+			return err
+		}
 		if len(g.Moves()) == 0 {
 			continue
 		}
@@ -276,12 +274,7 @@ func (rv *RepValidator) processOnePGN(f io.Reader, pgnFilename string) error {
 		ii++
 	}
 
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-
-	return err
+	return nil
 }
 
 func (rv *RepValidator) processOneGame(g *chess.Game, pgnFilename string,

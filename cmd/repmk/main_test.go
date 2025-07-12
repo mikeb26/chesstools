@@ -1,13 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"testing"
 
-	"github.com/notnil/chess"
+	"github.com/corentings/chess/v2"
 )
 
 func TestRepBld(t *testing.T) {
@@ -59,7 +58,8 @@ func TestRepBld(t *testing.T) {
 	err = processOneTestPGN(tmpConsolidatedFile2, tmpConsolidatedFile.Name(), 6,
 		expectedConsolidatedPos)
 	if err != nil {
-		t.Fatalf("Consolidated test failed: %v", err)
+		t.Fatalf("Consolidated test failed input:%v err:%v",
+			tmpConsolidatedFile.Name(), err)
 	}
 
 	expectedFlattenedPos := []string{
@@ -76,18 +76,17 @@ func TestRepBld(t *testing.T) {
 func processOneTestPGN(f io.Reader, pgnFilename string, numGames int,
 	expectedPos []string) error {
 
-	var opts chess.ScannerOpts
-	opts.ExpandVariations = true
-
-	scanner := chess.NewScannerWithOptions(f, opts)
+	scanner := chess.NewScanner(f, chess.WithExpandVariations())
 
 	found := make([]bool, len(expectedPos))
 
-	var err error
 	ii := 1
 	gameCount := 0
-	for scanner.Scan() {
-		g := scanner.Next()
+	for scanner.HasNext() {
+		g, err := scanner.ParseNext()
+		if err != nil {
+			return err
+		}
 		if len(g.Moves()) == 0 {
 			continue
 		}
@@ -102,11 +101,6 @@ func processOneTestPGN(f io.Reader, pgnFilename string, numGames int,
 		ii++
 	}
 
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-
 	if gameCount != numGames {
 		return fmt.Errorf("Expected game count %v but got %v", numGames,
 			gameCount)
@@ -117,5 +111,5 @@ func processOneTestPGN(f io.Reader, pgnFilename string, numGames int,
 		}
 	}
 
-	return err
+	return nil
 }

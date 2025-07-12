@@ -24,8 +24,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/notnil/chess"
-	"github.com/notnil/chess/uci"
+	"github.com/corentings/chess/v2"
+	"github.com/corentings/chess/v2/uci"
 )
 
 const (
@@ -343,25 +343,17 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	}
 	defer readCloser.Close()
 
-	var opts chess.ScannerOpts
-	opts.ExpandVariations = false
-
-	scanner := chess.NewScannerWithOptions(readCloser, opts)
+	scanner := chess.NewScanner(readCloser)
 	var ret *chess.Game
 
-	for scanner.Scan() {
-		ret = scanner.Next()
+	for scanner.HasNext() {
+		ret, err = scanner.ParseNext()
+		if err != nil {
+			panic(err)
+		}
 
 		// only process 1st game
 		break
-	}
-
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-	if err != nil {
-		panic(err)
 	}
 
 	return ret

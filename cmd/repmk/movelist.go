@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 type MoveListAndStartFEN struct {

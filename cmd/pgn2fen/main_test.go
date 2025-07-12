@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/notnil/chess"
+	"github.com/corentings/chess/v2"
 )
 
 func loadPgn(t *testing.T) *chess.Game {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/notnil/chess"
+	"github.com/corentings/chess/v2"
 )
 
 type FenCatOpts struct {

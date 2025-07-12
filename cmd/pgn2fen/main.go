@@ -1,15 +1,13 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 const NoEndMove = 10000
@@ -127,14 +125,21 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 	}
 	defer f.Close()
 
-	var scanOpts chess.ScannerOpts
-	scanOpts.ExpandVariations = opts.expandVar
+	var scanner *chess.Scanner
 
-	scanner := chess.NewScannerWithOptions(f, scanOpts)
+	if opts.expandVar {
+		scanner = chess.NewScanner(f, chess.WithExpandVariations())
+	} else {
+		scanner = chess.NewScanner(f)
+	}
 
 	ii := 1
-	for scanner.Scan() {
-		g := scanner.Next()
+	for scanner.HasNext() {
+		g, err := scanner.ParseNext()
+		if err != nil {
+			return err
+		}
+
 		if len(g.Moves()) == 0 {
 			continue
 		}
@@ -143,12 +148,7 @@ func processOnePgn(opts *Pgn2FenOpts, pgnFile string) error {
 		ii++
 	}
 
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-
-	return err
+	return nil
 }
 
 func game2FENs(opts *Pgn2FenOpts, g *chess.Game) string {

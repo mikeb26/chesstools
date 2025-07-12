@@ -3,14 +3,13 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 type FiltOpts struct {
@@ -20,16 +19,16 @@ type FiltOpts struct {
 type FiltCtx struct {
 	pgnFileList []string
 	fopts       FiltOpts
-	sopts       chess.ScannerOpts
+	expandVar   bool
 }
 
 func NewFiltCtx(pgns []string, foptsIn FiltOpts,
-	soptsIn chess.ScannerOpts) *FiltCtx {
+	expandVarIn bool) *FiltCtx {
 
 	rv := &FiltCtx{
 		pgnFileList: make([]string, len(pgns)),
 		fopts:       foptsIn,
-		sopts:       soptsIn,
+		expandVar:   expandVarIn,
 	}
 	for ii, p := range pgns {
 		rv.pgnFileList[ii] = p
@@ -40,14 +39,14 @@ func NewFiltCtx(pgns []string, foptsIn FiltOpts,
 
 func main() {
 	fopts := FiltOpts{}
-	sopts := chess.ScannerOpts{}
-	pgnList, err := parseArgs(&fopts, &sopts)
+	expandVar := false
+	pgnList, err := parseArgs(&fopts, &expandVar)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
 	}
 
-	filtCtx := NewFiltCtx(pgnList, fopts, sopts)
+	filtCtx := NewFiltCtx(pgnList, fopts, expandVar)
 	err = filtCtx.LoadAndFilter()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load PGN files: %v\n", err)
@@ -55,7 +54,7 @@ func main() {
 	}
 }
 
-func parseArgs(fopts *FiltOpts, sopts *chess.ScannerOpts) ([]string, error) {
+func parseArgs(fopts *FiltOpts, expandVar *bool) ([]string, error) {
 	f := flag.NewFlagSet("pgnfilt", flag.ExitOnError)
 
 	f.StringVar(&fopts.fen, "fen", "", "includes this specific position")
@@ -85,11 +84,18 @@ func (filtCtx *FiltCtx) LoadAndFilter() error {
 }
 
 func (filtCtx *FiltCtx) processOnePGN(f io.Reader) error {
-	scanner := chess.NewScannerWithOptions(f, filtCtx.sopts)
+	var scanner *chess.Scanner
+	if filtCtx.expandVar {
+		scanner = chess.NewScanner(f, chess.WithExpandVariations())
+	} else {
+		scanner = chess.NewScanner(f)
+	}
 
-	var err error
-	for scanner.Scan() {
-		g := scanner.Next()
+	for scanner.HasNext() {
+		g, err := scanner.ParseNext()
+		if err != nil {
+			return err
+		}
 		if len(g.Moves()) == 0 {
 			continue
 		}
@@ -100,12 +106,7 @@ func (filtCtx *FiltCtx) processOnePGN(f io.Reader) error {
 		}
 	}
 
-	err = scanner.Err()
-	if errors.Is(err, io.EOF) {
-		err = nil
-	}
-
-	return err
+	return nil
 }
 
 func (filtCtx *FiltCtx) processOneGame(g *chess.Game) error {

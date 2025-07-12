@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/corentings/chess/v2"
 	"github.com/mikeb26/chesstools"
-	"github.com/notnil/chess"
 )
 
 func (rv *RepValidator) selectMove(openingGame *chesstools.OpeningGame,

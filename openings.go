@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/notnil/chess"
+	"github.com/corentings/chess/v2"
 )
 
 const (
@@ -155,15 +155,7 @@ func (openingGame *OpeningGame) WithFEN(fen string) *OpeningGame {
 
 func (openingGame *OpeningGame) WithParent(parent *OpeningGame) *OpeningGame {
 	if !parent.fromFen {
-		parentMovesStr := parent.G.String()
-		parentMovesReader := strings.NewReader(parentMovesStr)
-		parentMoves, err := chess.PGN(parentMovesReader)
-		if err != nil {
-			panic(fmt.Sprintf("Could not parse parent err:%v moveList:%v", err,
-				parentMovesStr))
-		}
-		openingGame.G = chess.NewGame(parentMoves)
-
+		openingGame.G = parent.G.Clone()
 	} else {
 		parentFen := parent.G.Position().XFENString()
 		newGameArgs, err := chess.FEN(parentFen)
@@ -193,20 +185,16 @@ func (openingGame *OpeningGame) WithGame(game *chess.Game) *OpeningGame {
 
 func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 	if move != "" {
-		notation := chess.UseNotation(chess.UCINotation{})
-		notation(openingGame.G)
-		err := openingGame.G.MoveStr(move)
+		err := openingGame.G.PushNotationMove(move, chess.UCINotation{}, nil)
 		if err != nil {
-			notation := chess.UseNotation(chess.AlgebraicNotation{})
-			notation(openingGame.G)
-			err = openingGame.G.MoveStr(move)
+			err = openingGame.G.PushNotationMove(move,
+				chess.AlgebraicNotation{}, nil)
 		}
 		if err != nil {
-			if move == "Kh1" {
+			if move == "Kh1" { // hack for 960 encoded castle
 				move = "O-O"
-				notation := chess.UseNotation(chess.AlgebraicNotation{})
-				notation(openingGame.G)
-				err = openingGame.G.MoveStr(move)
+				err = openingGame.G.PushNotationMove(move,
+					chess.AlgebraicNotation{}, nil)
 			}
 		}
 		if err != nil {
