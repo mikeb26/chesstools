@@ -154,18 +154,8 @@ func (openingGame *OpeningGame) WithFEN(fen string) *OpeningGame {
 }
 
 func (openingGame *OpeningGame) WithParent(parent *OpeningGame) *OpeningGame {
-	if !parent.fromFen {
-		openingGame.G = parent.G.Clone()
-	} else {
-		parentFen := parent.G.Position().XFENString()
-		newGameArgs, err := chess.FEN(parentFen)
-		if err != nil {
-			panic(fmt.Sprintf("Could not parse parent err:%v fen:%v", err,
-				parentFen))
-		}
-		openingGame.G = chess.NewGame(newGameArgs)
-		openingGame.fromFen = true
-	}
+	openingGame.G = parent.G.Clone()
+	openingGame.fromFen = parent.fromFen
 	openingGame.opponent = parent.opponent
 	openingGame.opponentColor = parent.opponentColor
 	openingGame.Parent = parent
@@ -185,6 +175,9 @@ func (openingGame *OpeningGame) WithGame(game *chess.Game) *OpeningGame {
 
 func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 	if move != "" {
+		startMlen := len(openingGame.G.Moves())
+		startPlen := len(openingGame.G.Positions())
+
 		err := openingGame.G.PushNotationMove(move, chess.UCINotation{}, nil)
 		if err != nil {
 			err = openingGame.G.PushNotationMove(move,
@@ -201,6 +194,15 @@ func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 			panic(fmt.Sprintf("Could not parse move:%v in %v", move,
 				openingGame.G.Moves()))
 		}
+		// sanity check for https://github.com/CorentinGS/chess/pull/63
+		if len(openingGame.G.Moves()) != startMlen+1 {
+			panic(fmt.Sprintf("WARN: len(moves) unchanged after pushing:%v in game:%v",
+				move, openingGame.G.String()))
+		}
+		if len(openingGame.G.Positions()) != startPlen+1 {
+			panic(fmt.Sprintf("WARN len(positions) unchanged after pushing:%v in game:%v",
+				move, openingGame.G.String()))
+		}
 	}
 
 	return openingGame.withECO()
@@ -216,8 +218,8 @@ func (openingGame *OpeningGame) WithTopReplies(fetchTop bool) *OpeningGame {
 		openingGame.fullRatingRange, openingGame.allSpeeds, openingGame.opponent,
 		openingGame.opponentColor)
 	if err != nil {
-		panic(fmt.Sprintf("Could not fetch top moves err:%v in %v", err,
-			openingGame.String()))
+		panic(fmt.Sprintf("Could not fetch top moves err:'%v' fen:'%v' g:'%v'",
+			err, openingGame.G.Position().XFENString(), openingGame.String()))
 	}
 	openingGame.haveTopReplies = true
 

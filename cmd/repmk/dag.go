@@ -290,7 +290,7 @@ func (dag *Dag) emitGameToOutput(output io.Writer, node *DagNode) error {
 }
 
 func (node *DagNode) getEvalStr() string {
-	evalCtx := chesstools.NewEvalCtx(true).WithFEN(node.position.XFENString())
+	evalCtx := chesstools.NewEvalCtx(true).WithFEN(node.position.XFENString()).WithoutAtime()
 	defer evalCtx.Close()
 	evalCtx.InitEngine()
 	er := evalCtx.Eval()

@@ -31,6 +31,7 @@ type RepBldOpts struct {
 	dark         bool
 	minGames     int
 	expandVar    bool
+	noAtime      bool
 }
 
 type MoveMapValue struct {
@@ -118,6 +119,9 @@ func mainWork(opts *RepBldOpts) {
 	dag = NewDag(opts.color, opts.outputMode)
 	if opts.engineSelect {
 		evalCtx = chesstools.NewEvalCtx(false).WithEvalTime(opts.engineTime)
+		if opts.noAtime {
+			evalCtx = evalCtx.WithoutAtime()
+		}
 		defer evalCtx.Close()
 		evalCtx.InitEngine()
 	}

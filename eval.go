@@ -38,7 +38,7 @@ const (
 	UnknownSearchTime        = 0.0
 	UnknownEngVer            = 0.0
 	FileNamePrefix           = "fen."
-	CacheFileDir             = "cache"
+	DefaultCacheFileDir      = "cache"
 )
 
 var ErrCacheMiss = errors.New("cache miss")
@@ -101,6 +101,7 @@ type EvalCtx struct {
 	cloudCache    bool
 	doLazyInit    bool
 	atime         bool
+	cacheFileDir  string
 
 	engine     *uci.Engine
 	engVersion float64
@@ -132,6 +133,7 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.cloudCache = true
 	rv.doLazyInit = false
 	rv.atime = true
+	rv.cacheFileDir = DefaultCacheFileDir
 
 	var err error
 	rv.engine, err = uci.New("stockfish")
@@ -369,14 +371,14 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 		return nil, err
 	}
 	cacheFileName := fen2CacheFileName(fen)
-	cacheFilePath := fen2CacheFilePath(fen)
+	cacheFilePath := evalCtx.fen2CacheFilePath(fen)
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	encodedResult, err := ioutil.ReadFile(cacheFileFullName)
 	if os.IsNotExist(err) {
 		fen = evalCtx.position.XFENString()
 		cacheFileName = fen2CacheFileName(fen)
-		cacheFilePath = fen2CacheFilePath(fen)
+		cacheFilePath = evalCtx.fen2CacheFilePath(fen)
 		cacheFileFullName = filepath.Join(cacheFilePath, cacheFileName)
 		encodedResult, err = ioutil.ReadFile(cacheFileFullName)
 	}
@@ -591,7 +593,7 @@ func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
 		panic(err)
 	}
 	cacheFileName := fen2CacheFileName(fen)
-	cacheFilePath := fen2CacheFilePath(fen)
+	cacheFilePath := evalCtx.fen2CacheFilePath(fen)
 	cacheFileFullName := filepath.Join(cacheFilePath, cacheFileName)
 
 	_ = os.Remove(cacheFileFullName)
@@ -641,9 +643,9 @@ func cacheFileName2Fen(fileName string) string {
 	return fen
 }
 
-func fen2CacheFilePath(cacheFileName string) string {
+func (evalCtx *EvalCtx) fen2CacheFilePath(cacheFileName string) string {
 	xsum := crc32.ChecksumIEEE([]byte(cacheFileName))
-	return fmt.Sprintf("%v/%02x/%02x/%02x/%02x", CacheFileDir, xsum>>24,
+	return fmt.Sprintf("%v/%02x/%02x/%02x/%02x", evalCtx.cacheFileDir, xsum>>24,
 		(xsum>>16)&0xff, (xsum>>8)&0xff, xsum&0xff)
 }
 
@@ -685,12 +687,14 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 
 	searchEndTime := time.Now()
 
-	if fromCache && results.Info.Depth < er.Depth {
+	if fromCache &&
+		((evalCtx.evalDepth != DefaultDepth && results.Info.Depth < er.Depth) ||
+			float64(evalCtx.evalTimeInSec) < er.SearchTimeInSeconds) {
 		// we had a cached result, searched with the engine anyway, and
-		// found a result with a weaker depth than what we had found in
-		// the cache. in this scenario, throw away the engine's result and
-		// keep the existing cached result. this can occur when the user
-		// requested a search by time and there wasn't enough time to find
+		// found a result with a weaker depth or shorter time than what we had
+		// found in the cache. in this scenario, throw away the engine's
+		// result and keep the existing cached result. this can occur when the
+		// user requested a search by time and there wasn't enough time to find
 		// a move that exceeded the depth of the cached entry
 
 		return er
@@ -703,6 +707,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 
 	bestMvUciStr := uciNotation.Encode(evalCtx.position, results.BestMove)
 	bestMoveFixed, err := uciNotation.Decode(evalCtx.position, bestMvUciStr)
+
 	if err != nil {
 		panic(fmt.Sprintf("BUG: could not re-encode decoded uci str %v: %v",
 			bestMvUciStr, err))
@@ -782,7 +787,7 @@ func findAllCacheEvalFiles(dirPath string) (cachedEvalEntryList, error) {
 
 func (evalCtx *EvalCtx) loadAllERs() ([]*EvalResult, error) {
 	erList := make([]*EvalResult, 0)
-	entryList, err := findAllCacheEvalFiles(CacheFileDir)
+	entryList, err := findAllCacheEvalFiles(evalCtx.cacheFileDir)
 	if err != nil {
 		return erList, fmt.Errorf("Failed to find all cached evals: %w", err)
 	}
