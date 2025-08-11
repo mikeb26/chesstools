@@ -805,7 +805,13 @@ func (evalCtx *EvalCtx) loadAllERs() ([]*EvalResult, error) {
 	}
 
 	slices.SortFunc(erList, func(a, b *EvalResult) int {
-		return -a.Atime.Compare(b.Atime)
+		atimeCmp := -a.Atime.Compare(b.Atime)
+		if atimeCmp != 0 {
+			return atimeCmp
+		}
+		// for entries with equal timestamps just compare by fen to ensure
+		// consistent ordering
+		return strings.Compare(a.fen, b.fen)
 	})
 
 	return erList, nil
@@ -819,16 +825,27 @@ func (evalCtx *EvalCtx) UpgradeCache() error {
 		fmt.Printf("Failed to load cached results: %v\n", err)
 	}
 
-	fmt.Printf("Checking %v cached entries...\n", len(erList))
+	needUpgradeCount := 0
+	for _, er := range erList {
+		if er.EngVersion != evalCtx.engVersion {
+			needUpgradeCount++
+		}
+	}
+
+	fmt.Printf("Upgrading %v stale cached entries from %v total...\n",
+		needUpgradeCount, len(erList))
+
+	didUpgradeCount := 0
 
 	for ii, er := range erList {
-		evalCtx.SetFEN(er.fen)
 		if er.EngVersion == evalCtx.engVersion {
 			continue
 		}
+
+		evalCtx.SetFEN(er.fen)
 		if ii >= DefaultMaxEntriesUpgrade {
-			fmt.Printf("  Not upgrading(%v of %v) atime:%v fen:%v...\n", ii+1,
-				len(erList), er.Atime, er.fen)
+			fmt.Printf("  Not upgrading(%v of %v) (entry %v exceeds max) atime:%v fen:%v...\n",
+				didUpgradeCount+1, needUpgradeCount, ii, er.Atime, er.fen)
 			continue
 		}
 		evalCtx.staleOk = false
@@ -837,13 +854,17 @@ func (evalCtx *EvalCtx) UpgradeCache() error {
 		if evalCtx.evalTimeInSec == UnknownSearchTime {
 			evalCtx.evalTimeInSec = DefaultEvalTimeInSec
 		}
-		fmt.Printf("  Upgrading(%v of %v) fen:%v...\n", ii+1, len(erList),
-			er.fen)
+
+		fmt.Printf("  Upgrading(%v of %v) old.engver:%v fen:%v ...\n",
+			didUpgradeCount+1, needUpgradeCount, er.EngVersion, er.fen)
+
 		newEr := evalCtx.Eval()
 		if er.BestMove != newEr.BestMove {
 			fmt.Printf("    *** best move changed from %v(ver %v) to %v(ver %v)\n",
 				er.BestMove, er.EngVersion, newEr.BestMove, newEr.EngVersion)
 		}
+
+		didUpgradeCount++
 	}
 
 	return nil
