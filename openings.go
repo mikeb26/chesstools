@@ -20,7 +20,16 @@ import (
 const (
 	LichessDbBaseUrl = "https://explorer.lichess.ovh/lichess"
 	PlayerDbBaseUrl  = "https://explorer.lichess.ovh/player"
+
+	LichessTokenEnv = "LICHESS_TOKEN"
 )
+
+func lichessBearerToken() string {
+	if tok := strings.TrimSpace(os.Getenv(LichessTokenEnv)); tok != "" {
+		return tok
+	}
+	return ""
+}
 
 //go:embed eco/all_fen.tsv
 var openingNamesTsvText string
@@ -387,12 +396,22 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 		}
 
 		req.Header.Set("Accept", "application/json")
+		// Opening explorer may require a bearer token now.
+		if tok := lichessBearerToken(); tok != "" {
+			req.Header.Set("Authorization", "Bearer "+tok)
+		}
 
 		client := &http.Client{}
 		resp, err = client.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("opening: GET %v failed: %w",
 				requestURL.String(), err)
+		}
+		if resp.StatusCode == 401 || resp.StatusCode == 403 {
+			io.Copy(ioutil.Discard, resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("opening: GET %v failed: %v (set %v environment variable)",
+				requestURL.String(), resp.Status, LichessTokenEnv)
 		}
 		if resp.StatusCode == 429 {
 			// https://lichess.org/page/api-tips says wait a minute
