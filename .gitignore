@@ -11,3 +11,6 @@
 /pgnmk
 /fencat
 /960gen
+/*.pgn
+/exceptions.json
+/score_all.sh
