@@ -739,7 +739,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 		fen:                       fen,
 	}
 
-	if evalCtx.g.Position().Turn() == chess.Black {
+	if evalCtx.position.Turn() == chess.Black {
 		er.CP = -er.CP
 		er.Mate = -er.Mate
 	}

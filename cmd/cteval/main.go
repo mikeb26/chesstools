@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -11,19 +13,52 @@ import (
 	"github.com/mikeb26/chesstools"
 )
 
+type inputPosition struct {
+	fen   string
+	label string
+}
+
 func main() {
 	evalCtx := chesstools.NewEvalCtx(false)
 	defer evalCtx.Close()
 
-	dark, doUpgrade := parseArgs(evalCtx)
+	dark, doUpgrade, fenFile := parseArgs(evalCtx)
+
+	var positions []inputPosition
+	if fenFile != "" {
+		var err error
+		positions, err = loadFENFile(fenFile)
+		if err != nil {
+			panic(err)
+		}
+		evalCtx.WithFEN(positions[0].fen)
+	}
+
 	evalCtx.InitEngine()
 	if doUpgrade {
 		evalCtx.UpgradeCache()
 		return
 	} // else
 
-	er := evalCtx.Eval()
-	displayOutput(evalCtx, er, dark)
+	if fenFile == "" {
+		er := evalCtx.Eval()
+		displayOutput(evalCtx, er, dark)
+		return
+	}
+
+	for ii, position := range positions {
+		if ii != 0 {
+			fmt.Printf("\n")
+			evalCtx.SetFEN(position.fen)
+		}
+
+		fmt.Printf("=== Position %v (%v) ===\n", ii+1, position.label)
+		er := evalCtx.Eval()
+		displayOutput(evalCtx, er, dark)
+		if er == nil {
+			os.Exit(1)
+		}
+	}
 }
 
 func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
@@ -67,13 +102,15 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	fmt.Printf(b.Draw2(p.Turn(), dark))
 }
 
-func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
+func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool, string) {
 	f := flag.NewFlagSet("cteval", flag.ExitOnError)
 
 	var pgnFile string
 	f.StringVar(&pgnFile, "pgn", "", "<pgnFileName>")
 	var fen string
 	f.StringVar(&fen, "fen", "", "<FEN string>")
+	var fenFile string
+	f.StringVar(&fenFile, "fenfile", "", "<fenFileName|- for stdin>")
 	var colorFlag string
 	f.StringVar(&colorFlag, "turn", "", "<white|black>")
 	var moveNum uint
@@ -100,15 +137,18 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 	f.Parse(os.Args[1:])
 
 	if doUpgrade {
-		return false, true
+		return false, true, ""
 	}
 
 	var turn chess.Color
-	if pgnFile == "" && fen == "" {
-		panic("please specify --pgn <pgnFile> or --fen <FEN string>")
+	if pgnFile == "" && fen == "" && fenFile == "" {
+		panic("please specify --pgn <pgnFile>, --fen <FEN string>, or --fenfile <fenFileName|->")
 	}
-	if fen != "" && (pgnFile != "" || moveNum != 0 || colorFlag != "") {
-		panic("please specify either (--pgn <pgnFile> --move <moveNum> --turn <white|black>) or --fen <FEN string>")
+	if fen != "" && (pgnFile != "" || fenFile != "" || moveNum != 0 || colorFlag != "") {
+		panic("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
+	}
+	if fenFile != "" && (pgnFile != "" || fen != "" || moveNum != 0 || colorFlag != "") {
+		panic("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
 	}
 	if pgnFile != "" {
 		if moveNum == 0 {
@@ -134,7 +174,7 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 
 	if pgnFile != "" {
 		evalCtx = evalCtx.WithPgnFile(pgnFile).WithMoveNum(moveNum).WithTurn(turn)
-	} else {
+	} else if fen != "" {
 		evalCtx = evalCtx.WithFEN(fen)
 	}
 	if evalDepth != 0 {
@@ -156,5 +196,51 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool) {
 		evalCtx = evalCtx.WithoutCloudCache()
 	}
 
-	return dark, false
+	return dark, false, fenFile
+}
+
+func loadFENFile(fenFile string) ([]inputPosition, error) {
+	if fenFile == "-" {
+		return loadFENs(os.Stdin, "stdin")
+	}
+
+	file, err := os.Open(fenFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return loadFENs(file, fenFile)
+}
+
+func loadFENs(reader io.Reader, source string) ([]inputPosition, error) {
+	positions := make([]inputPosition, 0)
+	scanner := bufio.NewScanner(reader)
+	lineNum := 0
+
+	for scanner.Scan() {
+		lineNum++
+		fen := strings.TrimSpace(scanner.Text())
+		if fen == "" || strings.HasPrefix(fen, "#") {
+			continue
+		}
+
+		_, err := chess.FEN(fen)
+		if err != nil {
+			return nil, fmt.Errorf("%v:%v invalid FEN: %w", source, lineNum, err)
+		}
+
+		positions = append(positions, inputPosition{
+			fen:   fen,
+			label: fmt.Sprintf("%v:%v", source, lineNum),
+		})
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("%v: failed to read FEN file: %w", source, err)
+	}
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("%v: no FEN positions found", source)
+	}
+
+	return positions, nil
 }
