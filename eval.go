@@ -275,12 +275,12 @@ func (evalCtx *EvalCtx) earlyInitEngine() {
 }
 
 func (evalCtx *EvalCtx) lazyInitEngine() {
-	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_Chess960",
-		Value: "true"})
-	if err != nil {
-		panic(err)
-	}
-	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_ShowWDL",
+	//	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_Chess960",
+	//		Value: "true"})
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_ShowWDL",
 		Value: "true"})
 	if err != nil {
 		panic(err)
