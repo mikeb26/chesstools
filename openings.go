@@ -2,6 +2,7 @@ package chesstools
 
 import (
 	_ "embed"
+	"log"
 	"strconv"
 
 	"encoding/json"
@@ -344,10 +345,17 @@ func PctS2(pctf float64) string {
 	return fmt.Sprintf("%v%%", pctInt)
 }
 
+var lastFen = ""
+
 func getTopReplies(g *chess.Game, fullRatingRange bool,
 	allSpeeds bool, opponent string, opponentColor chess.Color) (*OpeningResp, error) {
 
 	fen := g.Position().XFENString()
+	if fen == lastFen {
+		log.Printf("**WARN** gettopreplies: lastFen==fen (%v)", fen)
+	} else {
+		lastFen = fen
+	}
 	position := url.QueryEscape(fen)
 	var ratingBuckets string
 	if fullRatingRange {
