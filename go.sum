@@ -1,4 +1,4 @@
-github.com/corentings/chess/v2 v2.2.0 h1:cvponglvX2gw73hGCgeP2B/RJOWqS1NElwBKNc2eue8=
-github.com/corentings/chess/v2 v2.2.0/go.mod h1:JhWYDbjY81/7NECXrLzz4g2r9taaMEXvyqS4gYZciVE=
-golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c h1:KL/ZBHXgKGVmuZBZ01Lt57yE5ws8ZPSkkihmEyq7FXc=
-golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c/go.mod h1:tujkw807nyEEAamNbDrEGzRav+ilXA7PCRAd6xsmwiU=
+github.com/corentings/chess/v2 v2.4.0 h1:QqycZpkrgu59HaDbmII+re08751/2yZ2hocHEAvBbuE=
+github.com/corentings/chess/v2 v2.4.0/go.mod h1:kc0OoyCO5rmcqub4L60Sb0dQL2sbPVX1OcbWmXc0OWc=
+golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a h1:+3jdDGGB8NGb1Zktc737jlt3/A5f6UlwSzmvqUuufxw=
+golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a/go.mod h1:d2fgXJLVs4dYDHUk5lwMIfzRzSrWCfGZb0ZqeLa/Vcw=
