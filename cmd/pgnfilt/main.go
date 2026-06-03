@@ -13,7 +13,8 @@ import (
 )
 
 type FiltOpts struct {
-	fen string
+	fen   string
+	white string
 }
 
 type FiltCtx struct {
@@ -58,6 +59,7 @@ func parseArgs(fopts *FiltOpts, expandVar *bool) ([]string, error) {
 	f := flag.NewFlagSet("pgnfilt", flag.ExitOnError)
 
 	f.StringVar(&fopts.fen, "fen", "", "includes this specific position")
+	f.StringVar(&fopts.white, "white", "", "includes this player as white")
 	f.Parse(os.Args[1:])
 
 	if len(f.Args()) == 0 {
@@ -133,6 +135,8 @@ func (filtCtx *FiltCtx) filterMatches(g *chess.Game) bool {
 				break
 			}
 		}
+	} else if filtCtx.fopts.white != "" {
+		isMatch = (g.GetTagPair("White") == filtCtx.fopts.white)
 	}
 
 	return isMatch
