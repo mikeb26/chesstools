@@ -85,6 +85,7 @@ rnbqkb1r/pppppp1p/5np1/8/1P2P3/8/PBPP1PPP/RN1QKBNR b KQkq - 0 3;A00;Polish Openi
 rnbq1rk1/ppp1ppbp/3p1np1/8/1PPP4/4PN2/PB3PPP/RN1QKB1R b KQ - 0 6;A00;Polish Opening: King's Indian Variation, Sokolsky Attack
 rnbqkbnr/pp2pppp/2p5/3p4/PP6/8/1BPPPPPP/RN1QKBNR b KQkq - 0 3;A00;Polish Opening: Myers Variation
 rnbqkbnr/pp1ppppp/2p5/8/1P6/8/P1PPPPPP/RNBQKBNR w KQkq - 0 2;A00;Polish Opening: Outflank Variation
+rnbqkbnr/1p1ppppp/2p5/pP6/8/8/PBPPPPPP/RN1QKBNR b KQkq - 0 3;A00;Polish Opening: Outflank Variation, Schuehler Gambit
 rnbqkb1r/p1pp1ppp/1p2pn2/1P6/8/8/PBPPPPPP/RN1QKBNR w KQkq - 0 4;A00;Polish Opening: Queen's Indian Variation
 rnbqkb1r/1ppp1ppp/p3pn2/1P6/8/8/PBPPPPPP/RN1QKBNR w KQkq - 0 4;A00;Polish Opening: Queenside Defense
 1nbqkb1r/1ppp1ppp/4pn2/1P6/8/8/2PPPPPP/BN1QKBNR b Kk - 0 6;A00;Polish Opening: Rooks Swap Line
@@ -253,10 +254,12 @@ rnbqkbnr/ppp1pp1p/6p1/3p4/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 0 3;A07;King's India
 rn1qkbnr/ppp1pppp/8/3p4/6b1/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 1 3;A07;King's Indian Attack: Keres Variation
 r2qkbnr/pppnpppp/8/3p4/6b1/5NP1/PPPPPPBP/RNBQK2R w KQkq - 3 4;A07;King's Indian Attack: Keres Variation
 r2qkbnr/pp1npppp/2p5/3p4/6b1/5NP1/PPPPPPBP/RNBQ1RK1 w kq - 4 5;A07;King's Indian Attack: Keres Variation
+r2qk2r/pp1n1ppp/2pb1n2/3p4/3P2b1/2N2NP1/PP2PPBP/R1BQ1RK1 w kq - 2 9;A07;King's Indian Attack: Keres Variation
 rnbqkbnr/ppp2ppp/8/3pp3/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 0 3;A07;King's Indian Attack: Omega-Delta Gambit
 rnbqk2r/ppp1npbp/6p1/3pp3/8/3P1NP1/PPP1PPBP/RNBQ1RK1 w kq - 1 6;A07;King's Indian Attack: Pachman System
 rnbqkbnr/pp2pppp/8/2pp4/8/5NP1/PPPPPP1P/RNBQKB1R w KQkq - 0 3;A07;King's Indian Attack: Sicilian Variation
 rn1qkb1r/pp2pppp/2p2n2/3p4/6b1/5NP1/PPPPPPBP/RNBQ1RK1 w kq - 2 5;A07;King's Indian Attack: Yugoslav Variation
+rnbqkb1r/p1p2ppp/1p2pn2/3p4/2P5/5NP1/PP1PPPBP/RNBQ1RK1 b kq - 1 5;A07;King's Indian Attack: Yugoslav Variation
 r1bqkbnr/pp2pppp/2n5/2pp4/8/5NP1/PPPPPPBP/RNBQK2R w KQkq - 2 4;A08;King's Indian Attack: French Variation
 r1bq1rk1/pp2bppp/2n1pn2/2pp4/4P3/3P1NP1/PPPN1PBP/R1BQR1K1 b - - 6 8;A08;King's Indian Attack: Sicilian Variation
 rnbqkbnr/pp2pppp/8/2pp4/8/5NP1/PPPPPPBP/RNBQK2R b KQkq - 1 3;A08;King's Indian Attack: Sicilian Variation
@@ -313,9 +316,19 @@ rn1qkbnr/pp2pppp/2p5/3p4/2P3b1/1P3N2/P2PPPPP/RNBQKB1R w KQkq - 1 4;A12;Réti Ope
 rn1qkbnr/pp2pppp/2p5/3p1b2/2P5/1P3N2/P2PPPPP/RNBQKB1R w KQkq - 1 4;A12;Réti Opening: Anglo-Slav Variation, Bogoljubow Variation
 rn1qkbnr/pp2pppp/2p5/3p1b2/2P5/1P3N2/PB1PPPPP/RN1QKB1R b KQkq - 2 4;A12;Réti Opening: Anglo-Slav Variation, Bogoljubow Variation
 rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P3N2/PB1PPPPP/RN1QKB1R w KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, Capablanca Variation
+rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P2PN2/PB1P1PPP/RN1QKB1R b KQkq - 0 5;A12;Réti Opening: Anglo-Slav Variation, Capablanca Variation
+rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P1P1N2/PB2PPPP/RN1QKB1R b KQkq - 0 5;A12;Réti Opening: Anglo-Slav Variation, Capablanca Variation
 rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P3NP1/P2PPP1P/RNBQKB1R w KQkq - 1 5;A12;Réti Opening: Anglo-Slav Variation, London Defensive System
+rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P3NP1/P2PPPBP/RNBQK2R b KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, London Defensive System
+rn1qkb1r/pp3ppp/2p1pn2/3p1b2/2P5/1P3NP1/PB1PPPBP/RN1QK2R b KQkq - 1 6;A12;Réti Opening: Anglo-Slav Variation, London Defensive System
+rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P3NP1/PB1PPP1P/RN1QKB1R b KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, London Defensive System
 rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P3N2/PB1PPPPP/RN1QKB1R w KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, New York System
+rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P2PN2/PB1P1PPP/RN1QKB1R b KQkq - 0 5;A12;Réti Opening: Anglo-Slav Variation, New York System
+rn1qkb1r/pp2pppp/2p2n2/3p1b2/2P5/1P1P1N2/PB2PPPP/RN1QKB1R b KQkq - 0 5;A12;Réti Opening: Anglo-Slav Variation, New York System
 rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P3NP1/P2PPP1P/RNBQKB1R w KQkq - 1 5;A12;Réti Opening: Anglo-Slav Variation, Torre System
+rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P3NP1/P2PPPBP/RNBQK2R b KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, Torre System
+rn1qkb1r/pp3ppp/2p1pn2/3p4/2P3b1/1P3NP1/PB1PPPBP/RN1QK2R b KQkq - 1 6;A12;Réti Opening: Anglo-Slav Variation, Torre System
+rn1qkb1r/pp2pppp/2p2n2/3p4/2P3b1/1P3NP1/PB1PPP1P/RN1QKB1R b KQkq - 2 5;A12;Réti Opening: Anglo-Slav Variation, Torre System
 rnbqkb1r/pp2pppp/2p2n2/8/2p5/1P3NP1/P2PPP1P/RNBQKB1R w KQkq - 0 5;A12;Réti Opening: Anglo-Slav Variation, with dxc4
 rnbqkbnr/pppp1ppp/4p3/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2;A13;English Opening: Agincourt Defense
 rnbqkbnr/pppp1ppp/4p3/8/2P5/5N2/PP1PPPPP/RNBQKB1R b KQkq - 1 2;A13;English Opening: Agincourt Defense
@@ -630,16 +643,17 @@ r1bqkb1r/pppppppp/2n2n2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 1 3;A50;Mexican Defen
 r1bqkb1r/pppppppp/5n2/3Pn3/2P2P2/8/PP2P1PP/RNBQKBNR b KQkq - 0 4;A50;Mexican Defense: Horsefly Gambit
 rnbqkb1r/p1pppppp/1p3n2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;A50;Queen's Indian Accelerated
 rnbqkb1r/pp1ppppp/2p2n2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;A50;Slav Indian
-rnbqkb1r/pppp1ppp/5n2/4p3/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;A51;Indian Defense: Budapest Defense
-rnbqkb1r/p1pp1ppp/1p6/4P3/2P1n3/P7/1P2PPPP/RNBQKBNR w KQkq - 0 5;A51;Indian Defense: Budapest Defense, Fajarowicz Defense, Bonsdorf Variation
-rnbqkb1r/pppp1ppp/8/4P3/2P1n3/8/PP2PPPP/RNBQKBNR w KQkq - 1 4;A51;Indian Defense: Budapest Defense, Fajarowicz Variation
-rnbqkb1r/pppp1ppp/8/4P3/2P1n3/8/PPQ1PPPP/RNB1KBNR b KQkq - 2 4;A51;Indian Defense: Budapest Defense, Fajarowicz-Steiner Variation
-rnbqkb1r/pppp1ppp/8/4P3/2P3n1/8/PP2PPPP/RNBQKBNR w KQkq - 1 4;A52;Indian Defense: Budapest Defense
-rnbqkb1r/pppp1ppp/8/4P3/2P3n1/5N2/PP2PPPP/RNBQKB1R b KQkq - 2 4;A52;Indian Defense: Budapest Defense, Adler Variation
-rnbqkb1r/pppp1ppp/8/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR b KQkq - 0 4;A52;Indian Defense: Budapest Defense, Alekhine Variation
-rnbqkb1r/pppp1ppp/2n5/8/2P1PP2/8/PP4PP/RNBQKBNR w KQkq - 1 6;A52;Indian Defense: Budapest Defense, Alekhine Variation, Abonyi Variation
-rnbqkb1r/ppp2ppp/3p4/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR w KQkq - 0 5;A52;Indian Defense: Budapest Defense, Alekhine Variation, Tartakower Defense
-rnbqkb1r/pppp1ppp/8/4P3/2P2Bn1/8/PP2PPPP/RN1QKBNR b KQkq - 2 4;A52;Indian Defense: Budapest Defense, Rubinstein Variation
+rnbqkb1r/pppp1ppp/5n2/4p3/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;A51;Indian Defense: Budapest Gambit
+rnbqkb1r/pppp1ppp/5n2/4P3/2P5/8/PP2PPPP/RNBQKBNR b KQkq - 0 3;A51;Indian Defense: Budapest Gambit Accepted
+rnbqkb1r/pppp1ppp/8/4P3/2P1n3/8/PP2PPPP/RNBQKBNR w KQkq - 1 4;A51;Indian Defense: Budapest Gambit Accepted, Fajarowicz Defense
+rnbqkb1r/pppp1ppp/8/4P3/2P1n3/P7/1P2PPPP/RNBQKBNR b KQkq - 0 4;A51;Indian Defense: Budapest Gambit Accepted, Fajarowicz Defense, Bonsdorf Variation
+rnbqkb1r/pppp1ppp/8/4P3/2P1n3/8/PPQ1PPPP/RNB1KBNR b KQkq - 2 4;A51;Indian Defense: Budapest Gambit Accepted, Fajarowicz Defense, Steiner Variation
+rnbqkb1r/pppp1ppp/8/4P3/2P3n1/8/PP2PPPP/RNBQKBNR w KQkq - 1 4;A52;Indian Defense: Budapest Gambit Accepted, Main Line
+rnbqkb1r/pppp1ppp/8/4P3/2P3n1/5N2/PP2PPPP/RNBQKB1R b KQkq - 2 4;A52;Indian Defense: Budapest Gambit Accepted, Main Line, Adler Variation
+rnbqkb1r/pppp1ppp/8/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR b KQkq - 0 4;A52;Indian Defense: Budapest Gambit Accepted, Main Line, Alekhine Variation
+rnbqkb1r/pppp1ppp/8/4n3/2P1P3/8/PP3PPP/RNBQKBNR w KQkq - 0 5;A52;Indian Defense: Budapest Gambit Accepted, Main Line, Alekhine Variation, Abonyi Variation
+rnbqkb1r/ppp2ppp/3p4/4P3/2P1P1n1/8/PP3PPP/RNBQKBNR w KQkq - 0 5;A52;Indian Defense: Budapest Gambit Accepted, Main Line, Alekhine Variation, Tartakower Defense
+rnbqkb1r/pppp1ppp/8/4P3/2P2Bn1/8/PP2PPPP/RN1QKBNR b KQkq - 2 4;A52;Indian Defense: Budapest Gambit Accepted, Main Line, Rubinstein Variation
 rnbqkb1r/ppp1pppp/3p1n2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3;A53;Old Indian Defense
 rnbqkb1r/ppp1pppp/3p1n2/8/2PP2P1/8/PP2PP1P/RNBQKBNR b KQkq - 0 3;A53;Old Indian Defense: Aged Gibbon Gambit
 rnbqkb1r/pp2pppp/2pp1n2/8/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4;A53;Old Indian Defense: Czech Variation, with Nc3
@@ -1423,7 +1437,6 @@ r1bqkb1r/pp2pppp/2np1n2/8/3NP3/2N3P1/PPP2P1P/R1BQKB1R b KQkq - 0 6;B56;Sicilian 
 rn1qkb1r/pp1bpppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 3 6;B56;Sicilian Defense: Kupreichik Variation
 r1bqkb1r/pp2pppp/2np1n2/8/4P3/2N5/PPP1NPPP/R1BQKB1R b KQkq - 1 6;B56;Sicilian Defense: Spielmann Variation
 rnbqkb1r/pp3ppp/3p1n2/1B2p3/3NP3/2N5/PPP2PPP/R1BQK2R b KQkq - 1 6;B56;Sicilian Defense: Venice Attack
-r1bqkb1r/pp2pppp/2np1n2/8/3NP3/2NB4/PPP2PPP/R1BQK2R b KQkq - 1 6;B56;Sicilian Defense: Yates Variation
 r1b1kb1r/pp2pppp/1qnp1n2/8/2BNP3/2N5/PPP2PPP/R1BQK2R w KQkq - 2 7;B57;Sicilian Defense: Classical Variation, Anti-Sozin Variation
 r1bqkb1r/pp2pppp/2np1n2/8/2BNP3/2N5/PPP2PPP/R1BQK2R b KQkq - 4 6;B57;Sicilian Defense: Classical Variation, Sozin Attack
 r1bqkb1r/p3pp1p/2pp1np1/4P3/2B5/2N5/PPP2PPP/R1BQK2R b KQkq - 0 8;B57;Sicilian Defense: Magnus Smith Trap
@@ -1523,9 +1536,14 @@ rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6;B90;Sicilian De
 rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N4P/PPP2PP1/R1BQKB1R b KQkq - 0 6;B90;Sicilian Defense: Najdorf Variation, Adams Attack
 rnbqkb1r/1p2pppp/p2p1n2/8/3NP1P1/2N5/PPP2P1P/R1BQKB1R b KQkq - 0 6;B90;Sicilian Defense: Najdorf Variation, Dekker Gambit
 rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N1B3/PPP2PPP/R2QKB1R b KQkq - 1 6;B90;Sicilian Defense: Najdorf Variation, English Attack
+rn1qkb1r/1p3ppp/p2pbn2/4p3/4P3/1NN1BP2/PPP3PP/R2QKB1R b KQkq - 0 8;B90;Sicilian Defense: Najdorf Variation, English Attack
+rnbqk2r/1p2bppp/p2p1n2/4p3/4P3/1NN1BP2/PPP3PP/R2QKB1R b KQkq - 0 8;B90;Sicilian Defense: Najdorf Variation, English Attack
+rn1qkb1r/1p3ppp/p2pbn2/4p3/4P3/1NN1B2P/PPP2PP1/R2QKB1R b KQkq - 0 8;B90;Sicilian Defense: Najdorf Variation, English Attack
+rnbqk2r/1p2bppp/p2p1n2/4p3/4P3/1NN1B2P/PPP2PP1/R2QKB1R b KQkq - 0 8;B90;Sicilian Defense: Najdorf Variation, English Attack
 rnbqkb1r/1p2pppp/p2p4/8/3NP1n1/2N1B3/PPP2PPP/R2QKB1R w KQkq - 2 7;B90;Sicilian Defense: Najdorf Variation, English Attack, Anti-English
 rnbqkb1r/1p2pppp/p2p1n2/8/2BNP3/2N5/PPP2PPP/R1BQK2R b KQkq - 1 6;B90;Sicilian Defense: Najdorf Variation, Lipnitsky Attack
 rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKBR1 b Qkq - 1 6;B90;Sicilian Defense: Najdorf Variation, Petronić Attack
+rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2NB4/PPP2PPP/R1BQK2R b KQkq - 1 6;B90;Sicilian Defense: Najdorf Variation, Yates Variation
 rnbqkb1r/1p3ppp/p2ppn2/8/3NP1P1/2N1B3/PPP2P1P/R2QKB1R b KQkq - 0 7;B90;Sicilian Defense: Scheveningen Variation, Delayed Keres Attack
 rnbqkb1r/1p3p1p/p2p1np1/4pNP1/4P3/2N1B3/PPP2P1P/R2QKB1R b KQkq - 0 9;B90;Sicilian Defense: Scheveningen Variation, Delayed Keres Attack, Perenyi Gambit
 rnbqkb1r/1p3ppp/p2ppn2/8/3NP3/2N1BP2/PPP3PP/R2QKB1R b KQkq - 0 7;B90;Sicilian Defense: Scheveningen Variation, English Attack, with f3
@@ -2224,9 +2242,9 @@ r1bqkb1r/pppp1ppp/2n2n2/4p3/3PP3/5N2/PPP1QPPP/RNB1KB1R b KQkq - 0 4;C42;Petrov's
 rnbqkb1r/ppp2ppp/3p4/8/4n3/2N2N2/PPPP1PPP/R1BQKB1R b KQkq - 1 5;C42;Petrov's Defense: Nimzowitsch Attack
 rnbqkb1r/ppp2ppp/3p1n2/8/2N1P3/8/PPPP1PPP/RNBQKB1R b KQkq - 1 4;C42;Petrov's Defense: Paulsen Attack
 r1bqkb1r/pppp1ppp/2n2n2/4N3/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 1 4;C42;Petrov's Defense: Stafford Gambit
-r1bqkb1r/ppp2ppp/2p2n2/8/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 5;C42;Petrov's Defense: Stafford Gambit
-r1bqk2r/ppp2ppp/2p2n2/2b5/4P3/2N5/PPPP1PPP/R1BQKB1R w KQkq - 2 6;C42;Petrov's Defense: Stafford Gambit
-r1bqk2r/ppp2ppp/2p2n2/2b5/4P3/3P4/PPP2PPP/RNBQKB1R w KQkq - 1 6;C42;Petrov's Defense: Stafford Gambit
+r1bqkb1r/ppp2ppp/2p2n2/8/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 0 5;C42;Petrov's Defense: Stafford Gambit Accepted
+r1bqk2r/ppp2ppp/2p2n2/2b5/4P3/2N5/PPPP1PPP/R1BQKB1R w KQkq - 2 6;C42;Petrov's Defense: Stafford Gambit Accepted
+r1bqk2r/ppp2ppp/2p2n2/2b5/4P3/3P4/PPP2PPP/RNBQKB1R w KQkq - 1 6;C42;Petrov's Defense: Stafford Gambit Accepted
 rnbqkb1r/pppp1ppp/5n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R b KQkq - 3 3;C42;Petrov's Defense: Three Knights Game
 rnbqkb1r/pppp1ppp/5n2/8/2BpP3/5N2/PPP2PPP/RNBQK2R b KQkq - 1 4;C43;Bishop's Opening: Urusov Gambit
 rnbqkb1r/pppp1ppp/8/8/2BQn3/5N2/PPP2PPP/RNB1K2R b KQkq - 0 5;C43;Bishop's Opening: Urusov Gambit, Keidansky Gambit
@@ -2382,6 +2400,8 @@ r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2P2N2/PP1P1PPP/RNBQ1RK1 b kq - 0 5;C50;Italia
 r1bqk2r/pppp1ppp/2n2n2/2b1p3/2BPP3/5N2/PPP2PPP/RNBQ1RK1 b kq - 0 5;C50;Italian Game: Deutz Gambit
 r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 4;C50;Italian Game: Giuoco Pianissimo
 r1bqk2r/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 b kq - 0 6;C50;Italian Game: Giuoco Pianissimo
+r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w - - 8 6;C50;Italian Game: Giuoco Pianissimo
+r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 b - - 0 6;C50;Italian Game: Giuoco Pianissimo
 r1bqk2r/ppp2ppp/2np1n2/2b1p1B1/2B1P3/2NP1N2/PPP2PPP/R2QK2R b KQkq - 1 6;C50;Italian Game: Giuoco Pianissimo, Canal Variation
 r1bqk1nr/pppp2pp/2n5/2b1p1N1/2B1Pp2/3P4/PPP2PPP/RNBQK2R w KQkq - 0 6;C50;Italian Game: Giuoco Pianissimo, Dubois Variation
 r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R b KQkq - 2 5;C50;Italian Game: Giuoco Pianissimo, Italian Four Knights Variation
@@ -2501,6 +2521,7 @@ r1bqk2r/ppp2ppp/3p1n2/4p1B1/2BnP3/8/PPP2PPP/RN1Q1RK1 w kq - 0 8;C55;Italian Game
 r1bqkb1r/ppp2ppp/2n5/3pp3/2B1N3/5N2/PPPP1PPP/R1BQK2R w KQkq - 0 6;C55;Italian Game: Two Knights Defense
 r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 4;C55;Italian Game: Two Knights Defense, Modern Bishop's Opening
 r1bqk2r/ppppbppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 1 5;C55;Italian Game: Two Knights Defense, Modern Bishop's Opening
+r1bqkb1r/ppp2pp1/2np1n1p/4p3/2B1P3/3P1N2/PPP2PPP/RNBQ1RK1 w kq - 0 6;C55;Italian Game: Two Knights Defense, Modern Bishop's Opening
 r1bqkb1r/pppp1ppp/2n2n2/8/2BpP3/5N2/PPP2PPP/RNBQ1RK1 b kq - 1 5;C56;Italian Game: Scotch Gambit
 r1b1kb1r/ppp2ppp/2n5/3q4/3pn3/2N2N2/PPP2PPP/R1BQR1K1 b kq - 1 8;C56;Italian Game: Scotch Gambit, Anderssen Attack
 r3kb1r/ppp2ppp/2n1b3/3q2B1/3pN3/5N2/PPP2PPP/R2QR1K1 b kq - 4 11;C56;Italian Game: Scotch Gambit, Anderssen Attack, Main Line
@@ -2800,6 +2821,7 @@ rnbqk2r/ppp1ppbp/5np1/8/2BP3P/2N2N2/PPP3P1/R1BQK2R b KQkq - 0 7;D00;Blackmar-Die
 rnbqk2r/ppp1ppbp/5np1/4N3/2BP4/2N5/PPP3PP/R1BQK2R b KQkq - 3 7;D00;Blackmar-Diemer Gambit Accepted: Bogoljubow Defense, Nimzowitsch Attack
 rnbq1rk1/ppp1ppbp/5np1/8/2BP4/2N2N2/PPP3PP/R1B1QRK1 b - - 5 8;D00;Blackmar-Diemer Gambit Accepted: Bogoljubow Defense, Studier Attack
 rnbqkb1r/ppp2ppp/4pn2/8/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq - 0 6;D00;Blackmar-Diemer Gambit Accepted: Euwe Defense
+rnbqkb1r/ppp2ppp/4pn2/8/3P4/2NB1N2/PPP3PP/R1BQK2R b KQkq - 1 6;D00;Blackmar-Diemer Gambit Accepted: Euwe Defense, Duthilleul Gambit
 r1bqk2r/ppp1bppp/4pn2/6B1/3n4/2NB1N2/PPP3PP/R2Q1R1K b kq - 1 9;D00;Blackmar-Diemer Gambit Accepted: Euwe Defense, Zilbermints Gambit
 rn1qkb1r/ppp1pppp/5n2/5b2/3P4/2N2N2/PPP3PP/R1BQKB1R w KQkq - 1 6;D00;Blackmar-Diemer Gambit Accepted: Gunderam Defense
 rn1qkb1r/ppp2ppp/4pn2/4N3/3Pb1P1/2N5/PPP4P/R1BQKB1R w KQkq - 1 8;D00;Blackmar-Diemer Gambit Accepted: Gunderam Defense, Stader Variation
@@ -2822,6 +2844,7 @@ rnbqkb1r/ppp1pppp/5n2/8/3P4/2N1pP2/PPP3PP/R1BQKBNR w KQkq - 0 5;D00;Blackmar-Die
 rnbqkb1r/pp2pppp/2p2n2/8/3Pp3/2N2P2/PPP3PP/R1BQKBNR w KQkq - 0 5;D00;Blackmar-Diemer Gambit Declined: O'Kelly Defense
 rn1qkb1r/ppp1pppp/5n2/5b2/3Pp3/2N2P2/PPP3PP/R1BQKBNR w KQkq - 1 5;D00;Blackmar-Diemer Gambit Declined: Vienna Defense
 rnbqkb1r/ppp2ppp/4pn2/8/3Pp3/2N2P2/PPP3PP/R1BQKBNR w KQkq - 0 5;D00;Blackmar-Diemer Gambit Declined: Weinsbach Defense
+rnbqkb1r/ppp2ppp/4pn2/8/3PP3/2N5/PPP3PP/R1BQKBNR b KQkq - 0 5;D00;Blackmar-Diemer Gambit Declined: Weinsbach Defense, Pfrang Gambit
 rnbqkbnr/ppp1pppp/8/8/3Pp3/5P2/PPP3PP/RNBQKBNR b KQkq - 0 3;D00;Blackmar-Diemer Gambit: Blackmar Gambit
 rnbqkbnr/ppp1pppp/8/8/3Pp3/4B3/PPP2PPP/RN1QKBNR b KQkq - 1 3;D00;Blackmar-Diemer Gambit: Diemer-Rosenberg Attack
 rnbqkbnr/ppp1pppp/8/8/2BPp3/8/PPP2PPP/RNBQK1NR b KQkq - 1 3;D00;Blackmar-Diemer Gambit: Fritz Attack
@@ -2888,6 +2911,8 @@ rnbqkbnr/ppp2ppp/4p3/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R b KQkq - 1 3;D02;Queen's Pa
 rnbqkb1r/ppp2ppp/4pn2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R w KQkq - 2 4;D02;Queen's Pawn Game: London System, with e6
 rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3;D02;Queen's Pawn Game: Symmetrical Variation
 rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5NP1/PPP1PP1P/RNBQKB1R b KQkq - 0 3;D02;Queen's Pawn Game: Symmetrical Variation, Pseudo-Catalan
+rn1qkb1r/pp2pppp/2p2n2/3p4/3P2b1/5NP1/PPP1PPBP/RNBQK2R w KQkq - 2 5;D02;Queen's Pawn Game: Symmetrical Variation, Pseudo-Catalan
+rn1qkb1r/pp3ppp/2p1pn2/3p4/3P2b1/5NP1/PPP1PPBP/RNBQ1RK1 w kq - 0 6;D02;Queen's Pawn Game: Symmetrical Variation, Pseudo-Catalan
 rnbqkb1r/p1p1pppp/5n2/1p1p4/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4;D02;Queen's Pawn Game: Zilbermints Countergambit
 rnbqkbnr/ppp1pppp/8/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R b KQkq - 1 2;D02;Queen's Pawn Game: Zukertort Variation
 rnbqkb1r/ppp1pppp/5n2/3p2B1/3P4/5N2/PPP1PPPP/RN1QKB1R b KQkq - 3 3;D03;Queen's Pawn Game: Torre Attack
@@ -2961,6 +2986,8 @@ rnbqkb1r/pp2pppp/2p2n2/3p2B1/2PP4/5N2/PP2PPPP/RN1QKB1R b KQkq - 3 4;D11;Slav Def
 rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/5N2/PP1NPPPP/R1BQKB1R b KQkq - 3 4;D11;Slav Defense: Breyer Variation
 rnbqkbnr/pp2pppp/2p5/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R b KQkq - 1 3;D11;Slav Defense: Modern Line
 rnbqkb1r/pp2pp1p/2p2np1/8/2pP4/5NP1/PP2PPBP/RNBQK2R w KQkq - 0 6;D11;Slav Defense: Modern Line
+rn1qkb1r/pp3ppp/2p1pn2/3p4/2PP2b1/5NP1/PP2PPBP/RNBQ1RK1 b kq - 1 6;D11;Slav Defense: Modern Line
+r2qkb1r/pp1npppp/2p2n2/3p4/2PP2b1/5NP1/PP2PPBP/RNBQ1RK1 b kq - 0 6;D11;Slav Defense: Modern Line
 rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/4PN2/PP3PPP/RNBQKB1R b KQkq - 0 4;D11;Slav Defense: Quiet Variation
 rn1qkb1r/pp2pppp/2p2n2/3p4/2PP2b1/4PN2/PP3PPP/RNBQKB1R w KQkq - 1 5;D11;Slav Defense: Quiet Variation, Pin Defense
 rn1qkb1r/pp1n1ppp/4p3/3pNb2/3P4/2N1P3/PP3PPP/R1BQKB1R w KQkq - 2 8;D12;Slav Defense: Quiet Variation, Amsterdam Variation
