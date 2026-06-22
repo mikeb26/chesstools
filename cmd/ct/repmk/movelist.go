@@ -1,4 +1,4 @@
-package main
+package repmk
 
 import (
 	"fmt"

@@ -1,8 +1,9 @@
-package main
+package repvld
 
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/corentings/chess/v2"
@@ -36,12 +37,19 @@ func TestNewRepValidator(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
+	if _, err := exec.LookPath("stockfish"); err != nil {
+		t.Skip("skipping repvld integration test: stockfish is not available")
+	}
+	if _, ok := os.LookupEnv("LICHESS_TOKEN"); !ok {
+		t.Skip("skipping repvld integration test: LICHESS_TOKEN is not set")
+	}
+
 	opts := RepValidatorOpts{
 		color:           chess.White,
 		gapThreshold:    0.04,
 		minMoveNum2Eval: 3,
 	}
-	rv := NewRepValidator(&opts, []string{"../../assets/test1.pgn"})
+	rv := NewRepValidator(&opts, []string{"../../../assets/test1.pgn"})
 	err := rv.Load()
 	if err != nil {
 		t.Fatalf("rv.Load() failed: %v", err)
@@ -102,7 +110,7 @@ func TestCorruptFileLoad(t *testing.T) {
 		gapThreshold:    0.04,
 		minMoveNum2Eval: 3,
 	}
-	rv := NewRepValidator(&opts, []string{"../../assets/test2.pgn"})
+	rv := NewRepValidator(&opts, []string{"../../../assets/test2.pgn"})
 	err := rv.Load()
 	if err == nil {
 		t.Fatalf("rv.Load() succeeded but should have failed")

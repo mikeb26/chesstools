@@ -1,4 +1,4 @@
-package main
+package fencat
 
 import (
 	"flag"
@@ -13,13 +13,13 @@ type FenCatOpts struct {
 	fens []string
 }
 
-func parseArgs(opts *FenCatOpts) error {
+func parseArgs(args []string, opts *FenCatOpts) error {
 	opts.fens = make([]string, 0)
 	f := flag.NewFlagSet("fencat", flag.ExitOnError)
 
 	f.BoolVar(&opts.dark, "dark", false, "<true|false>")
 
-	err := f.Parse(os.Args[1:])
+	err := f.Parse(args)
 	if err != nil {
 		return err
 	}
@@ -31,9 +31,9 @@ func parseArgs(opts *FenCatOpts) error {
 	return nil
 }
 
-func main() {
+func Main(args []string) {
 	var opts FenCatOpts
-	err := parseArgs(&opts)
+	err := parseArgs(args, &opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)

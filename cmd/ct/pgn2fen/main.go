@@ -1,4 +1,4 @@
-package main
+package pgn2fen
 
 import (
 	"flag"
@@ -36,7 +36,7 @@ func NewPgn2FenOpts() *Pgn2FenOpts {
 	return opts
 }
 
-func parseArgs(opts *Pgn2FenOpts) error {
+func parseArgs(args []string, opts *Pgn2FenOpts) error {
 
 	opts.pgnFiles = make([]string, 0)
 	f := flag.NewFlagSet("pgn2fen", flag.ExitOnError)
@@ -50,7 +50,7 @@ func parseArgs(opts *Pgn2FenOpts) error {
 	f.IntVar(&opts.endMoveNum, "endmove", opts.endMoveNum,
 		"ending move number")
 
-	err := f.Parse(os.Args[1:])
+	err := f.Parse(args)
 	if err != nil {
 		return err
 	}
@@ -84,10 +84,10 @@ func parseArgs(opts *Pgn2FenOpts) error {
 	return nil
 }
 
-func main() {
+func Main(args []string) {
 	opts := NewPgn2FenOpts()
 
-	err := parseArgs(opts)
+	err := parseArgs(args, opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)

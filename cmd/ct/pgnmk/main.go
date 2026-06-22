@@ -1,6 +1,6 @@
 /* Utility for creating pgn files */
 
-package main
+package pgnmk
 
 import (
 	"bufio"
@@ -67,9 +67,9 @@ func NewMkCtx(optsIn MkOpts) *MkCtx {
 	return rv
 }
 
-func main() {
+func Main(args []string) {
 	var opts MkOpts
-	err := parseArgs(&opts)
+	err := parseArgs(args, &opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pgnmk: Failed to parse arguments: %v\n", err)
 		os.Exit(1)
@@ -87,11 +87,11 @@ func main() {
 	fmt.Printf("OUTPUT:\n%v", mkCtx.String())
 }
 
-func parseArgs(opts *MkOpts) error {
+func parseArgs(args []string, opts *MkOpts) error {
 	f := flag.NewFlagSet("pgnmk", flag.ContinueOnError)
 
 	f.StringVar(&opts.inPgn, "input", "", "<existingPgnFile>")
-	err := f.Parse(os.Args[1:])
+	err := f.Parse(args)
 	if err != nil {
 		return err
 	}

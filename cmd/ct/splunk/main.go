@@ -1,7 +1,7 @@
 /* Utility for investigating which players have had a list of positions
  */
 
-package main
+package splunk
 
 import (
 	"errors"
@@ -49,7 +49,7 @@ func decodeKey(key string) (string, chess.Color) {
 	return parts[0], c
 }
 
-func parseArgs(opts *SplunkOpts) error {
+func parseArgs(args []string, opts *SplunkOpts) error {
 	f := flag.NewFlagSet("ctsplunk", flag.ContinueOnError)
 
 	var playerList string
@@ -57,7 +57,7 @@ func parseArgs(opts *SplunkOpts) error {
 	f.StringVar(&playerList, "playerlist", "", "<player1>[,<player2>...]")
 	f.StringVar(&opts.opponent, "opponent", "", "<player1>")
 
-	err := f.Parse(os.Args[1:])
+	err := f.Parse(args)
 	if err != nil {
 		return err
 	}
@@ -73,9 +73,9 @@ func parseArgs(opts *SplunkOpts) error {
 	return err
 }
 
-func main() {
+func Main(args []string) {
 	var opts SplunkOpts
-	err := parseArgs(&opts)
+	err := parseArgs(args, &opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ctsplunk: %v\n", err)
 		os.Exit(1)

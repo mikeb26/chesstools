@@ -1,7 +1,7 @@
 /* Utility for comreating an opening repertoire
  */
 
-package main
+package repmk
 
 import (
 	"flag"
@@ -51,7 +51,7 @@ var evalCtx *chesstools.EvalCtx
 
 const DefaultMinGames = 200
 
-func parseArgs(opts *RepBldOpts) error {
+func parseArgs(args []string, opts *RepBldOpts) error {
 
 	f := flag.NewFlagSet("repbld", flag.ExitOnError)
 	var colorFlag string
@@ -72,7 +72,7 @@ func parseArgs(opts *RepBldOpts) error {
 	f.IntVar(&opts.minGames, "mingames", DefaultMinGames, "<minimum games to consider from an opening book position>")
 	f.BoolVar(&opts.expandVar, "includevar", true, "include variations in input pgn <true|false>")
 
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
 		fallthrough
@@ -102,9 +102,9 @@ func parseArgs(opts *RepBldOpts) error {
 	return nil
 }
 
-func main() {
+func Main(args []string) {
 	var opts RepBldOpts
-	err := parseArgs(&opts)
+	err := parseArgs(args, &opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)

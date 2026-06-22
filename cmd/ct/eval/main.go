@@ -1,4 +1,4 @@
-package main
+package eval
 
 import (
 	"bufio"
@@ -18,11 +18,11 @@ type inputPosition struct {
 	label string
 }
 
-func main() {
+func Main(args []string) {
 	evalCtx := chesstools.NewEvalCtx(false)
 	defer evalCtx.Close()
 
-	dark, doUpgrade, fenFile := parseArgs(evalCtx)
+	dark, doUpgrade, fenFile := parseArgs(args, evalCtx)
 
 	var positions []inputPosition
 	if fenFile != "" {
@@ -99,10 +99,10 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 	p := g.Position()
 	b := p.Board()
 
-	fmt.Printf(b.Draw2(p.Turn(), dark))
+	fmt.Print(b.Draw2(p.Turn(), dark))
 }
 
-func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool, string) {
+func parseArgs(args []string, evalCtx *chesstools.EvalCtx) (bool, bool, string) {
 	f := flag.NewFlagSet("cteval", flag.ExitOnError)
 
 	var pgnFile string
@@ -134,7 +134,7 @@ func parseArgs(evalCtx *chesstools.EvalCtx) (bool, bool, string) {
 	var doUpgrade bool
 	f.BoolVar(&doUpgrade, "upgrade", false, "upgrade all existing cached evaluations using the most recently installed engine version")
 
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	if doUpgrade {
 		return false, true, ""

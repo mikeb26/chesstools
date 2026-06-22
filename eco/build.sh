@@ -10,7 +10,7 @@ cut -f3,2,1 -d$'\t' --output-delimiter=';' all.tsv | while read line
 do
     IFS=';' read -ra fields <<< "$line"
 
-    fen=$(echo "${fields[2]}" | ../pgn2fen)
+    fen=$(echo "${fields[2]}" | ../ct pgn2fen)
     eco="${fields[0]}"
     openingName=${fields[1]}
 

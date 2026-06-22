@@ -1,6 +1,6 @@
 /* Utility for filtering large pgn files */
 
-package main
+package pgnfilt
 
 import (
 	"flag"
@@ -38,10 +38,10 @@ func NewFiltCtx(pgns []string, foptsIn FiltOpts,
 	return rv
 }
 
-func main() {
+func Main(args []string) {
 	fopts := FiltOpts{}
 	expandVar := false
-	pgnList, err := parseArgs(&fopts, &expandVar)
+	pgnList, err := parseArgs(args, &fopts, &expandVar)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
@@ -55,12 +55,12 @@ func main() {
 	}
 }
 
-func parseArgs(fopts *FiltOpts, expandVar *bool) ([]string, error) {
+func parseArgs(args []string, fopts *FiltOpts, expandVar *bool) ([]string, error) {
 	f := flag.NewFlagSet("pgnfilt", flag.ExitOnError)
 
 	f.StringVar(&fopts.fen, "fen", "", "includes this specific position")
 	f.StringVar(&fopts.white, "white", "", "includes this player as white")
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	if len(f.Args()) == 0 {
 		return nil, fmt.Errorf("please specify 1 or more PGN files to filter")

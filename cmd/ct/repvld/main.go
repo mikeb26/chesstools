@@ -4,7 +4,7 @@
  * order.
  */
 
-package main
+package repvld
 
 import (
 	"encoding/json"
@@ -95,9 +95,9 @@ func NewRepValidator(optsIn *RepValidatorOpts, pgns []string) *RepValidator {
 * value being inserted.
  */
 
-func main() {
+func Main(args []string) {
 	opts := RepValidatorOpts{}
-	pgnList, err := parseArgs(&opts)
+	pgnList, err := parseArgs(args, &opts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		return
@@ -117,7 +117,7 @@ func main() {
 	}
 }
 
-func parseArgs(opts *RepValidatorOpts) ([]string, error) {
+func parseArgs(args []string, opts *RepValidatorOpts) ([]string, error) {
 
 	f := flag.NewFlagSet("repvld", flag.ExitOnError)
 	var colorFlag string
@@ -131,7 +131,7 @@ func parseArgs(opts *RepValidatorOpts) ([]string, error) {
 	f.BoolVar(&opts.cacheOnly, "cacheonly", false, "only return cached evaluations")
 	f.BoolVar(&opts.staleOk, "staleok", true, "accept cached evals from older engine versions")
 	f.UintVar(&opts.minMoveNum2Eval, "minevalmovenum", 3, "<minevalmovenum>")
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 	switch strings.ToUpper(colorFlag) {
 	case "WHITE":
 		fallthrough

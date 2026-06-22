@@ -1,15 +1,20 @@
-package main
+package repmk
 
 import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/corentings/chess/v2"
 )
 
 func TestRepBldBasic(t *testing.T) {
+	if _, err := exec.LookPath("stockfish"); err != nil {
+		t.Skip("skipping repmk integration test: stockfish is not available")
+	}
+
 	tmpConsolidatedFile, err := os.CreateTemp("", "repbldtestc-*")
 	if err != nil {
 		t.Fatalf("Could not open temp file: %v", err)
@@ -77,6 +82,10 @@ func TestRepBldBasic(t *testing.T) {
 }
 
 func TestRepBldAdv(t *testing.T) {
+	if _, err := exec.LookPath("stockfish"); err != nil {
+		t.Skip("skipping repmk integration test: stockfish is not available")
+	}
+
 	fmt.Printf("DEBUG - TestRepBldAdv()\n")
 	tmpFlattenedFile, err := os.CreateTemp("", "repbldtestf2-*")
 	if err != nil {

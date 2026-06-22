@@ -5,25 +5,18 @@ export GOFLAGS=-mod=vendor
 all: build
 
 .PHONY: build
-build: eco/all_fen.tsv pgn2fen
-	go build github.com/mikeb26/chesstools/cmd/repvld
-	go build github.com/mikeb26/chesstools/cmd/repmk
-	go build github.com/mikeb26/chesstools/cmd/cteval
-	go build github.com/mikeb26/chesstools/cmd/960gen
-	go build github.com/mikeb26/chesstools/cmd/pgnfilt
-	go build github.com/mikeb26/chesstools/cmd/pgnmk
-	go build github.com/mikeb26/chesstools/cmd/ctsplunk
-	go build github.com/mikeb26/chesstools/cmd/fencat
+build: eco/all_fen.tsv ct
+	go build ./cmd/ct
 
-eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv pgn2fen
+eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv ct
 	cd eco; ./build.sh
 
-pgn2fen:
-	go build github.com/mikeb26/chesstools/cmd/pgn2fen
+ct:
+	go build ./cmd/ct
 
 .PHONY: test
 test:
-	go test github.com/mikeb26/chesstools/cmd/repvld github.com/mikeb26/chesstools/cmd/repmk github.com/mikeb26/chesstools/cmd/cteval github.com/mikeb26/chesstools/cmd/960gen github.com/mikeb26/chesstools/cmd/pgnfilt github.com/mikeb26/chesstools/cmd/pgnmk github.com/mikeb26/chesstools/cmd/fencat github.com/mikeb26/chesstools/cmd/ctsplunk github.com/mikeb26/chesstools/cmd/pgn2fen
+	GOFLAGS= go test -mod=mod ./cmd/ct/...
 
 .PHONY: deps
 deps:
@@ -43,6 +36,6 @@ vendor: go.mod
 
 .PHONY: clean
 clean:
-	rm -f repvld repmk cteval 960gen pgnfilt pgnmk fencat ctsplunk pgn2fen eco/all_fen.tsv
+	rm -f ct eco/all_fen.tsv
 
 FORCE:
