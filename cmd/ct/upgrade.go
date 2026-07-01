@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+const BrewVersionSuffix = "b"
 const DevVersionText = "v0.devbuild"
 
 //go:embed version.txt
@@ -72,7 +73,13 @@ func upgradeMainWork() error {
 	}
 
 	fmt.Printf("Upgrading ct from %v to %v...\n", versionText, latestVer)
-	return upgradeViaGithub(latestVer)
+
+	if isBrewVersion() {
+		err = upgradeCLIViaBrew()
+	} else {
+		err = upgradeViaGithub(latestVer)
+	}
+	return err
 }
 
 func getLatestVersion() (string, error) {
@@ -108,6 +115,10 @@ func getLatestVersion() (string, error) {
 	}
 	if release.TagName == "" {
 		return "", fmt.Errorf("could not parse %s", latestReleaseURL)
+	}
+
+	if isBrewVersion() {
+		release.TagName += BrewVersionSuffix
 	}
 
 	return release.TagName, nil
@@ -210,6 +221,10 @@ func checkAndPrintUpgradeWarning() bool {
 }
 
 func isBrewVersion() bool {
+	if versionText[len(versionText)-1] == BrewVersionSuffix[0] {
+		return true
+	}
+
 	return false
 }
 
