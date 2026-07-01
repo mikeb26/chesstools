@@ -202,7 +202,7 @@ func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 		}
 		if err != nil {
 			log.Fatalf("Could not parse move:%v in %v", move,
-				openingGame.G.Moves()))
+				openingGame.G.Moves())
 		}
 		// sanity check for https://github.com/CorentinGS/chess/pull/63
 		if len(openingGame.G.Moves()) != startMlen+1 {

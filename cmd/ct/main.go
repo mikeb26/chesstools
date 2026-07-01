@@ -34,6 +34,8 @@ var commands = []command{
 	{name: "pgnmk", description: "interactively create PGNs", run: pgnmk.Main},
 	{name: "repmk", description: "build opening repertoires", run: repmk.Main},
 	{name: "repvld", description: "validate opening repertoires", run: repvld.Main},
+	{name: "version", description: "print ct version", run: versionMain},
+	{name: "upgrade", description: "upgrade ct to the latest release", run: upgradeMain},
 }
 
 func main() {
@@ -71,6 +73,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "ct: unknown command %q\n", arg1)
 		printUsage(os.Stderr)
 		os.Exit(1)
+	}
+
+	if cmd.name != "upgrade" {
+		checkAndPrintUpgradeWarning()
 	}
 
 	cmd.run(os.Args[2:])
