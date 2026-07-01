@@ -11,7 +11,7 @@ build: eco/all_fen.tsv | ct
 eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv | ct
 	cd eco; ./build.sh
 
-ct:
+ct: vendor
 	go build ./cmd/ct
 
 .PHONY: test
@@ -20,7 +20,6 @@ test:
 
 unit-tests.xml: FORCE
 	gotestsum --junitfile unit-tests.xml ./...
-
 
 .PHONY: deps
 deps:
