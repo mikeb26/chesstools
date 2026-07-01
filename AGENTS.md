@@ -18,7 +18,6 @@ Key areas:
 - Prefer small, focused changes. Preserve existing CLI flags and output formats unless explicitly asked to change them.
 - Keep generated/local artifacts out of git. Important ignored outputs include command binaries, `cache/`, `vendor/`, root-level `*.pgn`, `exceptions.json`, and `score_all.sh`.
 - Do not edit ECO TSV data or regenerate `eco/all_fen.tsv` unless the task is specifically about opening data.
-- Many functions intentionally panic for CLI-style fatal errors; do not broadly refactor panic/error behavior without a clear requirement.
 - Network-facing code talks to Lichess and may rate-limit/sleep on HTTP 429. Avoid adding tests that depend on live network unless clearly marked or gated.
 
 ## Build and test commands

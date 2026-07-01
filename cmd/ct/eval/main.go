@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func Main(args []string) {
 		var err error
 		positions, err = loadFENFile(fenFile)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		evalCtx.WithFEN(positions[0].fen)
 	}
@@ -92,7 +93,7 @@ func displayOutput(evalCtx *chesstools.EvalCtx, er *chesstools.EvalResult,
 
 	newGameArgs, err := chess.FEN(fen)
 	if err != nil {
-		panic(fmt.Sprintf("FEN invalid err:%v fen:%v", err, fen))
+		log.Fatal(fmt.Sprintf("FEN invalid err:%v fen:%v", err, fen))
 	}
 
 	g := chess.NewGame(newGameArgs)
@@ -142,17 +143,17 @@ func parseArgs(args []string, evalCtx *chesstools.EvalCtx) (bool, bool, string) 
 
 	var turn chess.Color
 	if pgnFile == "" && fen == "" && fenFile == "" {
-		panic("please specify --pgn <pgnFile>, --fen <FEN string>, or --fenfile <fenFileName|->")
+		log.Fatal("please specify --pgn <pgnFile>, --fen <FEN string>, or --fenfile <fenFileName|->")
 	}
 	if fen != "" && (pgnFile != "" || fenFile != "" || moveNum != 0 || colorFlag != "") {
-		panic("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
+		log.Fatal("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
 	}
 	if fenFile != "" && (pgnFile != "" || fen != "" || moveNum != 0 || colorFlag != "") {
-		panic("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
+		log.Fatal("please specify exactly one input mode: (--pgn <pgnFile> --move <moveNum> --turn <white|black>), --fen <FEN string>, or --fenfile <fenFileName|->")
 	}
 	if pgnFile != "" {
 		if moveNum == 0 {
-			panic("please specify --move <moveNum>")
+			log.Fatal("please specify --move <moveNum>")
 		}
 
 		switch strings.ToUpper(colorFlag) {
@@ -165,11 +166,11 @@ func parseArgs(args []string, evalCtx *chesstools.EvalCtx) (bool, bool, string) 
 		case "B":
 			turn = chess.Black
 		default:
-			panic("please specify --turn <white|black>")
+			log.Fatal("please specify --turn <white|black>")
 		}
 	}
 	if evalDepth != 0 && evalTimeInSec != 0 {
-		panic("--depth and --time are mutually exclusive")
+		log.Fatal("--depth and --time are mutually exclusive")
 	}
 
 	if pgnFile != "" {

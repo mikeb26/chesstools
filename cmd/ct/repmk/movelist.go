@@ -2,6 +2,7 @@ package repmk
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -81,7 +82,7 @@ func (moveListSet MoveListAndStartFENSet) String() string {
 	fen := firstMvList.fen
 	fen, err := chesstools.NormalizeFEN(fen)
 	if err != nil {
-		panic("Can't parse fen")
+		log.Fatal("Can't parse fen")
 	}
 	turn := firstMvList.turn
 	moveNum := firstMvList.moveNum
@@ -93,27 +94,27 @@ func (moveListSet MoveListAndStartFENSet) String() string {
 	for _, mvList := range moveListSet.moveLists {
 		curFen, err := chesstools.NormalizeFEN(mvList.fen)
 		if err != nil {
-			panic("Can't parse fen")
+			log.Fatal("Can't parse fen")
 		}
 		if curFen != fen {
 			for idx, mvList2 := range moveListSet.moveLists {
 				fmt.Fprintf(os.Stderr, "mvList[%v] fen:%v moves:%v\n", idx,
 					mvList2.fen, mvList2)
 			}
-			panic(fmt.Sprintf("moveList fen does not match\n\t1st:%v\n\tcur:%v",
-				fen, curFen))
+			log.Fatalf("moveList fen does not match\n\t1st:%v\n\tcur:%v",
+				fen, curFen)
 		}
 		if mvList.turn != turn {
-			panic(fmt.Sprintf("moveList turn %v does not match %v", mvList.turn,
-				turn))
+			log.Fatalf("moveList turn %v does not match %v", mvList.turn,
+				turn)
 		}
 		if mvList.moveNum != moveNum {
-			panic(fmt.Sprintf("moveList moveNum %v does not match %v",
-				mvList.moveNum, moveNum))
+			log.Fatalf("moveList moveNum %v does not match %v",
+				mvList.moveNum, moveNum)
 		}
 		if len(mvList.moves) != numMoves {
-			panic(fmt.Sprintf("moveList numMoves %v does not match %v",
-				len(mvList.moves), numMoves))
+			log.Fatalf("moveList numMoves %v does not match %v",
+				len(mvList.moves), numMoves)
 		}
 	}
 

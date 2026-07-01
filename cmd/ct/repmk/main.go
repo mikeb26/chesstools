@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -450,7 +451,7 @@ func alreadyKnowMove(openingGame *chesstools.OpeningGame, mv string) bool {
 
 	fen, err := chesstools.NormalizeFEN(tmpGame.G.Position().XFENString())
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	_, present := moveMap[fen]

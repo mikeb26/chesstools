@@ -154,7 +154,7 @@ func (openingGame *OpeningGame) WithFullRatingRange(fetchFullRatingRange bool) *
 func (openingGame *OpeningGame) WithFEN(fen string) *OpeningGame {
 	newGameArgs, err := chess.FEN(fen)
 	if err != nil {
-		panic(fmt.Sprintf("FEN invalid err:%v fen:%v", err, fen))
+		log.Fatalf("FEN invalid err:%v fen:%v", err, fen)
 	}
 
 	openingGame = openingGame.WithGame(chess.NewGame(newGameArgs))
@@ -177,7 +177,7 @@ func (openingGame *OpeningGame) WithGame(game *chess.Game) *OpeningGame {
 	openingGame.G = game
 
 	if openingGame.Parent != nil {
-		panic("WithGame() and WithParent() are mutually exclusive")
+		log.Fatal("WithGame() and WithParent() are mutually exclusive")
 	}
 
 	return openingGame.withECO()
@@ -201,17 +201,17 @@ func (openingGame *OpeningGame) WithMove(move string) *OpeningGame {
 			}
 		}
 		if err != nil {
-			panic(fmt.Sprintf("Could not parse move:%v in %v", move,
+			log.Fatalf("Could not parse move:%v in %v", move,
 				openingGame.G.Moves()))
 		}
 		// sanity check for https://github.com/CorentinGS/chess/pull/63
 		if len(openingGame.G.Moves()) != startMlen+1 {
-			panic(fmt.Sprintf("WARN: len(moves) unchanged after pushing:%v in game:%v",
-				move, openingGame.G.String()))
+			log.Fatalf("WARN: len(moves) unchanged after pushing:%v in game:%v",
+				move, openingGame.G.String())
 		}
 		if len(openingGame.G.Positions()) != startPlen+1 {
-			panic(fmt.Sprintf("WARN len(positions) unchanged after pushing:%v in game:%v",
-				move, openingGame.G.String()))
+			log.Fatalf("WARN len(positions) unchanged after pushing:%v in game:%v",
+				move, openingGame.G.String())
 		}
 	}
 
@@ -228,8 +228,8 @@ func (openingGame *OpeningGame) WithTopReplies(fetchTop bool) *OpeningGame {
 		openingGame.fullRatingRange, openingGame.allSpeeds, openingGame.opponent,
 		openingGame.opponentColor)
 	if err != nil {
-		panic(fmt.Sprintf("Could not fetch top moves err:'%v' fen:'%v' g:'%v'",
-			err, openingGame.G.Position().XFENString(), openingGame.String()))
+		log.Fatalf("Could not fetch top moves err:'%v' fen:'%v' g:'%v'",
+			err, openingGame.G.Position().XFENString(), openingGame.String())
 	}
 	openingGame.haveTopReplies = true
 
@@ -268,8 +268,8 @@ func (openingGame *OpeningGame) WithEval(doEval bool) *OpeningGame {
 	if doEval {
 		err := openingGame.getEvalsForResp()
 		if err != nil {
-			panic(fmt.Sprintf("Could not fetch evals err:%v in %v", err,
-				openingGame.String()))
+			log.Fatalf("Could not fetch evals err:%v in %v", err,
+				openingGame.String())
 		}
 	}
 

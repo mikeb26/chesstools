@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -116,7 +117,7 @@ func (mkCtx *MkCtx) getOneTag(key string, defaultVal string, required bool) {
 		}
 		val, err = mkCtx.in.ReadString('\n')
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 			val = ""
 			continue
 		}

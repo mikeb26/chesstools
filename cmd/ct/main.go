@@ -3,18 +3,19 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 
 	gen960 "github.com/mikeb26/chesstools/cmd/ct/960gen"
 	"github.com/mikeb26/chesstools/cmd/ct/eval"
-	"github.com/mikeb26/chesstools/cmd/ct/splunk"
 	"github.com/mikeb26/chesstools/cmd/ct/fencat"
 	"github.com/mikeb26/chesstools/cmd/ct/pgn2fen"
 	"github.com/mikeb26/chesstools/cmd/ct/pgnfilt"
 	"github.com/mikeb26/chesstools/cmd/ct/pgnmk"
 	"github.com/mikeb26/chesstools/cmd/ct/repmk"
 	"github.com/mikeb26/chesstools/cmd/ct/repvld"
+	"github.com/mikeb26/chesstools/cmd/ct/splunk"
 )
 
 type command struct {
@@ -36,6 +37,8 @@ var commands = []command{
 }
 
 func main() {
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+
 	if len(os.Args) < 2 {
 		printUsage(os.Stdout)
 		return

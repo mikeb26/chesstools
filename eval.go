@@ -11,6 +11,7 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"net/url"
@@ -138,7 +139,7 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	var err error
 	rv.engine, err = uci.New("stockfish")
 	if err != nil {
-		panic("Unable to initialize stockfish")
+		log.Fatal("Unable to initialize stockfish")
 	}
 
 	return rv
@@ -213,7 +214,7 @@ func getSystemMem() uint64 {
 	in := &syscall.Sysinfo_t{}
 	err := syscall.Sysinfo(in)
 	if err != nil {
-		panic("Unable to determine system memory")
+		log.Fatal("Unable to determine system memory")
 	}
 
 	return uint64(in.Totalram) * uint64(in.Unit)
@@ -232,7 +233,7 @@ func (evalCtx *EvalCtx) InitEngine() {
 
 		p := evalCtx.g.Positions()
 		if halfMoveIndex >= uint(len(p)) {
-			panic("bogus move num")
+			log.Fatal("bogus move num")
 		}
 		evalCtx.position = p[halfMoveIndex]
 	}
@@ -254,22 +255,22 @@ func renice(pid int) error {
 func (evalCtx *EvalCtx) earlyInitEngine() {
 	err := renice(evalCtx.engine.Getpid())
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	err = evalCtx.engine.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	engineVer := evalCtx.engine.ID()["name"]
 	engineVerParts := strings.Split(engineVer, " ")
 	if len(engineVerParts) < 2 {
-		panic("Cannot find stockfish version number")
+		log.Fatal("Cannot find stockfish version number")
 	}
 	evalCtx.engVersion, err = strconv.ParseFloat(engineVerParts[1], 64)
 	if err != nil {
-		panic("Cannot parse stockfish version number")
+		log.Fatal("Cannot parse stockfish version number")
 	}
 
 }
@@ -278,34 +279,34 @@ func (evalCtx *EvalCtx) lazyInitEngine() {
 	//	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_Chess960",
 	//		Value: "true"})
 	//	if err != nil {
-	//		panic(err)
+	//		log.Fatal(err)
 	//	}
 	err := evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_ShowWDL",
 		Value: "true"})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Threads", Value: strconv.FormatUint(evalCtx.numThreads, 10)})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Hash", Value: strconv.FormatUint(evalCtx.hashSizeInMiB, 10)})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "UCI_AnalyseMode", Value: "true"})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = evalCtx.engine.Run(uci.CmdSetOption{Name: "Ponder", Value: "true"})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	//err = evalCtx.engine.Run(uci.CmdSetOption{Name: "MultiPV", Value: "5"})
 
 	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	evalCtx.doLazyInit = false
@@ -315,13 +316,13 @@ func (evalCtx *EvalCtx) SetFEN(fen string) *EvalCtx {
 	evalCtx.fen = fen
 	fenCheck, err := chess.FEN(fen)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	evalCtx.g = chess.NewGame(fenCheck)
 	evalCtx.position = evalCtx.g.Position()
 	err = evalCtx.engine.Run(uci.CmdPosition{Position: evalCtx.position})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return evalCtx
@@ -334,14 +335,14 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	if evalCtx.fen != "" {
 		fen, err := chess.FEN(evalCtx.fen)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		return chess.NewGame(fen)
 	} // else
 
 	readCloser, err := OpenPgn(evalCtx.pgnFile)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer readCloser.Close()
 
@@ -351,7 +352,7 @@ func (evalCtx *EvalCtx) loadPgnOrFEN() *chess.Game {
 	for scanner.HasNext() {
 		ret, err = scanner.ParseNext()
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		// only process 1st game
@@ -386,17 +387,17 @@ func (evalCtx *EvalCtx) loadResultFromLocalCache(
 		return nil, ErrCacheMiss
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	var er EvalResult
 	err = json.Unmarshal(encodedResult, &er)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if evalCtx.engVersion == UnknownEngVer {
-		panic("Unknown current engine version")
+		log.Fatal("Unknown current engine version")
 	}
 
 	er.Type = EvalTypeLocalStockfish
@@ -522,8 +523,8 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 	uciNotation := chess.UCINotation{}
 	bestMove, err := uciNotation.Decode(evalCtx.position, moveList[0])
 	if err != nil {
-		panic(fmt.Sprintf("BUG: could not decode uci str %v: %v",
-			moveList[0], err))
+		log.Fatalf("BUG: could not decode uci str %v: %v",
+			moveList[0], err)
 	}
 
 	algNotation := chess.AlgebraicNotation{}
@@ -590,7 +591,7 @@ func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
 	var err error
 	fen, err = NormalizeFEN(fen)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	cacheFileName := fen2CacheFileName(fen)
 	cacheFilePath := evalCtx.fen2CacheFilePath(fen)
@@ -599,23 +600,23 @@ func (evalCtx *EvalCtx) persistResultToCache(er *EvalResult) {
 	_ = os.Remove(cacheFileFullName)
 	err = os.MkdirAll(cacheFilePath, 0755)
 	if err != nil && !os.IsExist(err) {
-		panic(err)
+		log.Fatal(err)
 	}
 	file, err := os.OpenFile(cacheFileFullName, os.O_CREATE|os.O_RDWR|os.O_EXCL,
 		0644)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer file.Close()
 
 	encodedResult, err := json.Marshal(er)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	_, err = file.Write(encodedResult)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return
@@ -637,7 +638,7 @@ func cacheFileName2Fen(fileName string) string {
 	var err error
 	fen, err = NormalizeFEN(fen)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return fen
@@ -680,7 +681,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 			time.Duration(evalCtx.evalTimeInSec)})
 	}
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	results := evalCtx.engine.SearchResults()
@@ -709,8 +710,8 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	bestMoveFixed, err := uciNotation.Decode(evalCtx.position, bestMvUciStr)
 
 	if err != nil {
-		panic(fmt.Sprintf("BUG: could not re-encode decoded uci str %v: %v",
-			bestMvUciStr, err))
+		log.Fatal("BUG: could not re-encode decoded uci str %v: %v",
+			bestMvUciStr, err)
 	}
 	winPct, _ := results.Info.Score.WinPct()
 	lossPct, _ := results.Info.Score.LossPct()
@@ -719,7 +720,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	fen := evalCtx.position.XFENString()
 	fen, err = NormalizeFEN(fen)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	er = &EvalResult{

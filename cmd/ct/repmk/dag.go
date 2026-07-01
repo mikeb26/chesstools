@@ -3,6 +3,7 @@ package repmk
 import (
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"time"
 
@@ -107,7 +108,7 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 		}
 
 		if mv == "" {
-			panic("BUG: empty mv during node insertion")
+			log.Fatal("BUG: empty mv during node insertion")
 		}
 		parent.children[mv] = dagNode
 		dag.nodeMap[fen] = dagNode
@@ -117,7 +118,7 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 
 	if parent != nil {
 		if mv == "" {
-			panic("BUG: empty mv during node insertion")
+			log.Fatal("BUG: empty mv during node insertion")
 		}
 		// the Dag already has this node, but it may not yet have this
 		// parent
@@ -126,7 +127,7 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 			// node already exists in both the Dag and in its parent's children
 			// map, so no-op
 			if dagNode != dagNode2 {
-				panic("BUG: distinct dag nodes for same position")
+				log.Fatal("BUG: distinct dag nodes for same position")
 			}
 			return dagNode
 		}
@@ -152,7 +153,7 @@ func (dag *Dag) addNodesFromGame(game *chess.Game) {
 	moves := game.Moves()
 	positions := game.Positions()
 	if len(moves) > len(positions) {
-		panic(fmt.Sprintf("can't parse game %v", game))
+		log.Fatalf("can't parse game %v", game)
 	}
 
 	var parentNode *DagNode
