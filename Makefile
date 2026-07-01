@@ -5,10 +5,10 @@ export GOFLAGS=-mod=vendor
 all: build
 
 .PHONY: build
-build: eco/all_fen.tsv ct
+build: eco/all_fen.tsv | ct
 	go build ./cmd/ct
 
-eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv ct
+eco/all_fen.tsv: eco/a.tsv eco/b.tsv eco/c.tsv eco/d.tsv eco/e.tsv eco/extra_fen.tsv | ct
 	cd eco; ./build.sh
 
 ct:
