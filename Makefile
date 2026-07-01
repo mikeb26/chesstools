@@ -37,6 +37,10 @@ vendor: go.mod
 	go mod download
 	go mod vendor
 
+cmd/ct/version.txt:
+	git describe --tags > cmd/ct/version.txt
+	truncate -s -1 cmd/ct/version.txt
+
 .PHONY: clean
 clean:
 	rm -f ct eco/all_fen.tsv unit-tests.xml
