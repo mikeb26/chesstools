@@ -710,7 +710,7 @@ func (evalCtx *EvalCtx) Eval() *EvalResult {
 	bestMoveFixed, err := uciNotation.Decode(evalCtx.position, bestMvUciStr)
 
 	if err != nil {
-		log.Fatal("BUG: could not re-encode decoded uci str %v: %v",
+		log.Fatalf("BUG: could not re-encode decoded uci str %v: %v",
 			bestMvUciStr, err)
 	}
 	winPct, _ := results.Info.Score.WinPct()

@@ -16,7 +16,11 @@ ct:
 
 .PHONY: test
 test:
-	GOFLAGS= go test -mod=mod ./cmd/ct/...
+	GOFLAGS= go test -mod=mod ./...
+
+unit-tests.xml: FORCE
+	gotestsum --junitfile unit-tests.xml ./...
+
 
 .PHONY: deps
 deps:
@@ -36,6 +40,6 @@ vendor: go.mod
 
 .PHONY: clean
 clean:
-	rm -f ct eco/all_fen.tsv
+	rm -f ct eco/all_fen.tsv unit-tests.xml
 
 FORCE:
