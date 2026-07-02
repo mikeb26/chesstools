@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+const ProjName = "chesstools"
+const CliName = "ct"
 const BrewVersionSuffix = "b"
 const DevVersionText = "v0.devbuild"
 
@@ -36,20 +38,20 @@ func upgradeMain(args []string) {
 	}
 
 	if err := upgradeMainWork(); err != nil {
-		fmt.Fprintf(os.Stderr, "ct upgrade failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%v upgrade failed: %v\n", CliName, err)
 		os.Exit(1)
 	}
 }
 
 func printUpgradeUsage() {
-	fmt.Fprintln(os.Stdout, "usage: ct upgrade")
+	fmt.Fprintf(os.Stdout, "usage: %v upgrade\n", CliName)
 	fmt.Fprintln(os.Stdout)
-	fmt.Fprintln(os.Stdout, "upgrade the ct binary to the latest GitHub release")
+	fmt.Fprintf(os.Stdout, "upgrade the %v binary to the latest GitHub release\n", ProjName)
 }
 
 func upgradeMainWork() error {
 	if versionText == DevVersionText {
-		fmt.Fprintf(os.Stderr, "Skipping ct upgrade on development version\n")
+		fmt.Fprintf(os.Stderr, "Skipping %v upgrade on development version\n", ProjName)
 		return nil
 	}
 
@@ -58,11 +60,12 @@ func upgradeMainWork() error {
 		return err
 	}
 	if latestVer == versionText {
-		fmt.Printf("ct %v is already the latest version\n", versionText)
+		fmt.Printf("%v %v is already the latest version\n", ProjName, versionText)
 		return nil
 	}
 
-	fmt.Printf("A new version of chesstools is available (%v). Upgrade? (Y/N) [Y]: ", latestVer)
+	fmt.Printf("A new version of %v is available (%v). Upgrade? (Y/N) [Y]: ",
+		ProjName, latestVer)
 	shouldUpgrade := "Y"
 	if _, err := fmt.Scanf("%s", &shouldUpgrade); err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("failed to read confirmation: %w", err)
@@ -72,7 +75,7 @@ func upgradeMainWork() error {
 		return nil
 	}
 
-	fmt.Printf("Upgrading chesstools from %v to %v...\n", versionText, latestVer)
+	fmt.Printf("Upgrading %v from %v to %v...\n", ProjName, versionText, latestVer)
 
 	if isBrewVersion() {
 		err = upgradeCLIViaBrew()
@@ -100,7 +103,7 @@ func getLatestVersion() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return "", fmt.Errorf("no GitHub releases published for chesstools yet")
+		return "", fmt.Errorf("no GitHub releases published for %v yet", ProjName)
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 8*1024))
@@ -169,11 +172,11 @@ func upgradeViaGithub(latestVer string) error {
 
 	myBinaryPath, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("could not determine path to ct: %w", err)
+		return fmt.Errorf("could not determine path to %v: %w", CliName, err)
 	}
 	myBinaryPath, err = filepath.EvalSymlinks(myBinaryPath)
 	if err != nil {
-		return fmt.Errorf("could not determine path to ct: %w", err)
+		return fmt.Errorf("could not determine path to %v: %w", CliName, err)
 	}
 
 	myBinaryPathBak := myBinaryPath + ".bak"
@@ -215,7 +218,8 @@ func checkAndPrintUpgradeWarning() bool {
 		return false
 	}
 
-	fmt.Fprintf(os.Stderr, "*WARN*: A new version of ct is available (%v). Please upgrade via 'ct upgrade'.\n\n", latestVer)
+	fmt.Fprintf(os.Stderr, "*WARN*: A new version of %v is available (%v). Please upgrade via '%v upgrade'.\n\n",
+		ProjName, latestVer, CliName)
 
 	return true
 }
@@ -234,9 +238,9 @@ func upgradeCLIViaBrew() error {
 	if err != nil {
 		return fmt.Errorf("failed to update brew formulae: %w\n", err)
 	}
-	err = runHostCommand(ctx, []string{"brew", "install", "mikeb26/tap/ct"}, os.Stdout, os.Stderr)
+	err = runHostCommand(ctx, []string{"brew", "install", "mikeb26/tap/chesstools"}, os.Stdout, os.Stderr)
 	if err != nil {
-		return fmt.Errorf("failed to upgrade ct: %w\n", err)
+		return fmt.Errorf("failed to upgrade %v: %w\n", ProjName, err)
 	}
 
 	return nil
