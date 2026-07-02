@@ -101,7 +101,7 @@ When reporting test results, mention skipped or failed tests caused by missing `
   - `--pgn <file-or-lichess-url> --move <n> --turn <white|black>`
 - Commands that accept PGN inputs generally use `chesstools.OpenPgn`, so they may accept local files or Lichess game/study URLs.
 - `ct pgn2fen` reads PGN from stdin when no PGN files are provided.
-- `ct eval` maintains local cache files under `cache/` by default.
+- `ct eval` maintains local cache files under the user's config directory by default, typically `~/.config/chesstools/cache` on Linux.
 - `ct repmk` writes the requested output file after removing any existing file of the same name.
 - `ct upgrade` contacts GitHub releases and, for Homebrew builds, runs Homebrew commands.
 

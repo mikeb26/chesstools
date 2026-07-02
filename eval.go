@@ -39,8 +39,9 @@ const (
 	UnknownSearchTime        = 0.0
 	UnknownEngVer            = 0.0
 	FileNamePrefix           = "fen."
-	DefaultCacheFileDir      = "cache"
 )
+
+var userConfigDir = os.UserConfigDir
 
 var ErrCacheMiss = errors.New("cache miss")
 var ErrCacheStale = errors.New("cache stale")
@@ -134,7 +135,7 @@ func NewEvalCtx(cacheOnlyIn bool) *EvalCtx {
 	rv.cloudCache = true
 	rv.doLazyInit = false
 	rv.atime = true
-	rv.cacheFileDir = DefaultCacheFileDir
+	rv.cacheFileDir = defaultCacheFileDir()
 
 	var err error
 	rv.engine, err = uci.New("stockfish")
@@ -642,6 +643,15 @@ func cacheFileName2Fen(fileName string) string {
 	}
 
 	return fen
+}
+
+func defaultCacheFileDir() string {
+	configDir, err := userConfigDir()
+	if err != nil || configDir == "" {
+		return "cache"
+	}
+
+	return filepath.Join(configDir, "chesstools", "cache")
 }
 
 func (evalCtx *EvalCtx) fen2CacheFilePath(cacheFileName string) string {

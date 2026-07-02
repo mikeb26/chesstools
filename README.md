@@ -3,7 +3,6 @@
 [![Release](https://img.shields.io/github/v/release/mikeb26/chesstools)](https://github.com/mikeb26/chesstools/releases)
 [![CircleCI](https://img.shields.io/circleci/build/github/mikeb26/chesstools/main?label=CircleCI)](https://app.circleci.com/pipelines/github/mikeb26/chesstools)
 [![Go Reference](https://pkg.go.dev/badge/github.com/mikeb26/chesstools.svg)](https://pkg.go.dev/github.com/mikeb26/chesstools)
-[![Go version](https://img.shields.io/github/go-mod/go-version/mikeb26/chesstools)](go.mod)
 [![License: MIT](https://img.shields.io/github/license/mikeb26/chesstools)](LICENSE)
 
 `chesstools` is a Go library and a single command-line tool, `ct`, for working with chess PGNs, FENs, openings, repertoires, Lichess data, and Stockfish evaluations.
@@ -133,7 +132,7 @@ ct eval --fenfile positions.txt --depth 10
 cat positions.txt | ct eval --fenfile - --cacheonly
 ```
 
-Evaluation results are cached under `cache/` by default. `ct eval` can also read Lichess cloud evaluations unless `--nocloudcache` is set.
+Evaluation results are cached under the user's config directory by default, typically `~/.config/chesstools/cache` on Linux. `ct eval` can also read Lichess cloud evaluations unless `--nocloudcache` is set.
 
 ### Work with repertoires
 
