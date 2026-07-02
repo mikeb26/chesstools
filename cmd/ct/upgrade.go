@@ -23,7 +23,7 @@ const DevVersionText = "v0.devbuild"
 var versionText string
 
 func versionMain(args []string) {
-	fmt.Printf("ct-%v\n", versionText)
+	fmt.Printf("chesstools-%v\n", versionText)
 }
 
 func upgradeMain(args []string) {
@@ -62,7 +62,7 @@ func upgradeMainWork() error {
 		return nil
 	}
 
-	fmt.Printf("A new version of ct is available (%v). Upgrade? (Y/N) [Y]: ", latestVer)
+	fmt.Printf("A new version of chesstools is available (%v). Upgrade? (Y/N) [Y]: ", latestVer)
 	shouldUpgrade := "Y"
 	if _, err := fmt.Scanf("%s", &shouldUpgrade); err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("failed to read confirmation: %w", err)
@@ -72,7 +72,7 @@ func upgradeMainWork() error {
 		return nil
 	}
 
-	fmt.Printf("Upgrading ct from %v to %v...\n", versionText, latestVer)
+	fmt.Printf("Upgrading chesstools from %v to %v...\n", versionText, latestVer)
 
 	if isBrewVersion() {
 		err = upgradeCLIViaBrew()
@@ -90,7 +90,7 @@ func getLatestVersion() (string, error) {
 		return "", err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "ct-upgrade")
+	req.Header.Set("User-Agent", "chesstools-upgrade")
 
 	client := http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
@@ -131,7 +131,7 @@ func upgradeViaGithub(latestVer string) error {
 	if err != nil {
 		return fmt.Errorf("failed to prepare download request: %w", err)
 	}
-	req.Header.Set("User-Agent", "ct-upgrade")
+	req.Header.Set("User-Agent", "chesstools-upgrade")
 
 	client := http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
