@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -66,12 +67,11 @@ func upgradeMainWork() error {
 
 	fmt.Printf("A new version of %v is available (%v). Upgrade? (Y/N) [Y]: ",
 		ProjName, latestVer)
-	shouldUpgrade := "Y"
-	if _, err := fmt.Scanf("%s", &shouldUpgrade); err != nil && !errors.Is(err, io.EOF) {
+	shouldUpgrade, err := readUpgradeConfirmation(os.Stdin)
+	if err != nil {
 		return fmt.Errorf("failed to read confirmation: %w", err)
 	}
-	shouldUpgrade = strings.ToUpper(strings.TrimSpace(shouldUpgrade))
-	if shouldUpgrade == "" || shouldUpgrade[0] != 'Y' {
+	if !shouldUpgrade {
 		return nil
 	}
 
@@ -83,6 +83,20 @@ func upgradeMainWork() error {
 		err = upgradeViaGithub(latestVer)
 	}
 	return err
+}
+
+func readUpgradeConfirmation(r io.Reader) (bool, error) {
+	confirmation, err := bufio.NewReader(r).ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return false, err
+	}
+
+	confirmation = strings.ToUpper(strings.TrimSpace(confirmation))
+	if confirmation == "" {
+		return true, nil
+	}
+
+	return confirmation[0] == 'Y', nil
 }
 
 func getLatestVersion() (string, error) {
