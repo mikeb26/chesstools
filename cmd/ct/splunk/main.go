@@ -215,7 +215,7 @@ func getGameInfos(openingGame *chesstools.OpeningGame,
 	gameInfos := make([]chesstools.GameInfo, 0)
 	for _, mv := range openingGame.OpeningResp.Moves {
 		childGame :=
-			chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithAllSpeeds(true).WithTopReplies(true).WithEval(true)
+			chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithAllSpeeds(true).WithTopReplies(true).WithEval(false, true)
 		childGameInfos, err := getGameInfos(childGame, sampleOk)
 		if errors.Is(err, ErrNoGames) {
 			continue

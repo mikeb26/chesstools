@@ -15,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/mikeb26/chesstools"
 )
 
 const ProjName = "chesstools"
@@ -107,7 +109,7 @@ func getLatestVersion() (string, error) {
 		return "", err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "chesstools-upgrade")
+	req.Header.Set("User-Agent", chesstools.UserAgent)
 
 	client := http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
@@ -148,7 +150,7 @@ func upgradeViaGithub(latestVer string) error {
 	if err != nil {
 		return fmt.Errorf("failed to prepare download request: %w", err)
 	}
-	req.Header.Set("User-Agent", "chesstools-upgrade")
+	req.Header.Set("User-Agent", chesstools.UserAgent)
 
 	client := http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)

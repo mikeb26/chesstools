@@ -32,6 +32,7 @@ type RepBldOpts struct {
 	dark         bool
 	minGames     int
 	expandVar    bool
+	noCloudCache bool
 	noAtime      bool
 }
 
@@ -72,6 +73,7 @@ func parseArgs(args []string, opts *RepBldOpts) error {
 	f.StringVar(&opts.opponent, "opponent", "", "<lichess_username> (opponent to prep for)")
 	f.IntVar(&opts.minGames, "mingames", DefaultMinGames, "<minimum games to consider from an opening book position>")
 	f.BoolVar(&opts.expandVar, "includevar", true, "include variations in input pgn <true|false>")
+	f.BoolVar(&opts.noCloudCache, "nocloudcache", false, "do not reference lichess APIs for cached evaluations")
 
 	f.Parse(args)
 	switch strings.ToUpper(colorFlag) {
@@ -123,6 +125,9 @@ func mainWork(opts *RepBldOpts) {
 		if opts.noAtime {
 			evalCtx = evalCtx.WithoutAtime()
 		}
+		if opts.noCloudCache {
+			evalCtx = evalCtx.WithoutCloudCache()
+		}
 		defer evalCtx.Close()
 		evalCtx.InitEngine()
 	}
@@ -169,13 +174,15 @@ func mainWork(opts *RepBldOpts) {
 		if opts.opponent != "" {
 			openingGame = openingGame.WithOpponent(opts.opponent, opts.color.Other()).WithFullRatingRange(true)
 		}
-		openingGame = openingGame.WithTopReplies(true).WithEval(opts.color == startGame.Position().Turn())
+		openingGame = openingGame.WithTopReplies(true).WithEval(
+			opts.color == startGame.Position().Turn(), opts.noCloudCache)
 	} else {
 		openingGame = chesstools.NewOpeningGame().WithThreshold(opts.threshold)
 		if opts.opponent != "" {
 			openingGame = openingGame.WithOpponent(opts.opponent, opts.color.Other()).WithFullRatingRange(true)
 		}
-		openingGame = openingGame.WithTopReplies(true).WithEval(opts.color == chess.White)
+		openingGame = openingGame.WithTopReplies(true).WithEval(
+			opts.color == chess.White, opts.noCloudCache)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to init: %v\n", err)
@@ -213,10 +220,10 @@ func buildRep(opts *RepBldOpts,
 			}
 
 			if mv == "quit" {
-				dag.addNodesFromGame(openingGame.Parent.G)
+				dag.addNodesFromGame(openingGame.Parent.G, opts.noCloudCache)
 				return false, fmt.Errorf("told to quit")
 			} else if mv == "endvar" {
-				dag.addNodesFromGame(openingGame.Parent.G)
+				dag.addNodesFromGame(openingGame.Parent.G, opts.noCloudCache)
 				return false, nil
 			}
 			childGame = chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv).WithThreshold(openingGame.Threshold).WithTopReplies(true)
@@ -237,7 +244,7 @@ func buildRep(opts *RepBldOpts,
 			}
 		}
 		if !emittedAny {
-			dag.addNodesFromGame(childGame.G)
+			dag.addNodesFromGame(childGame.G, opts.noCloudCache)
 		}
 		return true, nil
 	} // else opponent's turn
@@ -258,7 +265,7 @@ func buildRep(opts *RepBldOpts,
 		if alreadyKnowMove(openingGame, mv.San) || opts.engineSelect {
 			needEvals = false
 		}
-		childGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold).WithTopReplies(needEvals).WithEval(needEvals)
+		childGame := chesstools.NewOpeningGame().WithParent(openingGame).WithMove(mv.San).WithThreshold(openingGame.Threshold).WithTopReplies(needEvals).WithEval(needEvals, opts.noCloudCache)
 		emittedAny = true
 		_, err := buildRep(opts, childGame, childTotalPct, output, stackDepth+1)
 		if err != nil {
@@ -360,7 +367,7 @@ func processOnePGN(repOpts *RepBldOpts, f io.Reader, dag *Dag) error {
 			return err
 		}
 		if repOpts.keepExisting {
-			dag.addNodesFromGame(g)
+			dag.addNodesFromGame(g, repOpts.noCloudCache)
 		}
 		ii++
 	}

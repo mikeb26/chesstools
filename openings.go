@@ -263,10 +263,10 @@ func (openingGame *OpeningGame) withECO() *OpeningGame {
 	return openingGame
 }
 
-func (openingGame *OpeningGame) WithEval(doEval bool) *OpeningGame {
+func (openingGame *OpeningGame) WithEval(doEval bool, noCloudCache bool) *OpeningGame {
 	openingGame.eval = doEval
 	if doEval {
-		err := openingGame.getEvalsForResp()
+		err := openingGame.getEvalsForResp(noCloudCache)
 		if err != nil {
 			log.Fatalf("Could not fetch evals err:%v in %v", err,
 				openingGame.String())
@@ -404,6 +404,7 @@ func getTopReplies(g *chess.Game, fullRatingRange bool,
 		}
 
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", UserAgent)
 		// Opening explorer may require a bearer token now.
 		if tok := lichessBearerToken(); tok != "" {
 			req.Header.Set("Authorization", "Bearer "+tok)
@@ -492,11 +493,14 @@ func init() {
 	}
 }
 
-func (openingGame *OpeningGame) getEvalsForResp() error {
+func (openingGame *OpeningGame) getEvalsForResp(noCloudCache bool) error {
 	if !openingGame.haveTopReplies {
 		return fmt.Errorf("bug: caller must call WithTopReplies() prior to WithEval()")
 	}
 	evalCtx := NewEvalCtx(true)
+	if noCloudCache {
+		evalCtx = evalCtx.WithoutCloudCache()
+	}
 	defer evalCtx.Close()
 	evalCtx.InitEngine()
 

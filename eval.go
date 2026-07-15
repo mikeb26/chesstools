@@ -466,6 +466,7 @@ func (evalCtx *EvalCtx) loadResultFromCloudCache(
 			return nil, fmt.Errorf("eval: failed to create request:%w", err)
 		}
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", UserAgent)
 
 		client := &http.Client{}
 		resp, err = client.Do(req)

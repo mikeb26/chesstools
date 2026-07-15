@@ -76,8 +76,7 @@ func openPgnLichess(url string) (io.ReadCloser, error) {
 		url2Fetch = LichessUrlPrefix + LichessUrlGamePath + gameId + LichessUrlGameSuffixParams
 	}
 
-	//client := conf.Client()
-	client := &http.Client{}
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", url2Fetch, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to construct http request for url %v: %w", url, err)

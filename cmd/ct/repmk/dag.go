@@ -39,6 +39,7 @@ type DagNode struct {
 	openingNameType         OpeningNameType
 	moveListSet             MoveListAndStartFENSet
 	nodeId                  int
+	noCloudCache            bool // @todo move to Dag instead
 }
 
 type Dag struct {
@@ -78,7 +79,7 @@ func NewDag(repColorIn chess.Color, outputModeIn OutputMode) *Dag {
 }
 
 func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
-	mv string) *DagNode {
+	mv string, noCloudCacheIn bool) *DagNode {
 
 	fen := pos.XFENString()
 
@@ -99,6 +100,7 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 			openingEco:              "",
 			moveListSet:             NewMoveListAndStartFENSet(),
 			nodeId:                  dag.numNodes,
+			noCloudCache:            noCloudCacheIn,
 		}
 		dagNode.openingName, dagNode.openingNameType =
 			dag.getOpeningName(parent, dagNode, mv)
@@ -149,7 +151,7 @@ func (dag *Dag) upsertNode(parent *DagNode, pos *chess.Position,
 	return dagNode
 }
 
-func (dag *Dag) addNodesFromGame(game *chess.Game) {
+func (dag *Dag) addNodesFromGame(game *chess.Game, noCloudCache bool) {
 	moves := game.Moves()
 	positions := game.Positions()
 	if len(moves) > len(positions) {
@@ -167,7 +169,7 @@ func (dag *Dag) addNodesFromGame(game *chess.Game) {
 			encoder := chess.AlgebraicNotation{}
 			mv = encoder.Encode(parentNode.position, moves[idx-1])
 		}
-		dagNode := dag.upsertNode(parentNode, pos, mv)
+		dagNode := dag.upsertNode(parentNode, pos, mv, noCloudCache)
 		parentNode = dagNode
 	}
 }
@@ -293,6 +295,9 @@ func (dag *Dag) emitGameToOutput(output io.Writer, node *DagNode) error {
 func (node *DagNode) getEvalStr() string {
 	evalCtx := chesstools.NewEvalCtx(true).WithFEN(node.position.XFENString()).WithoutAtime()
 	defer evalCtx.Close()
+	if node.noCloudCache {
+		evalCtx = evalCtx.WithoutCloudCache()
+	}
 	evalCtx.InitEngine()
 	er := evalCtx.Eval()
 	if er == nil {

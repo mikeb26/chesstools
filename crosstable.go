@@ -41,6 +41,7 @@ func GetCrossTable(player1 string, player2 string) (int, error) {
 		}
 
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", UserAgent)
 
 		client := &http.Client{}
 		resp, err = client.Do(req)
